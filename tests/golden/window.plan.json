@@ -101,12 +101,12 @@
         {
           "id": "in5",
           "kind": "lavfi",
-          "lavfi": "color=c=black@0:s=320x180:r=15/1:d=2",
+          "lavfi": "color=c=black@0:s=320x180:r=15/1:d=2,format=rgba",
           "args": [
             "-f",
             "lavfi",
             "-i",
-            "color=c=black@0:s=320x180:r=15/1:d=2"
+            "color=c=black@0:s=320x180:r=15/1:d=2,format=rgba"
           ]
         }
       ],
