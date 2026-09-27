@@ -15,4 +15,4 @@ Current implementation contracts live here. Read the owning document before chan
 11. [QA and preview](qa.md) — checks, severities, preview fidelity, placeholders.
 12. [Skills](skills.md) — packaged agent skills and install.
 
-The [active roadmap](../devlog/_plan/260927_vid2_roadmap/000_plan.md) records future work; these documents describe the current implementation.
+The [completed 0.1 roadmap](../devlog/_fin/260927_vid2_roadmap/000_plan.md) records future work; these documents describe the current implementation.

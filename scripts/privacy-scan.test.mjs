@@ -8,7 +8,7 @@ import { scanText } from "./privacy-scan.mjs";
 
 test("roadmap and README have no privacy findings", () => {
   const root = new URL("..", import.meta.url);
-  for (const path of ["README.md", "devlog/_plan/260927_vid2_roadmap/000_plan.md", "devlog/_plan/260927_vid2_roadmap/080_release.md"]) {
+  for (const path of ["README.md", "devlog/_fin/260927_vid2_roadmap/000_plan.md", "devlog/_fin/260927_vid2_roadmap/080_release.md"]) {
     assert.deepEqual(scanText(readFileSync(new URL(path, root), "utf8"), path), []);
   }
 });

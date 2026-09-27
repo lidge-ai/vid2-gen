@@ -165,3 +165,11 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   command-line lavfi colour source loses alpha unless the lavfi string ends in format=rgba (perspective windows went black); creative review
   caught placeholder evidence inside the film and a mislabelled demo app. Direction for wp9: release workflow, npm publish (NEEDS_HUMAN if no
   token), GitHub release with the full MP4.
+- **wp9 D + closeout (2026-09-28):** v0.1.0 released: annotated tag on 9d209458 (CI 36352678367: all 9 jobs green), GitHub release with
+  vid2-gen-0.1.0.tgz (sha256 a26cb4e3…) and vid2-launch.mp4; release.yml publish job skipped by design (NPM_PUBLISH_MODE=none); the tarball
+  installed from the release URL into a temporary prefix runs version/doctor/skill list/init/render. **NEEDS_HUMAN:** first npm publication
+  (local npm token returns E401, no NPM_TOKEN secret): `npm login`, `npm whoami`, download the release tarball, `npm publish ./vid2-gen-0.1.0.tgz
+  --access public`; afterwards restore the npm badge/install line and configure trusted publishing (NPM_PUBLISH_MODE=oidc). Ignored dogfood
+  evidence copied to ~/.vid2/evidence/vid2-launch-0.1.0 (143 files, 64.7 MB, verified). **Pending (later idle task):** replace this linked
+  worktree with a standalone clone and delete branch codex/vid2-gen in ima2-gen (needs separate authorization for the ima2-gen branch).
+  All criteria c-1..c-10 met. Unit archived to devlog/_fin/.

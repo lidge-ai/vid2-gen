@@ -22,4 +22,4 @@ and `asciinema` paths tell the later terminal capture workflow which adapters
 are available. Capability values describe the local FFmpeg build, not a promise
 that every device or hardware encoder can run on the current host.
 
-Contract source: `devlog/_plan/260927_vid2_roadmap/010_foundations.md`, Probe section.
+Contract source: `devlog/_fin/260927_vid2_roadmap/010_foundations.md`, Probe section.

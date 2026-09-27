@@ -29,4 +29,4 @@ Failure shape:
 | 6 | QA failure | `E_QA` |
 | 7 | Interrupted or timed out | `E_INTERRUPTED`, `E_TIMEOUT` |
 
-The contract is specified in `devlog/_plan/260927_vid2_roadmap/010_foundations.md` and implemented in `src/cli/output.ts`, `src/cli/main.ts`, and `src/shared/errors.ts`.
+The contract is specified in `devlog/_fin/260927_vid2_roadmap/010_foundations.md` and implemented in `src/cli/output.ts`, `src/cli/main.ts`, and `src/shared/errors.ts`.
