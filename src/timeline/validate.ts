@@ -3,6 +3,7 @@ import { Vid2Error } from "../shared/errors.ts";
 import type { Timeline } from "./schema.ts";
 import { resolveTimeline } from "./resolve.ts";
 import { stageLayerIssues } from "./validate-stage.ts";
+import { kineticLayerIssues, kineticTimingIssues } from "./validate-kinetic.ts";
 import type { ResolveOptions, ResolvedTimeline, ValidationIssue } from "./types.ts";
 
 function issue(path: string, code: string, message: string): ValidationIssue { return { path, code, message }; }
@@ -36,6 +37,7 @@ function checkReferences(t: Timeline): ValidationIssue[] {
         issues.push(issue(`${path}.font`, "missing_font", `unknown font: ${layer.font}`));
       }
       issues.push(...stageLayerIssues(layer, path, t));
+      issues.push(...kineticLayerIssues(layer, path, t));
     }
   }
   for (const [i, layer] of t.overlays.entries()) add(sourceIssue(t, layer.source, `overlays.${i}.source`, ["image", "video"]));
@@ -48,6 +50,7 @@ function checkReferences(t: Timeline): ValidationIssue[] {
 
 function checkResolved(r: ResolvedTimeline): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  issues.push(...kineticTimingIssues(r));
   for (const [i, scene] of r.scenes.entries()) {
     if (scene.frames <= 0) issues.push(issue(`scenes.${i}.duration`, "empty_scene", "scene duration must resolve to at least one frame"));
     const next = r.scenes[i + 1];

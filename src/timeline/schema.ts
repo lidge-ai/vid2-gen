@@ -2,9 +2,10 @@
 import { z } from "zod";
 import { Color, Span, TimeLiteral } from "./primitives.ts";
 import { StageLayer } from "./stage-schema.ts";
+import { KineticLayer } from "./kinetic-schema.ts";
 
 export { Color, TimeLiteral };
-export { StageLayer };
+export { KineticLayer, StageLayer };
 const SignedOffset = z.string().regex(/^-?\d+(\.\d+)?(s|ms|f|b)$/);
 export const EventRef = z.strictObject({ event: z.string().min(1), source: z.string().optional(), offset: SignedOffset.optional() });
 export const MarkerRef = z.strictObject({ marker: z.string().min(1), offset: SignedOffset.optional() });
@@ -58,7 +59,7 @@ export const ShapeLayer = z.strictObject({ type: z.literal("shape"), shape: z.li
   color: Color, radius: z.number().default(0), ...Span });
 export const OverlayLayer = z.strictObject({ type: z.literal("overlay"), source: z.string(), blend: z.enum(["screen", "add", "normal"]).default("screen"),
   opacity: z.number().min(0).max(1).default(0.9), motion: z.enum(["none", "sweep"]).default("none"), ...Span });
-export const Layer = z.discriminatedUnion("type", [MediaLayer, TextLayer, ShapeLayer, OverlayLayer, StageLayer]);
+export const Layer = z.discriminatedUnion("type", [MediaLayer, TextLayer, ShapeLayer, OverlayLayer, StageLayer, KineticLayer]);
 export const Effect = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("grade"), lut: z.string().optional(), brightness: z.number().default(0), contrast: z.number().default(1),
     saturation: z.number().default(1), temperature: z.number().int().min(1000).max(40000).optional() }),

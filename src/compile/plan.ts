@@ -12,7 +12,7 @@ import { buildAudioPlan } from "./audio-plan.ts";
 import { mixGraph } from "../audio/mix.ts";
 import { buildOverlayLayer as buildOverlayFor } from "./layers/overlay.ts";
 import { requireTextCapability } from "./layers/text.ts";
-import { compileSegment, composite, inputRegistry } from "./segment.ts";
+import { compileSegment, composite, inputRegistry, STAGE_FAMILY } from "./segment.ts";
 import type { SegmentBase } from "./segment.ts";
 
 /** Output after the render profile (proxy halves dimensions); produced by render/profiles applyProfile. */
@@ -54,7 +54,7 @@ function checkCapabilities(t: ResolvedTimeline, info: FfmpegInfo, backend: TextB
   const transitions = t.scenes.some((s) => s.transitionOut && s.transitionOut.frames > 0);
   const hasWindow = layers.some((l) => l.type === "media" && l.window);
   const filters = [...requiredFilters(effects), "overlay", ...(transitions ? ["xfade"] : []), ...(hasWindow ? ["alphamerge"] : [])];
-  const stage = layers.some((l) => l.type === "stage");
+  const stage = layers.some((l) => STAGE_FAMILY.has(l.type));
   requireFeatures(info, { filters, ...(stage ? { encoders: ["ffv1"], decoders: ["ffv1"] } : {}) }, "render plan");
 }
 

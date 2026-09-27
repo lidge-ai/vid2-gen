@@ -13,6 +13,10 @@ import { buildTextRuns } from "./layers/text.ts";
 import { buildRasterText } from "./layers/text-raster.ts";
 import { buildCursorOverlays } from "./layers/cursor.ts";
 import { buildStageLayer, stageCompositeSpan } from "./layers/stage.ts";
+import { buildKineticLayer } from "./layers/kinetic.ts";
+
+/** Layer types rendered through the stage engine (010). */
+export const STAGE_FAMILY: ReadonlySet<string> = new Set(["stage", "kinetic", "field", "bars", "ticker", "chips"]);
 
 export const COLOR = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
@@ -58,6 +62,7 @@ function buildLayer(layer: ResolvedLayer, ctx: BuildContext): LayerOutput {
     case "shape": return buildShapeLayer(layer, ctx);
     case "overlay": return buildOverlayLayer(layer, ctx);
     case "stage": return buildStageLayer(layer, ctx);
+    case "kinetic": return buildKineticLayer(layer, ctx);
     case "text": throw new Vid2Error("E_INTERNAL", "text layers are compiled as runs");
   }
 }
@@ -79,7 +84,7 @@ export function compositeLayers(ctx: BuildContext, canvas: string, layers: Resol
     if (layer.type === "text" && ctx.textBackend === "raster") { flush(); canvas = composite(ctx, canvas, buildRasterText(layer, ctx), layer); continue; }
     if (layer.type === "text") { run.push(layer); continue; }
     flush();
-    canvas = composite(ctx, canvas, buildLayer(layer, ctx), layer.type === "stage" ? stageCompositeSpan(layer, ctx) : layer);
+    canvas = composite(ctx, canvas, buildLayer(layer, ctx), STAGE_FAMILY.has(layer.type) ? stageCompositeSpan(layer, ctx) : layer);
     if (layer.type === "media" && layer.cursorTrack?.length && layer.cursor && layer.cursor.style !== "none") {
       for (const c of buildCursorOverlays(layer, layer.cursor.style, ctx)) canvas = composite(ctx, canvas, c.built, c.span);
     }

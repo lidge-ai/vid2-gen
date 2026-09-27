@@ -3,6 +3,7 @@ import { providerById as audioProvider } from "../../audio/index.ts";
 import { providerById as assetProvider } from "../../assets/index.ts";
 import { doctorReport } from "../../probe/index.ts";
 import { Vid2Error } from "../../shared/errors.ts";
+import { ICONS } from "../../stage/icons/lucide.ts";
 import type { CommandSpec } from "../registry.ts";
 
 export const capabilities: CommandSpec = {
@@ -28,6 +29,8 @@ export const capabilities: CommandSpec = {
         acestep: await settle(audioProvider("acestep")!.capabilities()),
       },
       schemas: { timeline: "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json", steps: "vid2 schema --steps --json" },
+      layers: ["media", "text", "shape", "overlay", "stage", "kinetic"],
+      icons: Object.keys(ICONS).sort(),
     } };
   },
 };
