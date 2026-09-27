@@ -71,6 +71,7 @@
       ],
       "textBackend": "ass",
       "internalRate": 1,
+      "stageDeps": [],
       "hash": "<HASH>"
     }
   ],
@@ -94,6 +95,7 @@
   },
   "audio": null,
   "workDir": "<WORK>",
+  "stageRenders": [],
   "tool": {
     "ffmpeg": "ffmpeg",
     "ffprobe": "ffprobe",
