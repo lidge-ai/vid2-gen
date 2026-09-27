@@ -42,7 +42,8 @@ export interface CursorTrackSample { frame: number; x: number; y: number; scale:
 export type ResolvedLayer = Layer & ResolvedSpan & { inFrame?: number; outFrame?: number; inSeconds?: number; outSeconds?: number; cursorTrack?: CursorTrackSample[] };
 export type ResolvedEffect = Effect & { atFrame?: number; atSeconds?: number; absoluteAtFrame?: number; absoluteAtSeconds?: number };
 
-export interface ResolvedTransition { type: string; frames: number }
+export interface ResolvedTransition { type: string; frames: number;
+  rect?: { x: number; y: number; width: number; height: number; radius: number } | undefined; center?: { x: number; y: number } | undefined }
 export interface ResolvedScene {
   id: string;
   index: number;

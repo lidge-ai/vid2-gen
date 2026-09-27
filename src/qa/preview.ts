@@ -3,6 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { RenderPlan, SegmentPlan } from "../compile/ir.ts";
 import { num, quoteExpr } from "../compile/escape.ts";
+import { transitionChain } from "../compile/transitions.ts";
 import { renderSegments } from "../render/runner.ts";
 import { videoArgs } from "../render/profiles.ts";
 import { framesToSeconds, fpsString, runChecked, Vid2Error } from "../shared/index.ts";
@@ -45,12 +46,12 @@ function sourceGraph(plan: RenderPlan, window: WindowPlan, segmentOnly: boolean)
   const rate = fpsString(plan.output.fps);
   const normalize = (index: number, label: string) =>
     `[${index}:v]fps=${rate},settb=AVTB,setpts=PTS-STARTPTS,format=yuv420p,setsar=1,scale=out_range=tv[${label}]`;
-  const duration = num(step.frames * plan.output.fps.den / plan.output.fps.num);
-  const offset = num((first.frames - step.frames) * plan.output.fps.den / plan.output.fps.num);
+  const seconds = (frames: number) => frames * plan.output.fps.den / plan.output.fps.num;
   return [normalize(0, "pa"), normalize(1, "pb"),
     `[pa]trim=end_frame=${num(first.frames)},setpts=PTS-STARTPTS[pat]`,
     `[pb]trim=end_frame=${num(plan.segments[window.second]!.frames)},setpts=PTS-STARTPTS[pbt]`,
-    `[pat][pbt]xfade=transition=${step.transition}:duration=${duration}:offset=${offset}[pwindow]`];
+    ...transitionChain(step.spec ?? { type: step.transition ?? "fade", width: plan.output.width, height: plan.output.height },
+      seconds(step.frames), seconds(first.frames - step.frames), { a: "pat", b: "pbt", out: "pwindow" })];
 }
 
 function postGraph(plan: RenderPlan, extraSegmentInputs: number): string {

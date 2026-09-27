@@ -103,7 +103,12 @@
         "kind": "xfade",
         "transition": "fade",
         "frames": 8,
-        "offsetFrames": 22
+        "offsetFrames": 22,
+        "spec": {
+          "type": "fade",
+          "width": 320,
+          "height": 180
+        }
       }
     ],
     "totalFrames": 52,

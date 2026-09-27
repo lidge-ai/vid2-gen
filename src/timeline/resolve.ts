@@ -125,7 +125,9 @@ function resolvedEffect(effect: Effect, sceneStart: number, ctx: Context, baseDi
 
 function transition(scene: Timeline["scenes"][number], ctx: Context): ResolvedTransition | null {
   if (!scene.transition) return null;
-  return { type: scene.transition.type, frames: scene.transition.type === "cut" ? 0 : frame(scene.transition.duration, ctx, "duration") };
+  const t = scene.transition;
+  return { type: t.type, frames: t.type === "cut" ? 0 : frame(t.duration, ctx, "duration"), ...(t.rect ? { rect: t.rect } : {}),
+    ...(t.center ? { center: t.center } : {}) };
 }
 
 function resolvedAudio(audio: NonNullable<Timeline["audio"]>, ctx: Context): ResolvedAudio {

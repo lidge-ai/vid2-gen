@@ -4,9 +4,13 @@ import { TRANSITIONS } from "../timeline/schema.ts";
 import { num } from "./escape.ts";
 import { GraphBuilder } from "./graph.ts";
 import type { JoinPlan, JoinStep } from "./ir.ts";
+import { transitionFilters } from "./transitions.ts";
+import type { TransitionSpec } from "./transitions.ts";
 
 type JoinSegment = { id: string; frames: number; renderFrames: number };
-type JoinTransition = { type: string; frames: number } | null;
+type JoinTransition = { type: string; frames: number; rect?: TransitionSpec["rect"]; center?: TransitionSpec["center"] } | null;
+/** Output size and authored-to-output scale for transition geometry. */
+export interface JoinFrame { width: number; height: number; scale: number }
 
 function assertInput(segments: JoinSegment[], transitions: JoinTransition[], fps: Fps): void {
   if (!segments.length) throw new Vid2Error("E_INPUT", "join needs at least one segment");
@@ -23,7 +27,7 @@ function assertInput(segments: JoinSegment[], transitions: JoinTransition[], fps
   }
 }
 
-function transitionAt(transition: JoinTransition, previous: JoinSegment, next: JoinSegment): { type: string; frames: number } {
+function transitionAt(transition: JoinTransition, previous: JoinSegment, next: JoinSegment): NonNullable<JoinTransition> {
   if (!transition) return { type: "cut", frames: 0 };
   if (transition.type === "cut") {
     if (transition.frames !== 0) throw new Vid2Error("E_INPUT", "cut transition must have zero frames");
@@ -42,7 +46,14 @@ function normalize(graph: GraphBuilder, index: number, fps: Fps): string {
 }
 
 /** Build a frame-exact video join. transitions[i] is segment i's transitionOut; the last is ignored. */
-export function planJoin(segments: JoinSegment[], transitions: JoinTransition[], fps: Fps): JoinPlan {
+function specOf(t: NonNullable<JoinTransition>, frame: JoinFrame): TransitionSpec {
+  const s = frame.scale;
+  return { type: t.type, width: frame.width, height: frame.height,
+    ...(t.rect ? { rect: { x: t.rect.x * s, y: t.rect.y * s, width: t.rect.width * s, height: t.rect.height * s, radius: t.rect.radius * s } } : {}),
+    ...(t.center ? { center: { x: t.center.x * s, y: t.center.y * s } } : {}) };
+}
+
+export function planJoin(segments: JoinSegment[], transitions: JoinTransition[], fps: Fps, frame: JoinFrame = { width: 1920, height: 1080, scale: 1 }): JoinPlan {
   assertInput(segments, transitions, fps);
   const first = segments[0]!;
   if (segments.length === 1) return { segments, steps: [], totalFrames: first.frames, graph: null };
@@ -64,11 +75,15 @@ export function planJoin(segments: JoinSegment[], transitions: JoinTransition[],
     const incomingLength = incoming.frames + (i === segments.length - 1 ? 0 : 2);
     const right = graph.add([normalized[i]!], [`trim=end_frame=${num(incomingLength)}`, "setpts=PTS-STARTPTS"], `vright${i}`);
     const kind = transition.type === "cut" ? "concat" : "xfade";
-    const filter = kind === "concat" ? "concat=n=2:v=1:a=0" :
-      `xfade=transition=${transition.type}:duration=${num(transition.frames * fps.den / fps.num)}:offset=${num(offsetFrames * fps.den / fps.num)}`;
-    acc = graph.add([left, right], [filter], `vstep${i}`);
+    const spec = specOf(transition, frame);
+    if (kind === "concat") acc = graph.add([left, right], ["concat=n=2:v=1:a=0"], `vstep${i}`);
+    else {
+      const f = transitionFilters(spec, transition.frames * fps.den / fps.num, offsetFrames * fps.den / fps.num);
+      const [a, b] = f.input.length ? [graph.add([left], f.input), graph.add([right], f.input)] : [left, right];
+      acc = graph.add([a, b], f.xfade, `vstep${i}`);
+    }
     steps.push(kind === "concat" ? { kind, frames: 0, offsetFrames } :
-      { kind, transition: transition.type, frames: transition.frames, offsetFrames });
+      { kind, transition: transition.type, frames: transition.frames, offsetFrames, spec });
     visibleFrames += incoming.frames - transition.frames;
   }
   graph.add([acc], [`trim=end_frame=${num(visibleFrames)}`, "setpts=PTS-STARTPTS"], "vjoin");
