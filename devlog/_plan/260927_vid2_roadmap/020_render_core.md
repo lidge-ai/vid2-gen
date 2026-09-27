@@ -2,6 +2,28 @@
 
 Consumes 010 (schema, resolver, probe, exec, errors). Implements ARCH-04/05. Prototype lessons from 002 are requirements.
 
+## wp3 architect consultation
+
+Architect Gibbs (01a0e327-89a3-7dd1-82df-f4bfaab3a280) proposal W3-01..W3-06 (2026-09-27), checked locally on ffmpeg 8.0.1: rgbashift supports
+timeline `enable` (6-frame render ok); `ass` accepts `fontsdir`; `perspective` accepts `eval=frame` with an `in` expression; `-/filter_complex`
+is advertised; xfade of two 60-frame inputs at offset 1.5 s, duration 0.5 s gives 105 frames, and an offset past the first input gives 61 (guard needed).
+Dispositions: W3-01 accept (main writes ir.ts, graph.ts, escape.ts first and defines OverlayOp, EffectOp, ProfileName, ResolvedOutput in ir.ts
+so compile never imports render); W3-02 accept (lanes table below); W3-03 accept (zoom < 1 path, no blanket shortest=1, hardware encoders are
+unmeasured approximations); W3-04 accept (visible-output e2e fixture below); W3-05 accept (pinned font URLs below); W3-06 accept (C inspects keyframes).
+
+| Lane | Owner | Exclusive write scope |
+|---|---|---|
+| 0 (first) | main | `src/compile/{ir,graph,escape}.ts` + tests |
+| Visual | sol | `src/compile/{motion,ease,png}.ts`, `src/compile/layers/{media,window,shape,overlay}.ts`, colocated tests |
+| Typography | sol | `src/compile/text/**`, `src/compile/layers/text.ts`, `assets/fonts/**`, ASS/font tests |
+| Effects+joins | sol | `src/compile/effects/**`, `src/compile/joins.ts`, tests |
+| Render | sol | `src/render/**`, `structure/render.md`, tests |
+| Integration (last) | main | `src/compile/{plan,index}.ts`, `src/compile/plan.test.ts`, `tests/e2e/pack.test.ts` (render smoke), `src/cli/commands/{compile,render}.ts`, registry, probe allowlist, `structure/compiler.md`, INDEX/overview, `tests/golden/**`, `tests/e2e/render.test.ts`, timeline fixtures |
+
+Fonts (HTTP 200 on 2026-09-27): Geist + Geist Mono from `https://raw.githubusercontent.com/vercel/geist-font/v1.7.2/fonts/{Geist,GeistMono}/ttf/<name>.ttf`
+with `v1.7.2/OFL.txt`; Instrument Serif from `https://raw.githubusercontent.com/Instrument/instrument-serif/65c0ef225f386a3c7e87570a4aa9cc0262c2fd81/fonts/ttf/InstrumentSerif-{Regular,Italic}.ttf`
+with that revision's OFL.txt. SHA-256 of each file is recorded in assets/fonts/README.md.
+
 ## Scope
 
 IN: typed render IR; per-scene segment compilation; layer builders (media, window, text, shape, overlay); effects registry;
@@ -40,8 +62,10 @@ Record URLs + sha256 in assets/fonts/README.md.
 ```ts
 export interface InputSpec { id: string; args: string[]; path?: string; lavfi?: string; kind: "image"|"video"|"audio"|"lavfi"|"png" }
 export interface SegmentPlan { id: string; sceneId: string; index: number; frames: number; width: number; height: number;
-  fps: Fps; inputs: InputSpec[]; graph: string; outLabel: string; ass?: { path: string; content: string; fontsDir: string };
-  internalRate: number; hash: string }
+  fps: Fps; inputs: InputSpec[]; graph: string; outLabel: string;
+  assFiles: { path: string; content: string; fontsDir: string }[]; fontFiles: string[]; renderFrames: number; internalRate: number; hash: string }
+// assFiles is ordered (one per text run, audit wp3 round 2); the runner writes every entry before running the segment.
+// src/compile/ir.ts is the authoritative, complete form of this IR.
 export interface JoinStep { kind: "xfade"|"concat"; transition?: string; frames: number; offsetFrames: number }
 export interface JoinPlan { segments: { id: string; frames: number }[]; steps: JoinStep[]; totalFrames: number; graph: string }
 export interface PostPlan { overlays: OverlayOp[]; effects: EffectOp[]; graph: string | null }
@@ -61,7 +85,11 @@ joins filters with `,`, chains with `;`, validates labels are unique; unit tests
 
 Each ResolvedScene → one SegmentPlan rendered at `internalRate × fps` (internalRate = motionblur frames or 1).
 Base canvas: `color=c=<background>:s=WxH:r=<fps*rate>:d=<seconds>` (or a media background). Layers composite in array order via
-`overlay=x:y:eof_action=pass:format=auto` with `enable='between(n,s,e)'` from the layer span.
+`overlay=x:y:eof_action=pass:format=auto` with `enable='between(n,s*rate,e*rate-1)'`: n counts **internal** frames (fps × internalRate), so
+spans in timeline frames are multiplied by the rate (reflection wp3 gap 1). Layer timing: every layer stream is built from t=0 for its span
+length and then shifted with `setpts=PTS-STARTPTS+<spanStartSeconds>/TB`, so a still or clip that starts 2 s into the scene begins its
+first frame at 2 s (reflection wp3 gap 2); looped stills get `-t <span seconds>` and overlay's `eof_action=pass` hides them after the span.
+Tests: a delayed still (start 2 s, end 3 s) is absent at 1.9 s and present at 2.1 s, with and without motionblur (rate 3).
 
 - media.ts: input args: image → `-framerate R -loop 1 -t D -i`; video → `-ss <in> -t <len/speed> -i` + `setpts=(PTS-STARTPTS)/speed`
   + `fps=R`; capture → resolved by 030 to its CFR footage file. Normalization first: `scale=...:flags=lanczos,format=rgba,setsar=1`.
@@ -75,8 +103,14 @@ Base canvas: `color=c=<background>:s=WxH:r=<fps*rate>:d=<seconds>` (or a media b
   x0 = `W2*(ux-h)`, y0 = `H2*(uy-h)`, x1 = `W2*(ux+h)`, y1 = y0, x2 = x0, y2 = `H2*(uy+h)`, x3 = x1, y3 = y2 (W2/H2 = oversampled size).
   z, cx, cy are expressions of `in` (input frame number; perspective has no `t` — research pitfall 6) built from camera keys as a flat sum of
   segment terms `between(in,f_k,f_{k+1}-1)*(v_k+(v_{k+1}-v_k)*E((in-f_k)/(f_{k+1}-f_k)))` plus a hold term after the last key.
+  Zoom below 1 (schema allows 0.2; audit wp3 blocker 2): when the smallest key zoom zmin < 1 the source is first fit (its `fit` mode) at the
+  base size W×H, then centred on an expanded background canvas of size (W/zmin, H/zmin) (even-rounded, times the oversample factor); every key
+  zoom is rescaled to z/zmin (≥ 1) and the corner math uses the expanded canvas size as W2/H2. At zoom 0.5 the subject occupies the centre
+  half of the frame; at zoom 1 it fills it. Test: subject bounds (crop + signalstats) at zoom 0.5 and 1.
   Presets: kenburns = z 1.0→1.08 linear-inout over the layer; punch = `1+0.10*exp(-in/4)+0.025*in/N`; drift = z 1.04, cx 0.45→0.55.
-  Perf note: 2× oversample costs ~4× pixels; the proxy profile uses 1× (no oversample).
+  Perf note: 2× oversample costs ~4× pixels; the proxy profile uses 1× (no oversample). Memory guard (audit wp3 round 3): when the expanded
+  canvas × oversample exceeds 8192 px on either side, oversample drops to 1 and the canvas is capped at 8192 (motion is then pixel-stepped);
+  a unit test asserts zoom 0.2 at 1920×1080 plans a ≤ 8192 canvas.
 - ease.ts: expression generators: linear `t`, in `t*t`, out `1-(1-t)*(1-t)`, inout smoothstep `t*t*(3-2*t)`, punch `1-exp(-6*t)`
   — all take an expression string for t and return a string; unit-tested by evaluating with a tiny JS evaluator for the used grammar.
 - window.ts: content zooms inside a fixed frame (prototype rule). Pipeline: media chain scaled to window size (cover) → `format=rgba`
@@ -100,7 +134,10 @@ Base canvas: `color=c=<background>:s=WxH:r=<fps*rate>:d=<seconds>` (or a media b
   | wipe | `\clip(x0,y0,x0,y1)\t(0,ms,\clip(x0,y0,x1,y1))` |
   | blur | `\blur18\alpha&HFF&\t(0,ms,\blur0\alpha&H00&)` |
   Text escaping: `\` → `\\`, `{`/`}` → `\{`/`\}`, newline → `\N`. Colors → `&HAABBGGRR`. Box → BorderStyle 3 with BackColour.
-  The filter is `ass=filename=<escapePath>:fontsdir=<escapePath>` applied last in the segment (after layers, before effects).
+  Layer order is preserved (audit wp3 blocker 1): consecutive text layers form a run; each run becomes one .ass file whose filter
+  `ass=filename=<escapePath>:fontsdir=<escapePath>` is applied to the canvas at that run's position in the layer array (so a shape listed
+  after a text layer covers it). Effects come after all layers. Test: text followed by an opaque shape over the same box → overlap pixels
+  are the shape colour; and text → shape → text renders both runs visible at their positions (two assFiles).
   fonts.ts: built-ins `sans` (regular/semibold/bold/black → Geist-*.ttf), `mono` (Geist Mono), `serif` (Instrument Serif regular/italic);
   user fonts by path (copied into a per-plan fonts dir)
   or family (looked up in OS font dirs: macOS /System/Library/Fonts, /Library/Fonts, ~/Library/Fonts; Windows %WINDIR%/Fonts,
@@ -146,7 +183,8 @@ timeline renders with exact frame count; single segment → no join graph (copy)
 - profiles.ts: `proxy` = half resolution (even dims), x264 `-preset ultrafast -crf 26`; `final` = full, intermediates x264
   `-preset veryfast -crf 12 -pix_fmt yuv420p`, final encode `-preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart` (+ `-tag:v hvc1` for hevc),
   webm → libvpx-vp9 `-crf 32 -b:v 0`, prores → prores_ks profile 3. `--hw` picks the first available of videotoolbox/nvenc/qsv/amf/vaapi
-  (encoders.ts) with quality-equivalent settings; absent → warning and software.
+  (encoders.ts) with approximate settings (videotoolbox `-q:v 65`, nvenc `-cq 19 -preset p5`, qsv `-global_quality 20`, amf `-qp_i 18 -qp_p 20`,
+  vaapi `-qp 20`), documented as unmeasured; software stays the default; absent → warning and software.
 - cache.ts: key = hashJson({segmentPlanWithoutWorkDir, inputFileHashes, fontHashes, profile, ffmpegVersion, effectVersions}); file
   `cacheDir("segments")/<key>.mp4`; `--no-cache` bypass; `vid2 render --segments <ids>` forces re-render of those.
 - progress.ts: add `-progress pipe:2 -nostats`; parse `frame=` and `out_time_ms=` lines → logger progress per segment.
@@ -154,8 +192,8 @@ timeline renders with exact frame count; single segment → no join graph (copy)
   color_range; mismatch → E_RENDER with details. Final: `+faststart` check (moov before mdat, first 4 MiB).
 - Graph transport: every filtergraph is written to `<workDir>/<segment>.graph.txt` and passed as `-/filter_complex <file>` when ffmpeg ≥ 7.1,
   else `-filter_complex_script <file>` (research pitfall 18: avoids argv escaping differences and Windows' 32 KiB command-line limit).
-  Minimum supported ffmpeg: 6.1 (doctor errors below 6.1, warns below 7.1). Looped stills always get `-t`, and overlays of looped inputs use
-  `shortest=1` (pitfall 9). The join validates `offset + duration <= len(acc)` before running (equality is valid: ffmpeg 8.0.1 renders two 60-frame clips with a 15-frame
+  Minimum supported ffmpeg: 6.1 (doctor errors below 6.1, warns below 7.1). Looped stills always get `-t` equal to their layer span (pitfall 9); overlays never use
+  `shortest=1` (it would end the canvas early); the canvas `color` source has `d=` set and each segment ends with `trim=end_frame=<frames*rate>`. The join validates `offset + duration <= len(acc)` before running (equality is valid: ffmpeg 8.0.1 renders two 60-frame clips with a 15-frame
   fade to 105 frames, audit note; `>` would silently drop B, pitfall 3). With the per-join trim, len(acc) = start_i + T_i = offset + duration, so every
   planned transition sits exactly on the valid boundary; the check guards against resolver bugs.
   Blend size-matching uses the two-input `scale=rw:rh` form (scale2ref is deprecated since 7.1) followed by `format=gbrp`.
@@ -172,10 +210,14 @@ Real renders (tests/e2e/render.test.ts; 320x180 @ 15 fps; sources generated per 
 (2) text-anim: ASS file content matches snapshot and the render succeeds (libass present); (3) window: output non-black inside the window
 rect and background colour outside (crop + signalstats); (4) effects: motionblur segment frame count still correct; (5) overlay screen:
 mean luma increases during the overlay span only; (6) cache: second render of same plan reports cached=true for all segments;
-(7) proxy dims = half. All via ffprobe/signalstats reading the output, so they observe the change target.
+(7) proxy dims = half; (8) visible composition (W3-04): one 8 s 320x180 @15 fps fixture, two 4.25 s scenes with a 0.5 s fade, a window over
+generated motion, and rise text: 120 frames, blend at the midpoint, window vs background regions differ, text region changes between before/after
+entrance, and blackdetect finds no black run. All via ffprobe/signalstats reading the output, so they observe the change target.
 
 ## Verification (C for wp3)
 
-`npm run typecheck && npm run lint && npm test` (includes golden + e2e renders); `node bin/vid2.js render tests/fixtures/timelines/effects.json
+`npm run typecheck && npm run lint && npm run build && npm test` (includes golden + e2e renders); `VID2_PACK_TEST=1 node --test
+tests/e2e/pack.test.ts` where the packed install, outside the checkout, runs `vid2 render` on a 1 s fixture and ffprobe checks its frame
+count (audit wp3 blocker 4, 000 per-phase package contract); `node bin/vid2.js render tests/fixtures/timelines/effects.json
 -o /tmp/vid2-effects.mp4 --json` → ok, then `ffprobe` dims/frames match, `blackdetect` no unexpected runs; README gets a "Render a
 timeline" section. SoT: structure/compiler.md (IR, math, escaping), structure/render.md (profiles, cache, verify).
