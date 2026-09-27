@@ -1,8 +1,42 @@
 /** Kerning-aware wrapping and OpenType paths for raster typography. */
 import opentype from "opentype.js";
 import { readFileSync } from "node:fs";
-import type { Font, FontPath } from "opentype.js";
+import type { Font, FontPath, Glyph } from "opentype.js";
 import { resolveFont } from "../fonts.ts";
+
+/**
+ * Direct glyph layout (cmap + kerning, no GSUB). opentype.js 2 always runs ccmp substitution and throws on chained-context lookups
+ * (type 6 format 2) in Instrument Serif, so text is shaped glyph by glyph; raster text must never fail on a font table.
+ */
+function glyphRun(font: Font, text: string): Glyph[] {
+  return [...text].map((ch) => font.charToGlyph(ch));
+}
+
+export function advanceWidth(font: Font, text: string, size: number): number {
+  const glyphs = glyphRun(font, text);
+  const scale = size / font.unitsPerEm;
+  let units = 0;
+  glyphs.forEach((g, i) => {
+    units += g.advanceWidth ?? 0;
+    const next = glyphs[i + 1];
+    if (next) units += font.getKerningValue(g, next);
+  });
+  return units * scale;
+}
+
+export function textPath(font: Font, text: string, x: number, y: number, size: number): FontPath {
+  const glyphs = glyphRun(font, text);
+  const scale = size / font.unitsPerEm;
+  const commands: FontPath["commands"] = [];
+  let pen = x;
+  glyphs.forEach((g, i) => {
+    commands.push(...g.getPath(pen, y, size).commands);
+    pen += (g.advanceWidth ?? 0) * scale;
+    const next = glyphs[i + 1];
+    if (next) pen += font.getKerningValue(g, next) * scale;
+  });
+  return { commands };
+}
 import type { BuildContext, LayerOf } from "../../ir.ts";
 
 type TextLayer = LayerOf<"text">;
@@ -24,13 +58,13 @@ function wrapLine(text: string, maxWidth: number, font: Font, size: number): str
   for (const word of words) {
     if (/^\s+$/u.test(word)) { current += word; continue; }
     const candidate = current + word;
-    if (current && font.getAdvanceWidth(candidate, size, { kerning: true }) > maxWidth) {
+    if (current && advanceWidth(font, candidate, size) > maxWidth) {
       lines.push(current.trimEnd());
       current = "";
     }
-    if (font.getAdvanceWidth(word, size, { kerning: true }) <= maxWidth) { current += word; continue; }
+    if (advanceWidth(font, word, size) <= maxWidth) { current += word; continue; }
     for (const char of word) {
-      if (current && font.getAdvanceWidth(current + char, size, { kerning: true }) > maxWidth) {
+      if (current && advanceWidth(font, current + char, size) > maxWidth) {
         lines.push(current);
         current = "";
       }
@@ -47,20 +81,20 @@ export function layoutText(layer: TextLayer, ctx: BuildContext): TextLayout {
   const size = layer.size * ctx.scale * font.unitsPerEm / (font.ascender - font.descender);
   const maxWidth = layer.maxWidth === undefined ? Infinity : layer.maxWidth * ctx.scale;
   const lines = layer.text.split(/\r?\n/u).flatMap(line => wrapLine(line, maxWidth, font, size));
-  const widths = lines.map(line => font.getAdvanceWidth(line, size, { kerning: true }));
+  const widths = lines.map(line => advanceWidth(font, line, size));
   const width = Math.max(1, ...widths);
   const lineHeight = size * 1.2;
   const ascent = size * font.ascender / font.unitsPerEm;
   const height = Math.max(size, lines.length * lineHeight);
   const first = lines[0] ?? "";
   const boundaries = [0];
-  for (let i = 1; i <= [...first].length; i++) boundaries.push(font.getAdvanceWidth([...first].slice(0, i).join(""), size, { kerning: true }));
+  for (let i = 1; i <= [...first].length; i++) boundaries.push(advanceWidth(font, [...first].slice(0, i).join(""), size));
   return { font, lines, widths, width, height, lineHeight, ascent, size, boundaries };
 }
 
 export function textPaths(layout: TextLayout, x: number, y: number, align: TextLayer["align"]): FontPath[] {
   return layout.lines.map((line, index) => {
     const offset = align === "left" ? 0 : align === "right" ? layout.width - layout.widths[index]! : (layout.width - layout.widths[index]!) / 2;
-    return layout.font.getPath(line, x + offset, y + layout.ascent + index * layout.lineHeight, layout.size, { kerning: true });
+    return textPath(layout.font, line, x + offset, y + layout.ascent + index * layout.lineHeight, layout.size);
   });
 }

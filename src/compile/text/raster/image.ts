@@ -1,7 +1,7 @@
 /** Compose glyph mask, optional box, and shadow into one RGBA PNG. */
 import { encodePng } from "../../png.ts";
 import type { BuildContext, LayerOf } from "../../ir.ts";
-import { layoutText, textPaths } from "./glyphs.ts";
+import { advanceWidth, layoutText, textPaths } from "./glyphs.ts";
 import { rasterizePaths } from "./rasterize.ts";
 
 type TextLayer = LayerOf<"text">;
@@ -76,7 +76,7 @@ export function renderTextImage(layer: TextLayer, ctx: BuildContext): RasterText
     const left = pad + (layer.align === "left" ? 0 : layer.align === "right" ? layout.width - layout.widths[index]!
       : (layout.width - layout.widths[index]!) / 2);
     const boundaries = [0];
-    for (let n = 1; n <= [...line].length; n++) boundaries.push(layout.font.getAdvanceWidth([...line].slice(0, n).join(""), layout.size, { kerning: true }));
+    for (let n = 1; n <= [...line].length; n++) boundaries.push(advanceWidth(layout.font, [...line].slice(0, n).join(""), layout.size));
     return { top: Math.floor(pad + index * layout.lineHeight), bottom: Math.ceil(pad + (index + 1) * layout.lineHeight), left, boundaries };
   });
   return { png: encodePng(width, height, 4, data), data, width, height, inkLeft: pad, inkWidth: layout.width,
