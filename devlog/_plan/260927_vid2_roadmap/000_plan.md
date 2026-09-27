@@ -146,3 +146,7 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   skips), native live capture 60 frames 3024x1964, hosted CI 36337221673 green with the Ubuntu web e2e required. Findings folded: merged action
   groups must frame their union (dogfood exposed a crop that cut both targets); capture footage shorter than its layer holds the last frame;
   audit tightened E_ACCESS to permission-specific errors. Direction for wp5: concrete AudioPlan in ir.ts, mux in the runner, synth/SFX/mix lanes.
+- **wp5 D (2026-09-28):** audio shipped (44a2c3ad..5dfac179): synth beds, SFX presets with anchors, auto cues from transitions and capture
+  actions, provider audio via `vid2 audio generate` + manifest, mix/master/mux in render. Receipt: 202 tests (197 pass), synth bed detected at
+  120 BPM, hello-audio −14.1 LUFS / −1.4 dBFS; CI green on Ubuntu ffmpeg 6.1.1. Finding folded: AAC overshoots true peak (−0.8 on 6.1.1), so the
+  master ceiling sits 0.5 dB under the target. Direction for wp6: ima2 adapter through its JSON CLI, materialized into the same cache/manifest idea.
