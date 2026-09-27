@@ -20,6 +20,7 @@ Capture, audio, asset materialization, and QA extend this pipeline in later phas
 | `src/probe` | Tool location and capability inspection | Imports shared; no timeline mutation |
 | `src/compile` | Timeline → RenderPlan (filtergraphs, ASS text, joins) | Imports timeline, probe, shared; never render |
 | `src/stage` | Stage scene graph, rasterizer, compositor, frame loop, FFV1 encoder (structure/stage.md) | Imports shared and the raster text rasterizer; no timeline or CLI |
+| `src/stage/presets` | Kinetic (and later UI) presets written through `SpecBuilder` | Pure; `src/timeline/validate-kinetic.ts` may import its dependency-free token and icon tables |
 | `src/render` | Runs a RenderPlan with ffmpeg; cache, progress, verification | Imports compile types only |
 | `src/cli` | Parsing, command registration, output contract | Calls timeline and probe public indexes |
 | `src/index.ts` | Package API | Exposes supported public types/functions |

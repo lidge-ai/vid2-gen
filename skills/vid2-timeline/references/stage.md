@@ -29,3 +29,26 @@ layer start. Presets (`kinetic`, `field`, `bars`, `ticker`, `chips`) build on th
   node's own property.
 - Good defaults for launch-film motion: entrances 0.3–0.4 s `out` with 8–16 px rise and 6–12 px blur; exits 0.2–0.3 s; springs
   stiffness 170, damping 20–24 for layout moves, damping 14 for playful pops.
+
+## Kinetic typography
+
+`kinetic` builds typographic motion from states: each state is the full line on screen at that moment.
+
+```json
+{ "type": "kinetic", "x": 960, "y": 540, "size": 84, "maxWidth": 1300,
+  "accent": { "color": "#5AC8FA", "decay": "0.3s" },
+  "enter": { "style": "rise", "duration": "0.38s", "stagger": "0.11s" },
+  "states": [
+    { "at": "0s", "text": "Anything you can do in a {globe} browser" },
+    { "at": "2.2s", "text": "{globe} browser" } ] }
+```
+
+- Words shared by consecutive states glide to their new place; words missing from the next state exit (`exit.style`: `blur fade fall
+  none`); new words enter (`enter.style`: `rise blur fade pop none` per word, `type drop scramble` per glyph with `glyphStagger`).
+- `{name}` inserts an icon as a word: built-in names from `vid2 capabilities --json` (`icons`), or an `image` source id (app icons from
+  ima2). Use `tokens: [{ "text": "encrypted", "enter": "scramble" }, { "icon": "lock" }]` for per-token control or explicit `key`s.
+- Typing into a search pill: `"enter": {"style":"type"}`, `"pill": {"fill":"#1C1C1ECC","stroke":"#FFFFFF22","glow":"#5AC8FA33"}`,
+  `"camera": {"mode":"follow","width":1400}` so a long line pans instead of overflowing.
+- Reading highlight on light scenes: `"color":"#1C1C1E","highlight":{"dim":"#C7C7CC","sweep":"0.12s"}`.
+- App-opens reveal: a state with `"expand": {"token":"icon:app#0","to":"frame"}` grows that icon (image source) to full frame; cut or fade
+  to the next scene when it covers the frame.

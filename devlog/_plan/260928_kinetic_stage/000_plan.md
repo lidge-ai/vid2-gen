@@ -101,3 +101,20 @@ spare tail frames — now composited through `renderFrames` with `holdFrame` fre
 animated width vanished (lookup key used evaluated size) — fixed in 2ac48c0c by decoding each file once at native size (long side
 ≤ 2048) and fitting per sprite with box filtering. Round 3 **PASS**. Lesson recorded for the next cycles: commit the D note before
 taking the Check receipt.
+
+### wp3 (kinetic typography) — D, 2026-09-28
+
+Conclusion: the `kinetic` layer reproduces the reference's typographic grammar — typing into a growing pill with accent decay and
+popping inline icons, word-by-word rise/blur builds, magic-move reflow to the surviving tokens, reading-highlight sweeps, scramble
+resolves, camera follow and an expand plate for "app opens". Evidence: `src/stage/presets/kinetic.test.ts` (8: magic move centred ±3
+with ≥ 4 intermediate positions, camera follow vs fixed control, accent colour at entry and after decay, type/scramble, monotonic pill
+= text + 2·padX ±4, expand covering ≥ 99 % with paint order pill < tokens < plate, leave → return → reflow, determinism),
+`src/compile/layers/kinetic.test.ts` (profile scaling, sound events, visible proxy render), `src/timeline/validate-kinetic.test.ts`,
+`src/stage/icons/lucide.test.ts` (all 58 icons parse), and a three-scene smoke render reviewed as 10 fps contact sheets. The full gate
+result is in the C receipt for this cycle.
+Did not improve / open: glyph styles draw one node per glyph, so a 40-character typed line costs 40 sprites per frame (fine at 1080p
+in tests, unmeasured at 4K); the scramble glyphs keep the final glyph's advance, so wide random characters can touch neighbours
+briefly; the stroke-icon expand hands off to a flat fill plate rather than morphing the icon. What would prove the direction wrong:
+if the dogfood film needs per-token timing that states cannot express (e.g. words entering mid-state on audio beats), states must gain
+per-token `at`.
+Next: wp4 components, transitions and auto SFX (030 + 040).

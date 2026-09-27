@@ -57,3 +57,30 @@ empty lists. Compiling a timeline with a stage layer requires the `ffv1` encoder
 Duplicate node keys, a parent that is not a group, tracks on unknown nodes, properties a node kind cannot animate, colour/number
 mismatches, image nodes without an image source and unknown fonts are reported by `validateTimeline` as `E_SCHEMA` issues with paths
 (`vid2 validate` fails with `E_INPUT` and lists them).
+
+## Kinetic typography (`kinetic` layer)
+
+`src/compile/layers/kinetic.ts` turns the authored layer into a `KineticConfig` (seconds, authored px, resolved font and icons) and
+`src/stage/presets/kinetic.ts` writes it into a `SpecBuilder` (`presets/builder.ts`), which converts to stage frames and profile
+pixels once. The rest of the pipeline treats the result as a stage clip.
+
+- **Tokens** (`presets/tokens.ts`): `text` is split on whitespace; `{name}` is an icon token (a built-in icon or an `image` source id);
+  a newline starts a new line. Default keys are the lowercased word (or `icon:name`) plus `#occurrence`, so the same word in the next
+  state is the same actor. Explicit `tokens` may set `key`, `color`, `accent`, per-token `enter` and `newline`.
+- **Layout** (`presets/layout.ts`): kerned widths from the raster font code, icons at 0.82 × size × `iconScale`, greedy wrap at
+  `maxWidth`, per-line alignment around (`x`, `y`).
+- **Actors** (`presets/kinetic.ts`): a key present in consecutive states springs to its new box at the state time (magic move); new
+  tokens stagger in reading order and wait `exit.duration` when something leaves in that state; a key that returns later is a new actor.
+  Word styles (`rise`, `blur`, `fade`, `pop`, `none`) animate one text node; glyph styles (`drop`, `type`, `scramble`) put one node per
+  glyph at its kerned advance. `scramble` uses `TextNode.scramble`, evaluated by the renderer (seeded characters every 2 frames until
+  the glyph resolves). `accent` tints each new word/glyph and decays; `highlight` dims tokens and sweeps them to full colour.
+- **Framing** (`presets/kinetic-frame.ts`): the pill is a rect under the tokens (z −1) keyed to the on-screen extent at every entrance;
+  camera follow shifts the token group so the newest token stays `margin` inside `x ± camera.width/2`, starting 0.15 s early; `expand`
+  grows a plate (the icon's image, or a `fill` rect over a growing stroke icon) from the token's evaluated on-screen box to the target
+  (z 10). Geometry springs are critically damped so pills and plates never overshoot; token moves use the authored `move` spring.
+- **Sound events**: `token`, `icon`, `glyph` (every third typed glyph), `state` (≥ 3 actors move), `grow` (expand).
+- **Icons** (`src/stage/icons/lucide.ts`): 58 Lucide icons (ISC, `assets/icons/LICENSE-lucide.txt`) as 24×24 path data, drawn as round
+  strokes; `vid2 capabilities` lists the names.
+- **Validation** (`src/timeline/validate-kinetic.ts`): unknown icons, empty states, duplicate keys in one state, an `expand` token not on
+  screen, and (on resolved frames) states out of order or at/after the layer end. It imports the dependency-free token and icon tables
+  from `src/stage` so validation and compilation tokenize identically.
