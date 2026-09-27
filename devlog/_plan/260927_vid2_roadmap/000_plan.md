@@ -130,3 +130,8 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   locked; implementation starts with wp2 foundations from 010 exactly as audited. Direction for wp2: build shared/ first (errors, exec, time,
   json, hash, paths, log) because cli/probe/timeline import it, then run cli, probe, timeline and repo-scaffold lanes in parallel with
   disjoint write scopes.
+- **wp2 D (2026-09-27):** lane 0 (c84c2721) plus four parallel sol lanes (tooling, timeline, probe, cli) integrated as 38c546c2.
+  typecheck, lint, build and 43 tests green locally (pack test gated by VID2_PACK_TEST, passes); doctor --deep on macOS ffmpeg 8.0.1 reports
+  libass and the drawtext canary as present. Conclusion: the CLI/JSON/exit contract, timeline schema v1 and probe are the stable base; the
+  repo is pushed early so hosted 3-OS CI (c-2) runs from wp3 on. Direction for wp3: main writes compile/ir.ts, graph.ts, escape.ts first,
+  then layer/effect/text/render lanes run in parallel.
