@@ -1079,6 +1079,655 @@
                     "source"
                   ],
                   "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "stage"
+                    },
+                    "nodes": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "text"
+                              },
+                              "text": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "font": {
+                                "default": "sans",
+                                "type": "string"
+                              },
+                              "weight": {
+                                "default": "semibold",
+                                "type": "string",
+                                "enum": [
+                                  "regular",
+                                  "semibold",
+                                  "bold",
+                                  "black",
+                                  "italic"
+                                ]
+                              },
+                              "size": {
+                                "default": 72,
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              },
+                              "color": {
+                                "default": "#F5F5F2",
+                                "type": "string",
+                                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                              },
+                              "letterSpacing": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "reveal": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "key": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "parent": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "x": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "anchorX": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "anchorY": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "scale": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleX": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleY": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "rotation": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "opacity": {
+                                "default": 1,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "blur": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 32
+                              },
+                              "z": {
+                                "default": 0,
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "text",
+                              "key"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "image"
+                              },
+                              "source": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              },
+                              "height": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              },
+                              "radius": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "fit": {
+                                "default": "cover",
+                                "type": "string",
+                                "enum": [
+                                  "cover",
+                                  "contain"
+                                ]
+                              },
+                              "key": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "parent": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "x": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "anchorX": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "anchorY": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "scale": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleX": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleY": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "rotation": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "opacity": {
+                                "default": 1,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "blur": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 32
+                              },
+                              "z": {
+                                "default": 0,
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "source",
+                              "width",
+                              "height",
+                              "key"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "rect"
+                              },
+                              "width": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "height": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "radius": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "fill": {
+                                "default": "#FFFFFF",
+                                "type": "string",
+                                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                              },
+                              "stroke": {
+                                "type": "string",
+                                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                              },
+                              "strokeWidth": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "shadow": {
+                                "type": "object",
+                                "properties": {
+                                  "color": {
+                                    "default": "#00000066",
+                                    "type": "string",
+                                    "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                                  },
+                                  "blur": {
+                                    "default": 16,
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 32
+                                  },
+                                  "x": {
+                                    "default": 0,
+                                    "type": "number"
+                                  },
+                                  "y": {
+                                    "default": 8,
+                                    "type": "number"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "glow": {
+                                "type": "object",
+                                "properties": {
+                                  "color": {
+                                    "type": "string",
+                                    "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                                  },
+                                  "blur": {
+                                    "default": 16,
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 32
+                                  }
+                                },
+                                "required": [
+                                  "color"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "key": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "parent": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "x": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "anchorX": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "anchorY": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "scale": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleX": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleY": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "rotation": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "opacity": {
+                                "default": 1,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "blur": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 32
+                              },
+                              "z": {
+                                "default": 0,
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "width",
+                              "height",
+                              "key"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "group"
+                              },
+                              "clip": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "default": 0,
+                                    "type": "number"
+                                  },
+                                  "y": {
+                                    "default": 0,
+                                    "type": "number"
+                                  },
+                                  "width": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "height": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "radius": {
+                                    "default": 0,
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "width",
+                                  "height"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "key": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "parent": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_.:#-]+$"
+                              },
+                              "x": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "anchorX": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "anchorY": {
+                                "default": 0.5,
+                                "type": "number"
+                              },
+                              "scale": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleX": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "scaleY": {
+                                "default": 1,
+                                "type": "number"
+                              },
+                              "rotation": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "opacity": {
+                                "default": 1,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "blur": {
+                                "default": 0,
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 32
+                              },
+                              "z": {
+                                "default": 0,
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "key"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "tracks": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "node": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_.:#-]+$"
+                          },
+                          "prop": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "scale",
+                              "scaleX",
+                              "scaleY",
+                              "rotation",
+                              "opacity",
+                              "blur",
+                              "width",
+                              "height",
+                              "radius",
+                              "strokeWidth",
+                              "progress",
+                              "reveal",
+                              "color",
+                              "fill",
+                              "stroke"
+                            ]
+                          },
+                          "keys": {
+                            "minItems": 1,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "at": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "string",
+                                      "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                                    }
+                                  ]
+                                },
+                                "value": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "string",
+                                      "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                                    }
+                                  ]
+                                },
+                                "ease": {
+                                  "default": "inout",
+                                  "type": "string",
+                                  "enum": [
+                                    "linear",
+                                    "in",
+                                    "out",
+                                    "inout",
+                                    "punch",
+                                    "spring",
+                                    "hold"
+                                  ]
+                                },
+                                "spring": {
+                                  "type": "object",
+                                  "properties": {
+                                    "stiffness": {
+                                      "default": 170,
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "damping": {
+                                      "default": 22,
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "mass": {
+                                      "default": 1,
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "at",
+                                "value"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "node",
+                          "prop",
+                          "keys"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "events": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "at": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              {
+                                "type": "string",
+                                "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                              }
+                            ]
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "glyph",
+                              "token",
+                              "icon",
+                              "click",
+                              "grow",
+                              "state",
+                              "tick"
+                            ]
+                          },
+                          "sfx": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "at",
+                          "kind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "start": {
+                      "default": 0,
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                        }
+                      ]
+                    },
+                    "end": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "string",
+                          "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "nodes"
+                  ],
+                  "additionalProperties": false
                 }
               ]
             }

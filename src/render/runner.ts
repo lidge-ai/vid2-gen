@@ -15,13 +15,21 @@ import { ProgressParser } from "./progress.ts";
 import type { RenderProgress } from "./progress.ts";
 import { videoArgs } from "./profiles.ts";
 import { verifyVideo } from "./verify.ts";
+import { materializeStages } from "./stages.ts";
+import type { StageResult } from "./stages.ts";
 
-export interface RenderEvent { stage: "segment" | "join" | "post"; id?: string; progress?: RenderProgress; message?: string }
+export interface RenderEvent { stage: "segment" | "join" | "post" | "stage"; id?: string; progress?: RenderProgress; message?: string }
 export interface RenderOptions { jobs?: number; signal?: AbortSignal; noCache?: boolean; segments?: string[];
   hw?: boolean; out: string; logger?: (event: RenderEvent) => void }
 export interface SegmentResult { id: string; cached: boolean; ms: number }
 export interface AudioResult { master: Loudness; delivered: Loudness; durationDelta: number; normalization: string }
-export interface RenderResult { output: string; seconds: number; segments: SegmentResult[]; warnings: string[]; manifest: string; audio?: AudioResult }
+export interface RenderResult { output: string; seconds: number; segments: SegmentResult[]; warnings: string[]; manifest: string; audio?: AudioResult;
+  stages?: StageResult[] }
+
+function stageOptions(opts: RenderOptions): Parameters<typeof materializeStages>[2] {
+  return { ...(opts.noCache ? { noCache: true } : {}), ...(opts.signal ? { signal: opts.signal } : {}),
+    ...(opts.logger ? { logger: opts.logger } : {}) };
+}
 
 function graphFlag(plan: RenderPlan): string {
   return plan.tool.major > 7 || (plan.tool.major === 7 && plan.tool.minor >= 1) ? "-/filter_complex" : "-filter_complex_script";
@@ -101,6 +109,7 @@ export async function renderSegments(plan: RenderPlan, ids: string[], opts: Rend
     return segment;
   });
   const unique = [...new Map(selected.map((segment) => [segment.id, segment])).values()];
+  await materializeStages(plan, [...new Set(unique.flatMap((segment) => segment.stageDeps ?? []))], stageOptions(opts));
   await Promise.all(unique.map((segment) => renderSegment(plan, segment, opts)));
   return unique.map((segment) => ({ id: segment.id, path: join(plan.workDir, `segment-${segment.index}.mp4`) }));
 }
@@ -197,6 +206,7 @@ export async function renderPlan(plan: RenderPlan, opts: RenderOptions): Promise
   await mkdir(plan.workDir, { recursive: true });
   await mkdir(dirname(opts.out), { recursive: true });
   const started = Date.now();
+  const stages = await materializeStages(plan, undefined, stageOptions(opts));
   const segments = await segmentPool(plan, opts);
   const joined = await joinSegments(plan, opts);
   const warnings: string[] = [];
@@ -204,7 +214,7 @@ export async function renderPlan(plan: RenderPlan, opts: RenderOptions): Promise
   await finalEncode(plan, joined, { ...opts, out: videoOut }, warnings);
   const audio = plan.audio ? await renderAudio(plan, plan.audio, videoOut, opts, warnings) : null;
   const result: RenderResult = { output: opts.out, seconds: (Date.now() - started) / 1000, segments, warnings,
-    manifest: `${opts.out}.render.json`, ...(audio ? { audio } : {}) };
+    manifest: `${opts.out}.render.json`, ...(audio ? { audio } : {}), ...(stages.length ? { stages } : {}) };
   await writeFile(result.manifest, JSON.stringify({ planHash: hashJson(plan), timelineHash: plan.timelineHash,
     tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments, warnings,
     ...(audio ? { audio: { ...audio, provenance: plan.audio?.provenance ?? [] } } : {}) }, null, 2) + "\n");

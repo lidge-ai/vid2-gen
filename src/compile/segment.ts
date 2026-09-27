@@ -12,6 +12,7 @@ import { buildShapeLayer } from "./layers/shape.ts";
 import { buildTextRuns } from "./layers/text.ts";
 import { buildRasterText } from "./layers/text-raster.ts";
 import { buildCursorOverlays } from "./layers/cursor.ts";
+import { buildStageLayer } from "./layers/stage.ts";
 
 export const COLOR = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
@@ -19,6 +20,7 @@ export interface SegmentBase {
   width: number; height: number; scale: number; oversample: 1 | 2; profile: BuildContext["profile"];
   fps: BuildContext["fps"]; background: string; sources: BuildContext["sources"]; fonts: BuildContext["fonts"];
   workDir: string; pngDir: string; textBackend: BuildContext["textBackend"]; beat?: NonNullable<BuildContext["beat"]>;
+  stages?: BuildContext["stages"]; stageEvents?: BuildContext["stageEvents"];
 }
 
 export function inputRegistry(first = 0): InputRegistry {
@@ -55,6 +57,7 @@ function buildLayer(layer: ResolvedLayer, ctx: BuildContext): LayerOutput {
     case "media": return buildMediaLayer(layer, ctx);
     case "shape": return buildShapeLayer(layer, ctx);
     case "overlay": return buildOverlayLayer(layer, ctx);
+    case "stage": return buildStageLayer(layer, ctx);
     case "text": throw new Vid2Error("E_INTERNAL", "text layers are compiled as runs");
   }
 }
@@ -115,8 +118,10 @@ export function compileSegment(scene: ResolvedScene, base: SegmentBase, last: bo
   const out = ctx.graph.add([canvas], [...filters, `trim=end_frame=${renderFrames}`, "setpts=PTS-STARTPTS", "format=yuv420p", "setsar=1"], "vout");
   const inputs = ctx.inputs.list();
   const graph = ctx.graph.toString();
+  const paths = new Set(inputs.flatMap((i) => (i.path ? [i.path] : [])));
+  const stageDeps = [...(base.stages?.values() ?? [])].filter((s) => paths.has(s.out)).map((s) => s.id);
   const plan = { id: `seg-${scene.index}-${scene.id}`, sceneId: scene.id, index: scene.index, frames: scene.frames, renderFrames,
     width: base.width, height: base.height, fps: base.fps, inputs, graph, outLabel: out, assFiles: built.ass, fontFiles: built.fonts,
-    textBackend: base.textBackend, internalRate: rate };
+    textBackend: base.textBackend, internalRate: rate, stageDeps };
   return { ...plan, hash: hashJson({ graph, inputs, ass: built.ass.map((a) => a.content), fonts: built.fonts }) };
 }

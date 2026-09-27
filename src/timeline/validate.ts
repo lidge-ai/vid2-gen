@@ -2,6 +2,7 @@
 import { Vid2Error } from "../shared/errors.ts";
 import type { Timeline } from "./schema.ts";
 import { resolveTimeline } from "./resolve.ts";
+import { stageLayerIssues } from "./validate-stage.ts";
 import type { ResolveOptions, ResolvedTimeline, ValidationIssue } from "./types.ts";
 
 function issue(path: string, code: string, message: string): ValidationIssue { return { path, code, message }; }
@@ -34,6 +35,7 @@ function checkReferences(t: Timeline): ValidationIssue[] {
       if (layer.type === "text" && !["sans", "mono", "serif"].includes(layer.font) && !t.fonts[layer.font]) {
         issues.push(issue(`${path}.font`, "missing_font", `unknown font: ${layer.font}`));
       }
+      issues.push(...stageLayerIssues(layer, path, t));
     }
   }
   for (const [i, layer] of t.overlays.entries()) add(sourceIssue(t, layer.source, `overlays.${i}.source`, ["image", "video"]));

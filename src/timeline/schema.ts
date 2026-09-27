@@ -1,13 +1,15 @@
 /** Authored timeline v1. Keep strict objects so misspelled fields fail at ingress. */
 import { z } from "zod";
+import { Color, Span, TimeLiteral } from "./primitives.ts";
+import { StageLayer } from "./stage-schema.ts";
 
-export const TimeLiteral = z.union([z.number().nonnegative(), z.string().regex(/^\d+(\.\d+)?(s|ms|f|b)$/)]);
+export { Color, TimeLiteral };
+export { StageLayer };
 const SignedOffset = z.string().regex(/^-?\d+(\.\d+)?(s|ms|f|b)$/);
 export const EventRef = z.strictObject({ event: z.string().min(1), source: z.string().optional(), offset: SignedOffset.optional() });
 export const MarkerRef = z.strictObject({ marker: z.string().min(1), offset: SignedOffset.optional() });
 export const BarRef = z.strictObject({ bar: z.number().int().min(1), beat: z.number().min(1).default(1) });
 export const Time = z.union([TimeLiteral, EventRef, MarkerRef, BarRef]);
-export const Color = z.string().regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);
 export const Output = z.strictObject({
   width: z.number().int().min(16).max(7680).default(1920), height: z.number().int().min(16).max(4320).default(1080),
   fps: z.union([z.number().positive(), z.string()]).default(30), background: Color.default("#000000"),
@@ -38,7 +40,6 @@ export const Camera = z.union([z.array(CameraKey).min(1), z.strictObject({ auto:
 export const Window = z.strictObject({ x: z.number().int(), y: z.number().int(), width: z.number().int().positive(), height: z.number().int().positive(),
   radius: z.number().int().min(0).default(18), shadow: z.boolean().default(true), border: z.boolean().default(true),
   perspective: z.strictObject({ rx: z.number().min(-45).max(45).default(0), ry: z.number().min(-45).max(45).default(0) }).optional() });
-const Span = { start: TimeLiteral.default(0), end: TimeLiteral.optional() };
 export const MediaLayer = z.strictObject({ type: z.literal("media"), source: z.string(), fit: z.enum(["cover", "contain", "blurfill"]).default("cover"),
   in: Time.optional(), out: Time.optional(), speed: z.number().positive().default(1), camera: Camera.optional(), window: Window.optional(),
   motion: z.enum(["none", "kenburns", "punch", "drift"]).default("none"), opacity: z.number().min(0).max(1).default(1),
@@ -57,7 +58,7 @@ export const ShapeLayer = z.strictObject({ type: z.literal("shape"), shape: z.li
   color: Color, radius: z.number().default(0), ...Span });
 export const OverlayLayer = z.strictObject({ type: z.literal("overlay"), source: z.string(), blend: z.enum(["screen", "add", "normal"]).default("screen"),
   opacity: z.number().min(0).max(1).default(0.9), motion: z.enum(["none", "sweep"]).default("none"), ...Span });
-export const Layer = z.discriminatedUnion("type", [MediaLayer, TextLayer, ShapeLayer, OverlayLayer]);
+export const Layer = z.discriminatedUnion("type", [MediaLayer, TextLayer, ShapeLayer, OverlayLayer, StageLayer]);
 export const Effect = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("grade"), lut: z.string().optional(), brightness: z.number().default(0), contrast: z.number().default(1),
     saturation: z.number().default(1), temperature: z.number().int().min(1000).max(40000).optional() }),

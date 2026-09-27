@@ -15,12 +15,12 @@ function fixture(root: string, workDir: string, media: string): RenderPlan {
     width: 64, height: 64, fps: { num: 15, den: 1 }, inputs: [{ id: "media", kind: "video", path: media,
       args: ["-i", media] }], graph: `[0:v]ass=filename=${escapePath(join(workDir, "title.ass"))}[vout]`,
     outLabel: "vout", assFiles: [{ path: join(workDir, "title.ass"), content: "text", fontsDir: workDir }],
-    fontFiles: [font], textBackend: "ass" as const, internalRate: 1, hash: root };
+    fontFiles: [font], textBackend: "ass" as const, internalRate: 1, stageDeps: [], hash: root };
   return { planVersion: 1, timelineHash: "timeline", profile: "final", output: { width: 64, height: 64,
     fps: { num: 15, den: 1 }, background: "#000000", container: "mp4", videoCodec: "h264", quality: "high" },
     totalFrames: 15, segments: [segment], join: { segments: [{ id: "one", frames: 15, renderFrames: 15 }],
       steps: [], totalFrames: 15, graph: null }, post: { overlays: [], effects: [], inputs: [], graph: null },
-    audio: null, workDir, tool: { ffmpeg: "ffmpeg", ffprobe: "ffprobe", version: "8.0", major: 8, minor: 0 } };
+    audio: null, stageRenders: [], workDir, tool: { ffmpeg: "ffmpeg", ffprobe: "ffprobe", version: "8.0", major: 8, minor: 0 } };
 }
 
 test("segment cache key ignores work directory and changes with input bytes", async () => {

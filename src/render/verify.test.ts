@@ -19,7 +19,7 @@ function segment(index: number, color: string, frames: number): SegmentPlan {
     width: SIZE, height: SIZE, fps: FPS, inputs: [{ id: "color", kind: "lavfi", lavfi: color,
       args: ["-f", "lavfi", "-i", `color=c=${escapeValue(color)}:s=${num(SIZE)}x${num(SIZE)}:` +
         `r=${num(FPS.num)}:d=${num(frames / FPS.num)}`] }],
-    graph: "[0:v]format=yuv420p[vout]", outLabel: "vout", assFiles: [], fontFiles: [], textBackend: "ass" as const, internalRate: 1, hash: color };
+    graph: "[0:v]format=yuv420p[vout]", outLabel: "vout", assFiles: [], fontFiles: [], textBackend: "ass" as const, internalRate: 1, stageDeps: [], hash: color };
 }
 
 /** The installed ffmpeg's version picks the graph transport (-/filter_complex needs 7.1+; CI Ubuntu has 6.1). */
@@ -42,7 +42,7 @@ function plan(root: string): RenderPlan {
     segments: [segment(0, "red", 17), segment(1, "blue", 15)],
     join: { segments: [{ id: "s0", frames: 15, renderFrames: 17 }, { id: "s1", frames: 15, renderFrames: 15 }],
       steps: [{ kind: "xfade", transition: "fade", frames: 8, offsetFrames: 7 }], totalFrames: 22, graph },
-    post: { overlays: [], effects: [], inputs: [], graph: null }, audio: null, workDir: join(root, "work"),
+    post: { overlays: [], effects: [], inputs: [], graph: null }, audio: null, stageRenders: [], workDir: join(root, "work"),
     tool: { ffmpeg: "ffmpeg", ffprobe: "ffprobe", ...localVersion } };
 }
 

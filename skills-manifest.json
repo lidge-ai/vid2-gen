@@ -38,13 +38,14 @@
   },
   "vid2-timeline": {
     "files": {
-      "SKILL.md": "741a55779ab127db859fdc286b6053380dac878cd3edaeff743ff436cfa3aedd",
-      "assets/timeline.v1.json": "eef74e8c129dad3d85baa9302fce50fb8565595d58234c9eee15ebcfba34649a",
+      "SKILL.md": "c12abb9f2123d06fde6261dfa627a1fabbc0ca5f4a9bd8eba8822707e6cdf747",
+      "assets/timeline.v1.json": "de93eadacfd83f507cc5752944a5b70aff2588d51590e9ac84b141dcd1e1df55",
       "references/errors.md": "17c8b9f69788a830f50c4c556c4b80fdfbfefdf270956457adfdb3cbd6e61a99",
       "references/recipes.md": "66b1042acbdadc680f4a3fc0194690e5250a51dd9d2dfd40c581e9ad168cae15",
       "references/schema.md": "33c8bb838fbcd42bd52da7da0c330a478ec741ddc2f206eacbc864c6b0014cef",
+      "references/stage.md": "3029b7bb0fdc8f71e6607c983aefee1e31a8f7bcc692144f2dc1ac5be0f52a76",
       "references/time.md": "d0ff70a8b2922b5f41a5dc4db27003a4667ea740806ddb270c18fc65f269e743"
     },
-    "sha256": "57c473b82671cf91b3e91f35820fe82ccf483dbcb9137cb8f66dcf0918900930"
+    "sha256": "e71bc494823fefb0507c38f6a54f55b8f10ce7458fcac6aece65b4cefe750ebf"
   }
 }

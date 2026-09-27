@@ -3,6 +3,7 @@
  * Owned by main (020 lane 0). Lanes build against these names; changes go through main.
  */
 import type { BeatGrid, Fps } from "../shared/index.ts";
+import type { StageEvent, StageSpec } from "../stage/types.ts";
 import type { ResolvedEffect, ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import type { GraphBuilder } from "./graph.ts";
 
@@ -65,7 +66,15 @@ export interface BuildContext {
   textBackend: TextBackend;
   /** Beat grid of the timeline, when it has one (beat-based animation durations). */
   beat?: BeatGrid;
+  /** Plan-wide stage render collector (010); absent in contexts that cannot hold stage layers (post pass). */
+  stages?: Map<string, StageRender> | undefined;
+  /** Stage events converted to absolute output frames (040 auto SFX). */
+  stageEvents?: AbsoluteStageEvent[] | undefined;
 }
+
+/** A stage clip the runner materializes before any dependent segment: FFV1 bgra Matroska at the segment's internal rate. */
+export interface StageRender { id: string; hash: string; spec: StageSpec; out: string; frames: number; width: number; height: number }
+export interface AbsoluteStageEvent extends StageEvent { absoluteFrame: number }
 
 /**
  * A built layer. "overlay": an rgba stream placed at x/y (expressions allowed, evaluated per frame) during the
@@ -112,6 +121,8 @@ export interface SegmentPlan {
   fontFiles: string[];
   textBackend: TextBackend;
   internalRate: number;
+  /** Ids of stageRenders this segment reads (materialized first). */
+  stageDeps: string[];
   hash: string;
 }
 
@@ -157,6 +168,8 @@ export interface RenderPlan {
   join: JoinPlan;
   post: PostPlan;
   audio: AudioPlan | null;
+  /** Stage clips (010); plans compiled by 0.1 omit it and the loader normalizes to []. */
+  stageRenders: StageRender[];
   workDir: string;
   tool: { ffmpeg: string; ffprobe: string; version: string; major: number; minor: number };
 }

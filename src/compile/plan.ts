@@ -5,7 +5,8 @@ import type { FfmpegInfo } from "../probe/index.ts";
 import type { ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import { effectFilters, requiredFilters } from "./effects/registry.ts";
 import { GraphBuilder } from "./graph.ts";
-import type { TextBackend, BuildContext, EffectOp, OverlayOp, PostPlan, ProfileName, RenderPlan, ResolvedOutput, SegmentPlan } from "./ir.ts";
+import type { AbsoluteStageEvent, TextBackend, BuildContext, EffectOp, OverlayOp, PostPlan, ProfileName, RenderPlan, ResolvedOutput, SegmentPlan,
+  StageRender } from "./ir.ts";
 import { planJoin } from "./joins.ts";
 import { buildAudioPlan } from "./audio-plan.ts";
 import { mixGraph } from "../audio/mix.ts";
@@ -53,7 +54,8 @@ function checkCapabilities(t: ResolvedTimeline, info: FfmpegInfo, backend: TextB
   const transitions = t.scenes.some((s) => s.transitionOut && s.transitionOut.frames > 0);
   const hasWindow = layers.some((l) => l.type === "media" && l.window);
   const filters = [...requiredFilters(effects), "overlay", ...(transitions ? ["xfade"] : []), ...(hasWindow ? ["alphamerge"] : [])];
-  requireFeatures(info, { filters }, "render plan");
+  const stage = layers.some((l) => l.type === "stage");
+  requireFeatures(info, { filters, ...(stage ? { encoders: ["ffv1"], decoders: ["ffv1"] } : {}) }, "render plan");
 }
 
 function overlayOps(overlays: ResolvedLayer[], t: ResolvedTimeline): OverlayOp[] {
@@ -90,9 +92,11 @@ export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): Rend
   const textBackend = pickTextBackend(opts.ffmpeg, opts.textBackend);
   checkCapabilities(t, opts.ffmpeg, textBackend);
   const o = opts.output;
+  const stages = new Map<string, StageRender>();
+  const stageEvents: AbsoluteStageEvent[] = [];
   const base: SegmentBase = { width: o.width, height: o.height, scale: o.scale, oversample: o.oversample, profile: opts.profile,
     fps: o.fps, background: o.background, sources: t.sources, fonts: t.fonts, workDir: opts.workDir,
-    pngDir: opts.pngDir ?? cacheDir("png"), textBackend, ...(t.beat ? { beat: t.beat } : {}) };
+    pngDir: opts.pngDir ?? cacheDir("png"), textBackend, ...(t.beat ? { beat: t.beat } : {}), stages, stageEvents };
   const segments: SegmentPlan[] = t.scenes.map((s, i) => compileSegment(s, base, i === t.scenes.length - 1));
   const join = planJoin(segments.map(({ id, frames, renderFrames }) => ({ id, frames, renderFrames })),
     t.scenes.map((s) => s.transitionOut), o.fps);
@@ -106,6 +110,7 @@ export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): Rend
     post: postPlan(t, base, t.totalFrames),
     audio: buildAudioPlan(t, { workDir: opts.workDir, container: o.container, timelinePath: opts.timelinePath ?? "<timeline.json>", mix: mixGraph }),
     workDir: opts.workDir,
+    stageRenders: [...stages.values()],
     tool: { ffmpeg: info.path, ffprobe: opts.ffprobe, version: info.version, major: info.major, minor: info.minor } };
 }
 

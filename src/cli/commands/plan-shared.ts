@@ -48,10 +48,15 @@ export async function loadPlanOrTimeline(file: string | undefined, cwd: string, 
   if (!file) throw new Vid2Error("E_INPUT", "render needs a timeline or plan path");
   if (file.endsWith(".plan.json")) {
     const path = join(cwd, file);
-    const plan = JSON.parse(await readFile(path, "utf8")) as RenderPlan;
+    const raw = JSON.parse(await readFile(path, "utf8")) as RenderPlan;
+    // 0.1 plans predate stage clips (010).
+    const plan: RenderPlan = { ...raw, stageRenders: raw.stageRenders ?? [],
+      segments: raw.segments.map((s) => ({ ...s, stageDeps: s.stageDeps ?? [] })) };
     if (plan.planVersion !== 1) throw new Vid2Error("E_INPUT", "unsupported plan version", { details: { planVersion: plan.planVersion } });
-    const inputs = [...plan.segments.flatMap((s) => s.inputs.flatMap((i) => (i.path ? [i.path] : []))), ...(plan.audio?.stems.map((s) => s.path) ?? [])];
-    const renderOutputs = new Set(plan.audio?.renders.map((r) => r.out) ?? []);
+    const stageFiles = plan.stageRenders.flatMap((r) => r.spec.nodes.flatMap((n) => (n.kind === "text" ? [n.font] : n.kind === "image" ? [n.image] : [])));
+    const inputs = [...plan.segments.flatMap((s) => s.inputs.flatMap((i) => (i.path ? [i.path] : []))), ...(plan.audio?.stems.map((s) => s.path) ?? []),
+      ...stageFiles];
+    const renderOutputs = new Set([...(plan.audio?.renders.map((r) => r.out) ?? []), ...plan.stageRenders.map((r) => r.out)]);
     const gone = inputs.find((p) => !renderOutputs.has(p) && !existsSync(p));
     if (gone) throw new Vid2Error("E_NOT_FOUND", `plan input is missing: ${gone}`, { fix: "re-run vid2 compile (and vid2 assets resolve if it was generated)" });
     return { plan, path, warnings: [] };
