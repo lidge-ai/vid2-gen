@@ -62,7 +62,7 @@ void test("capture writes a mark-only native session through injected runner", a
     return result();
   };
   try {
-    const captured = await captureNative({ ...options(out), duration: 0.2, runner, capabilities: caps([]) });
+    const captured = await captureNative({ ...options(out), duration: 0.2, runner, capabilities: caps([]), platform: "darwin" });
     assert.equal(captureInput, "2:none");
     assert.equal(captured.session.meta.surface, "native");
     assert.equal(captured.session.meta.scale, 2);
@@ -97,7 +97,7 @@ void test("capture runner maps denial and ambiguous device failures to distinct 
         if (cmd === "system_profiler") return result("{}");
         return result("", message, 1);
       };
-      await assert.rejects(captureNative({ ...options(join(root, code)), duration: 0.1, runner, capabilities: caps([]) }),
+      await assert.rejects(captureNative({ ...options(join(root, code)), duration: 0.1, runner, capabilities: caps([]), platform: "darwin" }),
         (error: unknown) => typeof error === "object" && error !== null && "code" in error && error.code === code);
     }
   } finally { rmSync(root, { recursive: true, force: true }); }

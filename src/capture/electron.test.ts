@@ -10,7 +10,7 @@ import { captureElectron, electronLaunch } from "./electron.ts";
 test("Electron main scripts use a resolved executable and preserve app args", () => {
   const dir = tempDir("vid2-electron-launch-");
   const script = join(dir, "main.js");
-  const binary = join(dir, "electron");
+  const binary = join(dir, process.platform === "win32" ? "electron.cmd" : "electron");
   writeFileSync(script, "// fixture\n");
   writeFileSync(binary, "#!/bin/sh\nexit 0\n");
   chmodSync(binary, 0o755);
