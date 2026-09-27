@@ -70,6 +70,15 @@ Every capture keeps an action log (clicks, typing, marks) next to the footage. A
 to zoom where things happen, draw a smooth synthetic cursor, or cue a sound on `{"event": "buy"}`. Typed text is redacted unless you pass
 `--record-text`. See [structure/capture.md](structure/capture.md).
 
+## Generated assets (optional ima2-gen)
+
+```json
+"sources": { "hero": { "type": "generate", "provider": "ima2", "kind": "image", "prompt": "a glowing film strip" } }
+```
+
+`vid2 assets resolve timeline.json` (or `vid2 render --generate`) asks a running [ima2-gen](https://github.com/lidge-ai/ima2-gen) for images
+and Grok video clips once and caches them; renders stay offline and repeatable. See [structure/assets.md](structure/assets.md).
+
 ## Sound
 
 ```json
@@ -90,7 +99,7 @@ under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step ser
 | `preview` | Planned wp7 | Inspect a composed frame |
 | `capture` | wp4 | Record web (Chromium), Electron, native screen and terminal footage with an action log |
 | `audio` | wp5 | Beat detection, synth beds, SFX, provider audio; mixing and mastering happen in `render` |
-| `assets` | Planned wp6 | Resolve local and optional generated media |
+| `assets` | wp6 | Generate images and Grok clips through ima2-gen (optional), cached by request |
 | `qa`, `init`, `skill` | Planned wp7 | Review output and install an agent workflow |
 
 The intended flow is **capture → author one timeline → resolve assets → compile → render → QA**. Rendering will use ffmpeg locally; generated assets remain optional. The [structure guide](structure/INDEX.md) explains module boundaries and the public CLI contract.

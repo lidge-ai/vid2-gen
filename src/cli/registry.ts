@@ -9,6 +9,7 @@ import { compile } from "./commands/compile.ts";
 import { render } from "./commands/render.ts";
 import { capture } from "./commands/capture.ts";
 import { audio } from "./commands/audio.ts";
+import { assets } from "./commands/assets.ts";
 
 export interface CommandOption {
   type: "string" | "boolean";
@@ -32,4 +33,4 @@ export function register(spec: CommandSpec): void {
   commands.set(spec.name, spec);
 }
 
-for (const spec of [doctor, schema, validate, resolve, compile, render, capture, audio, version, help]) register(spec);
+for (const spec of [doctor, schema, validate, resolve, compile, render, capture, audio, assets, version, help]) register(spec);

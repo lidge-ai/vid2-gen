@@ -17,6 +17,11 @@ function sourceIssue(t: Timeline, id: string, path: string, kinds: readonly stri
 function checkReferences(t: Timeline): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const add = (found: ValidationIssue | undefined): void => { if (found) issues.push(found); };
+  for (const [id, source] of Object.entries(t.sources)) {
+    if (source.type === "generate" && source.kind === "audio") {
+      issues.push(issue(`sources.${id}.kind`, "E_INPUT", "audio generation belongs in timeline.audio (vid2 audio generate)"));
+    }
+  }
   const seen = new Set<string>();
   for (const [si, scene] of t.scenes.entries()) {
     if (seen.has(scene.id)) issues.push(issue(`scenes.${si}.id`, "duplicate_scene", `duplicate scene id: ${scene.id}`));

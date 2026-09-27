@@ -22,10 +22,11 @@ export const render: CommandSpec = {
     "no-cache": { type: "boolean", description: "Ignore and do not write the segment cache" },
     hw: { type: "boolean", description: "Use a hardware H.264 encoder when available (approximate quality)" },
     jobs: { type: "string", description: "Parallel segment renders (default: half the CPUs)" },
+    generate: { type: "boolean", description: "Call asset providers (ima2) for generated sources that are not cached yet" },
   },
   async run({ args, values, cwd, stderr, json }) {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "render needs one timeline or plan path");
-    const { plan, path } = await loadPlanOrTimeline(args[0], cwd, profileOf(values["profile"]));
+    const { plan, path } = await loadPlanOrTimeline(args[0], cwd, profileOf(values["profile"]), { generate: values["generate"] === true });
     const out = typeof values["out"] === "string" ? resolve(cwd, values["out"]) : path.replace(/(\.plan)?\.json$/i, "") + ".mp4";
     const controller = new AbortController();
     const onSigint = (): void => controller.abort();

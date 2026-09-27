@@ -5,6 +5,7 @@ import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandSpec } from "../registry.ts";
 import { loadTimeline } from "./timeline-file.ts";
 import { loadCaptures } from "../../capture/index.ts";
+import { materializeSources } from "../../assets/index.ts";
 
 export const validate: CommandSpec = {
   name: "validate",
@@ -19,9 +20,12 @@ export const validate: CommandSpec = {
     const events = captures ? { events: captures.events } : {};
     const issues = validateTimeline(timeline, { baseDir, ...events });
     if (issues.length) throw new Vid2Error("E_INPUT", "timeline validation failed", { details: { issues } });
+    const status = await materializeSources(timeline, baseDir, { mode: "status" });
+    const warnings = status.assets.filter((a) => a.status === "missing").map((a) => `generated source ${a.sourceId} is not materialized yet (vid2 assets resolve ${args[0]})`);
     const resolved = resolveTimeline(timeline, { baseDir, ...events });
     return {
       command: "validate",
+      warnings,
       data: {
         issues,
         summary: {

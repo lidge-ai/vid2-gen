@@ -8,6 +8,8 @@ import { applyProfile } from "../../render/index.ts";
 import { cacheDir, Vid2Error } from "../../shared/index.ts";
 import { resolveTimeline, validateTimeline } from "../../timeline/index.ts";
 import { loadTimeline } from "./timeline-file.ts";
+import { existsSync } from "node:fs";
+import { materializeSources } from "../../assets/index.ts";
 import { decorateCaptureLayers, loadCaptures } from "../../capture/index.ts";
 
 export function profileOf(value: unknown): ProfileName {
@@ -16,10 +18,14 @@ export function profileOf(value: unknown): ProfileName {
   throw new Vid2Error("E_INPUT", `unknown profile: ${JSON.stringify(value)}`, { fix: "use --profile proxy or --profile final" });
 }
 
-export async function planFromTimeline(file: string | undefined, cwd: string, profile: ProfileName): Promise<{ plan: RenderPlan; path: string }> {
-  const { timeline, path } = await loadTimeline(file, cwd);
+export async function planFromTimeline(file: string | undefined, cwd: string, profile: ProfileName, opts: { generate?: boolean } = {}): Promise<{ plan: RenderPlan; path: string }> {
+  const { timeline: authored, path } = await loadTimeline(file, cwd);
   const baseDir = dirname(path);
-  const captures = await loadCaptures(timeline.sources, baseDir);
+  const captures = await loadCaptures(authored.sources, baseDir);
+  const authoredIssues = validateTimeline(authored, { baseDir, ...(captures ? { events: captures.events } : {}) });
+  if (authoredIssues.length) throw new Vid2Error("E_INPUT", "timeline validation failed", { details: { issues: authoredIssues } });
+  // Generated sources become local image/video files (050): manifest only, unless --generate.
+  const { timeline } = await materializeSources(authored, baseDir, { mode: opts.generate ? "generate" : "require" });
   const issues = validateTimeline(timeline, { baseDir, ...(captures ? { events: captures.events } : {}) });
   if (issues.length) throw new Vid2Error("E_INPUT", "timeline validation failed", { details: { issues } });
   const base = resolveTimeline(timeline, { baseDir, ...(captures ? { events: captures.events } : {}) });
@@ -34,13 +40,17 @@ export async function planFromTimeline(file: string | undefined, cwd: string, pr
 }
 
 /** A render input is either a timeline or a plan.json written by vid2 compile. */
-export async function loadPlanOrTimeline(file: string | undefined, cwd: string, profile: ProfileName): Promise<{ plan: RenderPlan; path: string }> {
+export async function loadPlanOrTimeline(file: string | undefined, cwd: string, profile: ProfileName, opts: { generate?: boolean } = {}): Promise<{ plan: RenderPlan; path: string }> {
   if (!file) throw new Vid2Error("E_INPUT", "render needs a timeline or plan path");
   if (file.endsWith(".plan.json")) {
     const path = join(cwd, file);
     const plan = JSON.parse(await readFile(path, "utf8")) as RenderPlan;
     if (plan.planVersion !== 1) throw new Vid2Error("E_INPUT", "unsupported plan version", { details: { planVersion: plan.planVersion } });
+    const inputs = [...plan.segments.flatMap((s) => s.inputs.flatMap((i) => (i.path ? [i.path] : []))), ...(plan.audio?.stems.map((s) => s.path) ?? [])];
+    const renderOutputs = new Set(plan.audio?.renders.map((r) => r.out) ?? []);
+    const gone = inputs.find((p) => !renderOutputs.has(p) && !existsSync(p));
+    if (gone) throw new Vid2Error("E_NOT_FOUND", `plan input is missing: ${gone}`, { fix: "re-run vid2 compile (and vid2 assets resolve if it was generated)" });
     return { plan, path };
   }
-  return planFromTimeline(file, cwd, profile);
+  return planFromTimeline(file, cwd, profile, opts);
 }

@@ -4,6 +4,7 @@ import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandSpec } from "../registry.ts";
 import { loadTimeline } from "./timeline-file.ts";
 import { decorateCaptureLayers, loadCaptures } from "../../capture/index.ts";
+import { materializeSources } from "../../assets/index.ts";
 
 export const resolve: CommandSpec = {
   name: "resolve",
@@ -14,8 +15,9 @@ export const resolve: CommandSpec = {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "resolve needs one timeline path");
     const { timeline, path } = await loadTimeline(args[0], cwd);
     const captures = await loadCaptures(timeline.sources, dirname(path));
-    const base = resolveTimeline(timeline, { baseDir: dirname(path), ...(captures ? { events: captures.events } : {}) });
+    const status = await materializeSources(timeline, dirname(path), { mode: "status" });
+    const base = resolveTimeline(status.timeline, { baseDir: dirname(path), ...(captures ? { events: captures.events } : {}) });
     const resolved = captures ? decorateCaptureLayers(base, captures.sessions) : base;
-    return { command: "resolve", data: resolved as unknown as Record<string, unknown> };
+    return { command: "resolve", data: { ...(resolved as unknown as Record<string, unknown>), assets: status.assets } };
   },
 };

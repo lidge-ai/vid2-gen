@@ -30,3 +30,13 @@ test("duplicate ids, missing fonts, and empty text spans are reported", () => {
   assert.ok(result.includes("missing_font"));
   assert.ok(result.includes("text_span"));
 });
+
+test("audio generate sources are rejected whether or not a layer uses them", () => {
+  const gen = { type: "generate", provider: "ima2", kind: "audio", prompt: "music" };
+  const unreferenced = TimelineSchema.parse({ version: 1, sources: { bed: gen }, scenes: [{ id: "one", duration: 1 }] });
+  const referenced = TimelineSchema.parse({ version: 1, sources: { bed: gen }, scenes: [{ id: "one", duration: 1, layers: [{ type: "media", source: "bed" }] }] });
+  for (const t of [unreferenced, referenced]) {
+    assert.ok(validateTimeline(t, { baseDir: "/" }).some((i) => i.path === "sources.bed.kind" && /timeline\.audio/.test(i.message)));
+  }
+});
+
