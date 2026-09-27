@@ -45,6 +45,8 @@ export interface TextNode extends NodeBase {
   letterSpacing: number;
   /** Number of visible glyphs (typing); omitted = all. Animatable through the "reveal" prop. */
   reveal?: number | undefined;
+  /** Before `until` (stage frame) the node shows chars[floor((frame - from) / step) mod length] instead of `text` (scramble/decode). */
+  scramble?: { chars: string; from: number; until: number; step: number } | undefined;
 }
 
 export interface ImageNode extends NodeBase { kind: "image"; image: string; width: number; height: number; radius: number; fit: "cover" | "contain" }

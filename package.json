@@ -41,6 +41,7 @@
     "dist",
     "schema",
     "assets/fonts",
+    "assets/icons",
     "skills",
     "templates",
     "skills-manifest.json",

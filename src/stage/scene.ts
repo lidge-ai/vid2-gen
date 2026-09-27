@@ -68,7 +68,7 @@ function itemFor(node: StageNode, world: World, sprites: SpriteCache): DrawItem 
 
 /** Draw items for a frame in paint order (z, then declaration order). Invisible nodes are omitted. */
 export function frameItems(spec: StageSpec, index: TrackIndex, frame: number, sprites: SpriteCache): DrawItem[] {
-  const evaluated = new Map(spec.nodes.map((n) => [n.key, nodeAt(n, index, frame, spec.fps)]));
+  const evaluated = new Map(spec.nodes.map((n) => [n.key, scrambled(nodeAt(n, index, frame, spec.fps), frame)]));
   const worlds = new Map<string, World>();
   const ordered = [...evaluated.values()].map((n, i) => ({ n, i })).sort((a, b) => a.n.z - b.n.z || a.i - b.i);
   const items: DrawItem[] = [];
@@ -84,6 +84,14 @@ export function tintOf(color: string | null): [number, number, number, number] |
   if (color === null) return null;
   const [r, g, b, a] = parseColor(color);
   return [r / 255, g / 255, b / 255, a / 255];
+}
+
+/** Text node showing its scramble character for this frame (before resolving to its own text). */
+function scrambled(node: StageNode, frame: number): StageNode {
+  if (node.kind !== "text" || !node.scramble || frame >= node.scramble.until) return node;
+  const { chars, from, step } = node.scramble;
+  const i = Math.max(0, Math.floor((frame - from) / Math.max(1, step))) % [...chars].length;
+  return { ...node, text: [...chars][i]! };
 }
 
 export type { Fps };
