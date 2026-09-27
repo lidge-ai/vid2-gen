@@ -1,0 +1,40 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { z } from "zod";
+import { TimelineSchema } from "./schema.ts";
+
+function fixture(name: string): unknown {
+  return JSON.parse(readFileSync(fileURLToPath(new URL(`../../tests/fixtures/timelines/${name}.json`, import.meta.url)), "utf8"));
+}
+
+test("minimal authored timeline receives nested defaults", () => {
+  const value = TimelineSchema.parse(fixture("minimal"));
+  assert.equal(value.output.width, 1920);
+  assert.equal(value.output.fps, 30);
+  assert.equal(value.scenes[0]?.layers[0]?.type, "text");
+  assert.deepEqual(value.sources, {});
+});
+
+test("invalid fixtures fail with precise paths", () => {
+  for (const [name, key] of [["invalid-unknown", "scenes.0"], ["invalid-time", "scenes.0.duration"], ["invalid-font", "fonts.bad"]]) {
+    if (!name || !key) throw new Error("invalid test case");
+    const result = TimelineSchema.safeParse(fixture(name));
+    assert.equal(result.success, false, name);
+    if (!result.success) assert.ok(result.error.issues.some(issue => issue.path.join(".").startsWith(key)), name);
+  }
+});
+
+test("published input schema keeps defaults optional and strict objects closed", () => {
+  const schema = z.toJSONSchema(TimelineSchema, { target: "draft-2020-12", io: "input" });
+  assert.deepEqual(schema.required, ["version", "scenes"]);
+  assert.equal(schema.additionalProperties, false);
+  assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: "1s" }], typo: true }).success, false);
+  assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: "1s", typo: true }] }).success, false);
+});
+
+test("font path or family is required at runtime", () => {
+  assert.equal(TimelineSchema.safeParse(fixture("invalid-font")).success, false);
+  assert.equal(TimelineSchema.safeParse({ version: 1, fonts: { display: { family: "Instrument Serif" } }, scenes: [{ id: "one", duration: 1 }] }).success, true);
+});

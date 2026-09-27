@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "beat": { "bpm": 120 },
+  "markers": { "bar3": { "bar": 3 }, "start": "1s" },
+  "scenes": [{ "id": "one", "duration": "6s" }],
+  "audio": { "cues": [{ "at": { "marker": "bar3", "offset": "-0.5s" }, "sfx": "hit" }] }
+}

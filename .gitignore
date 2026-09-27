@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vid2/
+coverage/
+*.log
+.DS_Store
+out/
+.tmp/

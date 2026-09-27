@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "beat": { "bpm": 120, "offset": "0.5s", "meter": 4 },
+  "markers": { "chorus": { "bar": 3, "beat": 1 } },
+  "scenes": [
+    { "id": "intro", "duration": "4b" },
+    { "id": "chorus", "duration": "4b" }
+  ],
+  "audio": { "cues": [{ "at": { "marker": "chorus", "offset": "-0.5s" }, "sfx": "hit" }] }
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../schema/timeline.v1.json",
+  "version": 1,
+  "scenes": [
+    { "id": "opening", "duration": "2s", "layers": [{ "type": "text", "text": "Hello" }] }
+  ]
+}
