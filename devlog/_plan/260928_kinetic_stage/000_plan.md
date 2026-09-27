@@ -91,3 +91,13 @@ Did not improve / open: FFV1 encode throughput at 1080p is unmeasured (bench cov
 stage in a big frame pays full-frame encode and overlay cost — revisit if dogfood renders are slow. What would prove the direction
 wrong: if kinetic layouts with 40+ glyph nodes per frame fall below real-time, sprite reuse per glyph must be restructured.
 Next: wp3 kinetic preset (020).
+
+wp2 implementation review (same reviewer, after a C→P misstep: the D note was committed after the receipt, so D refused the stale
+receipt and the cycle re-entered at P). Round 1 **FAIL**, 5 High, all real and fixed in 15fecb1a with regression tests: dirty
+signatures missed stroke width and image radius (now the full evaluated node + transform + opacity + clips); blur levels were two
+source-over draws (alpha 191 at blur 3) — now mixed per pixel and composited once; parsed fonts were cached by path — now re-read on
+size/mtime change and reset per clip; decoded images were keyed by path — see round 2; stage clips were not composited through the
+spare tail frames — now composited through `renderFrames` with `holdFrame` freezing evaluation. Round 2 **FAIL**: an image with an
+animated width vanished (lookup key used evaluated size) — fixed in 2ac48c0c by decoding each file once at native size (long side
+≤ 2048) and fitting per sprite with box filtering. Round 3 **PASS**. Lesson recorded for the next cycles: commit the D note before
+taking the Check receipt.
