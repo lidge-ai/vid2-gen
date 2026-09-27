@@ -74,3 +74,20 @@ weak for look and sound; Low: committed README still). All accepted and folded (
 `transitionChain` with local offsets; 030 `stageTextBoxes` in QA; 050 13-shot mapping, strip and sound checks; 060 release assets).
 Round 2 **FAIL** (field lacked grow/accent for shot 1; cue sample vs anchor; stale `JoinStep.filter`), folded. Round 3 **FAIL** (typing
 cadence measured on 10 fps strips; stage-event rate conversion), folded. Round 4 **PASS** with one wording note (average cadence), folded.
+
+### wp2 (stage core) — D, 2026-09-28
+
+Conclusion: the stage primitive works end to end. A stage layer compiles to a JSON `StageRender`, is materialized into a cached FFV1
+bgra clip before its segments, and composites with correct alpha; preview matches the full render. Evidence at vid2-gen 419669b2
+(commits 776dd064, dab23431, 13b1cf75, and the golden refresh): full gate `typecheck && lint && build && privacy:scan && skills:check &&
+npm test` exit 0, 252 pass / 7 skipped (receipt in the native cwd evidence dir); `src/stage/stage.test.ts` (spring closed form,
+first-spring hold, dirty-rect vs full byte equality over 45 frames, cold seek frame 37) and `src/stage/stage-render.test.ts` (moving rect
+at analytic x, 50 % alpha = 128 ±8, two cached stage events on re-render, plan JSON replay frame hash equal, preview ≤ 2 mean diff, 0.1
+plan replay, image/font content invalidation, E_SCHEMA issue paths, E_CAPABILITY encoder:ffv1); bench 77 fps at 1080p before encode.
+Plan deviations: the spring continuity bound in acceptance was corrected from 40 px to 20 % of travel per frame (a 400 px spring move
+peaks at ~63 px/frame at 30 fps, which is intended motion); SVG path flattening (`icons/path.ts`) landed early with the renderer
+because the icon node kind shares the sprite code; the built-in icon set remains 020 work.
+Did not improve / open: FFV1 encode throughput at 1080p is unmeasured (bench covers JS only); the clip is full-canvas, so a small
+stage in a big frame pays full-frame encode and overlay cost — revisit if dogfood renders are slow. What would prove the direction
+wrong: if kinetic layouts with 40+ glyph nodes per frame fall below real-time, sprite reuse per glyph must be restructured.
+Next: wp3 kinetic preset (020).
