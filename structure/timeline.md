@@ -4,7 +4,7 @@
 
 ## Shape
 
-The root has `version: 1`, at least one `scene`, optional `output`, `beat`, `sources`, `fonts`, `markers`, global `overlays` and `effects`, and `audio`. Each scene is one segment with a duration, layers, effects, and an optional transition to the next scene. `src/timeline/index.ts` is the public module boundary for the schema, `resolveTimeline`, and `validateTimeline`.
+The root has `version: 1`, at least one `scene`, optional `output`, `beat`, `sources`, `fonts`, `markers`, global `overlays` and `effects`, and `audio`. Each scene is one segment with a duration, layers, effects, and an optional transition to the next scene. Layer types are `media`, `text`, `shape`, `overlay` and `stage` (motion graphics, structure/stage.md; its strict schema lives in `src/timeline/stage-schema.ts` and shared primitives in `primitives.ts`). `src/timeline/index.ts` is the public module boundary for the schema, `resolveTimeline`, and `validateTimeline`.
 
 ```json
 {

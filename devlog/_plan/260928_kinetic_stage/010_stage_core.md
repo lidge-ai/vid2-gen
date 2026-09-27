@@ -67,11 +67,11 @@ generic path) → validate → `buildLayer` switch (exhaustive; tsc fails on a m
 4. **Cache**: second render reports the stage cached (logger event `stage` with `cached:true`) and does not spawn the stage encoder.
 5. **Plan replay**: `vid2 compile t.json -o p.json` then `vid2 render p.json` in a fresh process produces the same frame hash.
 6. **Missing capability**: fake FfmpegInfo without ffv1 → `E_CAPABILITY` exit 3 naming ffv1.
-7. **Validation**: duplicate node key and a track on an unknown node → `E_SCHEMA` issues with paths.
+7. **Validation**: duplicate node key and a track on an unknown node → `vid2 validate` fails with the existing public contract (`E_INPUT`, exit 2) and `details.issues` carrying `E_SCHEMA`-coded issues with paths (`scenes.0.layers.0.nodes.1.key`, `...tracks.0.node`).
 9. **Dirty-rect correctness**: text moving across a stationary pill; every frame of the dirty-rect render equals a full-recomposite
    render of the same frame (byte-equal buffers, test flag forces full recomposite).
    Seek case: `renderStageFrame(spec, 37)` rendered cold (no prior frames) equals frame 37 of the sequential render, where frame 37
-   contains a stationary pill and an icon that stopped moving at frame 20.
+   contains a stationary pill and an image node that stopped moving at frame 20 (the icon variant is tested in 020).
 10. **Image invalidation**: replacing an image source with different content of the same size and restoring its mtime changes the
    stage hash and the rendered pixels.
 11. **0.1 plan replay**: a committed 0.1-format plan fixture without `stageRenders` renders through `vid2 render plan.json`.
@@ -80,3 +80,37 @@ generic path) → validate → `buildLayer` switch (exhaustive; tsc fails on a m
 
 Verifiers: `npm run typecheck`, `npm run lint`, `npm run build`, `npm test` (scripts/test.mjs discovers `src/**/*.test.ts`, so new
 tests are read), `npm run privacy:scan`, `node scripts/schema-json.mjs --check` via the drift test.
+
+## wp2 P revalidation (2026-09-28)
+
+Previous D (wp1): roadmap locked and audited; direction unchanged: build the render primitive first. Revalidated against the source at
+86487a90: `requireFeatures` already supports `encoders` (`src/probe/requirements.ts:6`) and `FfmpegInfo` exposes `encoders`/`decoders`
+sets, so the capability check is `encoders: ["ffv1"]` plus decoder presence via `info.decoders.has("ffv1")` (new
+`decoders` field in `FeatureRequirements`); `scripts/test.mjs` discovers `src/**/*.test.ts` recursively, so `src/stage/*.test.ts` runs in
+`npm test`. Implementation notes fixed at P:
+
+- Sprites are **coverage masks** (Float32 0..1) for text, rect fill, rect stroke, shadow and glow; colour is applied at draw time, so
+  colour tracks (accent decay) never re-rasterize. Images are RGBA sprites.
+- Rect geometry (width/height/radius) animates by re-rasterizing the rect mask when those values change (cheap analytic SDF); text and
+  image sprites are reused across frames.
+- Scale buckets: content is rasterized at bucket 2^(k/4) ≥ the node's effective scale (max 4), then drawn with residual scale ≤ 1.
+- Matroska output is written with `-fflags +bitexact -flags:v +bitexact` so identical frames give identical files (segment cache keys
+  hash the clip bytes).
+- The `icon` node kind and the built-in icon set arrive with 020; 010 ships `text`, `image`, `rect`, `group`.
+- Authored stage keys use `at` (TimeLiteral, relative to the layer start); compile converts to stage frames with `toFrames(at) × rate`.
+
+wp2 tasks: t1 renderer core (types, springs, tracks, raster, sprites, composite, scene, images, encode, materialize); t2 schema +
+validation + JSON schema; t3 compiler integration (IR, stage layer builder, plan, capability check) and plan loader normalization; t4
+runner/preview materialization + logger events; t5 tests 010 #1–11 + bench script; t6 structure docs (stage.md, INDEX, compiler,
+render, timeline) and skills reference stub.
+- Stage cache key = hash(canonical spec, STAGE_VERSION, ffmpeg version, content hash of every referenced font file and image file).
+  Acceptance 10 also covers fonts: replacing a font file at the same path with different content changes the key.
+
+Reflection (architect 01a0e4f2, wp2): ALIGNED with two gaps, both folded (cold-seek test uses an image node; font content in the stage
+cache key + same-path font replacement test).
+- Keyframe semantics (`src/stage/tracks.ts`): an ordinary key is the value reached at its frame, eased from the previous key; a spring
+  key is a release at its frame from the track's current value toward its own value; a spring key that is the track's first key springs
+  from the node's authored base property (e.g. `x` of the node), so no track ever jumps. Test: a single spring key at frame 10 on `x`
+  (base 100 → 500) holds 100 until frame 10 and then moves continuously (|x(f+1) − x(f)| < 80 px = 20 % of the travel per frame at 30 fps).
+
+Audit wp2 round 1 (reviewer 01a0e4fa): FAIL, 2 High — first-key spring start value; validation exit contract — both folded above.

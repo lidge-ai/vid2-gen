@@ -1,6 +1,6 @@
 # Render runner
 
-`src/render` consumes a compiled `RenderPlan`. Segment graphs are written to files, rendered concurrently with a bounded job pool, checked with ffprobe, and cached by a content hash. The runner then joins the verified segments, applies the optional post graph, encodes the final video, verifies it, and writes `<out>.render.json`.
+`src/render` consumes a compiled `RenderPlan`. Segment graphs are written to files, rendered concurrently with a bounded job pool, checked with ffprobe, and cached by a content hash. Before any segment it materializes the plan's stage clips (`src/render/stages.ts`, structure/stage.md): content-keyed cache in `cacheDir("stage")`, otherwise a JS frame render piped into FFV1 and verified; `renderSegments` materializes only the requested segments' `stageDeps`. The runner then joins the verified segments, applies the optional post graph, encodes the final video, verifies it, and writes `<out>.render.json`.
 
 ## Profiles and encoders
 
