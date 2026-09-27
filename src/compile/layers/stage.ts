@@ -62,9 +62,16 @@ export function stageSpan(layer: { startFrame: number; endFrame: number }, ctx: 
 }
 
 export function specFor(layer: Stage, ctx: BuildContext): StageSpec {
+  const visible = (layer.endFrame - layer.startFrame) * ctx.rate;
+  const frames = stageSpan(layer, ctx);
   return { version: STAGE_VERSION, width: ctx.width, height: ctx.height, fps: { num: ctx.fps.num * ctx.rate, den: ctx.fps.den },
-    frames: stageSpan(layer, ctx), nodes: layer.nodes.map((n) => stageNode(n, ctx)), tracks: stageTracks(layer, ctx),
+    frames, ...(frames > visible ? { holdFrame: visible - 1 } : {}), nodes: layer.nodes.map((n) => stageNode(n, ctx)), tracks: stageTracks(layer, ctx),
     events: layer.events.map((e) => ({ frame: stageFrame(e.at, ctx), kind: e.kind, ...(e.sfx ? { sfx: e.sfx } : {}) })) };
+}
+
+/** Composite span of a stage layer: through the spare tail frames when it reaches the scene end (its clip holds the last state). */
+export function stageCompositeSpan(layer: { startFrame: number; endFrame: number }, ctx: BuildContext): { startFrame: number; endFrame: number } {
+  return { startFrame: layer.startFrame, endFrame: layer.endFrame >= ctx.frames ? ctx.renderFrames : layer.endFrame };
 }
 
 /** Register a compiled spec and composite its clip over the layer span. */

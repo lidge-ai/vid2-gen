@@ -80,3 +80,38 @@ void test("pill, glow and text produce visible coverage at expected places", () 
   assert.equal(alphaAt(2, 2), 0, "corner transparent");
   assert.ok(alphaAt(40, 60) > 200, "dot moved to y=60");
 });
+
+function rectSpec(tracks: StageSpec["tracks"], blur = 0): StageSpec {
+  return { version: 1, width: 80, height: 60, fps, frames: 6, events: [], tracks, nodes: [
+    { key: "r", kind: "rect", x: 40, y: 30, width: 40, height: 30, radius: 6, fill: "#ffffff", stroke: "#ff0000", strokeWidth: 1, ...base, blur }] };
+}
+
+void test("animated stroke width redraws: sequential frames equal cold frames", () => {
+  const spec = rectSpec([{ node: "r", prop: "strokeWidth", keys: [{ frame: 0, value: 1 }, { frame: 1, value: 6, ease: "linear" }] }]);
+  const seq = new StageRenderer(spec);
+  for (let n = 0; n < 3; n++) assert.ok(Buffer.from(seq.frame(n)).equals(Buffer.from(renderStageFrame(spec, n))), `frame ${n}`);
+});
+
+void test("intermediate blur keeps an opaque centre opaque", () => {
+  // Big enough that a true Gaussian of these radii leaves the centre fully covered; mixing levels must not lose alpha.
+  for (const blur of [2, 3, 5, 6]) {
+    const spec: StageSpec = { version: 1, width: 240, height: 200, fps, frames: 1, events: [], tracks: [], nodes: [
+      { key: "r", kind: "rect", x: 120, y: 100, width: 180, height: 150, radius: 6, fill: "#ffffff", strokeWidth: 0, ...base, blur }] };
+    const f = renderStageFrame(spec, 0);
+    assert.equal(f[(100 * 240 + 120) * 4 + 3], 255, `blur ${blur}`);
+  }
+});
+
+void test("a font replaced at the same path with the same mtime renders the new glyphs", async () => {
+  const { copyFileSync, mkdtempSync, statSync, utimesSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const path = join(mkdtempSync(join(tmpdir(), "vid2-font-")), "f.ttf");
+  copyFileSync(join(packageRoot(), "assets/fonts/Geist-Regular.ttf"), path);
+  const spec: StageSpec = { version: 1, width: 120, height: 40, fps, frames: 1, events: [], tracks: [], nodes: [
+    { key: "t", kind: "text", text: "Wide", font: path, size: 30, color: "#ffffff", letterSpacing: 0, x: 60, y: 20, ...base }] };
+  const before = Buffer.from(renderStageFrame(spec, 0));
+  const mtime = statSync(path).mtime;
+  copyFileSync(join(packageRoot(), "assets/fonts/InstrumentSerif-Regular.ttf"), path);
+  utimesSync(path, mtime, mtime);
+  assert.ok(!before.equals(Buffer.from(renderStageFrame(spec, 0))));
+});

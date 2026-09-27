@@ -12,7 +12,7 @@ import { buildShapeLayer } from "./layers/shape.ts";
 import { buildTextRuns } from "./layers/text.ts";
 import { buildRasterText } from "./layers/text-raster.ts";
 import { buildCursorOverlays } from "./layers/cursor.ts";
-import { buildStageLayer } from "./layers/stage.ts";
+import { buildStageLayer, stageCompositeSpan } from "./layers/stage.ts";
 
 export const COLOR = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
@@ -79,7 +79,7 @@ export function compositeLayers(ctx: BuildContext, canvas: string, layers: Resol
     if (layer.type === "text" && ctx.textBackend === "raster") { flush(); canvas = composite(ctx, canvas, buildRasterText(layer, ctx), layer); continue; }
     if (layer.type === "text") { run.push(layer); continue; }
     flush();
-    canvas = composite(ctx, canvas, buildLayer(layer, ctx), layer);
+    canvas = composite(ctx, canvas, buildLayer(layer, ctx), layer.type === "stage" ? stageCompositeSpan(layer, ctx) : layer);
     if (layer.type === "media" && layer.cursorTrack?.length && layer.cursor && layer.cursor.style !== "none") {
       for (const c of buildCursorOverlays(layer, layer.cursor.style, ctx)) canvas = composite(ctx, canvas, c.built, c.span);
     }

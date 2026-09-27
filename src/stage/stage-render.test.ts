@@ -7,7 +7,7 @@ import { encodePng } from "../compile/png.ts";
 import { compileTimeline } from "../compile/plan.ts";
 import { loadPlanOrTimeline, planFromTimeline } from "../cli/commands/plan-shared.ts";
 import { locateTools, probeFfmpeg } from "../probe/index.ts";
-import { renderPlan } from "../render/runner.ts";
+import { renderPlan, renderSegments } from "../render/runner.ts";
 import type { RenderEvent } from "../render/runner.ts";
 import { stageCacheKey } from "../render/stages.ts";
 import { packageRoot, runChecked, sha256 } from "../shared/index.ts";
@@ -110,6 +110,28 @@ void test("stage cache key follows image and font content, not paths or mtimes",
     assert.notEqual(first, second, "image content change");
     copyFileSync(join(packageRoot(), "assets/fonts/Geist-Bold.ttf"), font);
     assert.notEqual(await key(), second, "font content change");
+  });
+});
+
+void test("one image source at two fits keeps both decodes; spare tail frames hold the stage before a transition", async (t) => {
+  if (!requireFfmpeg(t)) return;
+  const dir = mkdtempSync(join(tmpdir(), "vid2-stage-img-"));
+  await withHome(dir, async () => {
+    const pixels = new Uint8Array(20 * 20 * 4);
+    for (let i = 0; i < 400; i++) pixels.set((i % 20) < 10 ? [255, 0, 0, 255] : [0, 0, 255, 255], i * 4);
+    writeFileSync(join(dir, "split.png"), encodePng(20, 20, 4, pixels));
+    const path = join(dir, "t.json");
+    writeFileSync(path, JSON.stringify({ version: 1, output: { width: 160, height: 90, fps: 10 }, sources: { split: { type: "image", path: "split.png" } },
+      scenes: [{ id: "a", duration: "1s", background: "#000000", transition: { type: "fade", duration: "0.4s" }, layers: [{ type: "stage", nodes: [
+        { kind: "image", key: "contain", source: "split", width: 60, height: 20, fit: "contain", x: 40, y: 45 },
+        { kind: "image", key: "cover", source: "split", width: 60, height: 20, fit: "cover", x: 120, y: 45 }] }] },
+        { id: "b", duration: "1s", background: "#000000" }] }));
+    const { plan } = await planFromTimeline(path, dir, "final");
+    const [seg] = await renderSegments(plan, ["a"], { out: join(dir, "x.mp4") });
+    const last = await rgbFrame(seg!.path, plan.segments[0]!.renderFrames - 1);
+    assert.ok(px(last, 12, 45).every((v) => v < 40), `contain letterbox is empty: ${px(last, 12, 45).join(",")}`);
+    assert.ok(px(last, 92, 45)[0]! > 180, `cover fills its left edge with red: ${px(last, 92, 45).join(",")}`);
+    assert.ok(px(last, 148, 45)[2]! > 180, "cover right edge is blue in the final spare frame");
   });
 });
 

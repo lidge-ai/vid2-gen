@@ -8,8 +8,10 @@ import { nodeAt, parseColor } from "./tracks.ts";
 import type { TrackIndex } from "./tracks.ts";
 import type { StageNode, StageSpec } from "./types.ts";
 
-export interface DrawPart { piece: Piece; matrix: Matrix; weight: number }
-export interface DrawItem { key: string; parts: DrawPart[]; opacity: number; clips: Clip[]; rect: Rect | null; signature: string }
+/** One blur-level variant of a piece; a node's layer mixes its variants per pixel before compositing once. */
+export interface Variant { sprite: Piece["sprite"]; matrix: Matrix; weight: number }
+export interface DrawLayer { tint: string | null; variants: Variant[] }
+export interface DrawItem { key: string; layers: DrawLayer[]; opacity: number; clips: Clip[]; rect: Rect | null; signature: string }
 
 interface World { matrix: Matrix; opacity: number; clips: Clip[] }
 
@@ -49,24 +51,19 @@ function itemFor(node: StageNode, world: World, sprites: SpriteCache): DrawItem 
   const m = world.matrix;
   const scale = scaleBucket(Math.max(Math.hypot(m[0], m[1]), Math.hypot(m[2], m[3])));
   const { low, high, t } = blurMix(node.blur);
-  const parts: DrawPart[] = [];
+  const layers: DrawLayer[] = [];
   for (const [level, weight] of [[low, 1 - t], [high, t]] as const) {
     if (weight <= 0.001) continue;
-    for (const piece of nodePieces(node, sprites, scale, level)) parts.push({ piece, matrix: spriteMatrix(m, piece), weight });
+    nodePieces(node, sprites, scale, level).forEach((piece, i) => {
+      const layer = layers[i] ?? (layers[i] = { tint: piece.tint, variants: [] });
+      layer.variants.push({ sprite: piece.sprite, matrix: spriteMatrix(m, piece), weight });
+    });
   }
   let rect: Rect | null = null;
-  for (const p of parts) rect = union(rect, bounds(p.matrix, p.piece.sprite.width, p.piece.sprite.height));
-  const tints = parts.map((p) => p.piece.tint ?? "").join(",");
-  const signature = JSON.stringify([m.map((v) => v.toFixed(4)), world.opacity.toFixed(4), node.blur.toFixed(3), tints,
-    parts.map((p) => p.piece.sprite.width + "x" + p.piece.sprite.height + ":" + p.weight.toFixed(3)), world.clips.length]);
-  return { key: node.key, parts, opacity: world.opacity, clips: world.clips, rect, signature: node.kind + signature + contentKey(node) };
-}
-
-function contentKey(node: StageNode): string {
-  if (node.kind === "text") return node.text + "|" + (node.reveal ?? "") + "|" + node.size;
-  if (node.kind === "rect") return `${node.width}|${node.height}|${node.radius}`;
-  if (node.kind === "icon") return `${node.size}|${node.progress}`;
-  return "";
+  for (const layer of layers) for (const v of layer.variants) rect = union(rect, bounds(v.matrix, v.sprite.width, v.sprite.height));
+  // Every evaluated property (geometry, colours, stroke, reveal, radius...) plus the resolved transform, opacity and clips.
+  const signature = JSON.stringify([node, m, world.opacity, world.clips.map((c) => [c.inverse, c.hx, c.hy, c.cx, c.cy, c.radius])]);
+  return { key: node.key, layers, opacity: world.opacity, clips: world.clips, rect, signature };
 }
 
 /** Draw items for a frame in paint order (z, then declaration order). Invisible nodes are omitted. */

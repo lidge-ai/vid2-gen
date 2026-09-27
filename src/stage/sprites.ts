@@ -44,6 +44,9 @@ export function nodeBox(node: StageNode): { width: number; height: number } {
   }
 }
 
+/** Decoded-image lookup key: the same file may be decoded at several sizes and fits. */
+export function imageKey(node: ImageNode): string { return `${node.image}|${node.fit}|${node.width}x${node.height}`; }
+
 function maskSprite(mask: Mask, pad: number, scale: number, sigma: number): Sprite {
   const data = blurChannel(mask.data, mask.width, mask.height, sigma * scale);
   return { width: mask.width, height: mask.height, ox: pad, oy: pad, scale, channels: 1, data };
@@ -127,9 +130,9 @@ export function nodePieces(node: StageNode, cache: SpriteCache, scale: number, b
       return [{ sprite: cache.get(key, () => iconSprite(node, scale, blur)), tint: node.color, dx: 0, dy: 0 }];
     }
     case "image": {
-      const image = cache.images.get(node.image);
+      const image = cache.images.get(imageKey(node));
       if (!image) return [];
-      const key = `image|${node.image}|${node.width}|${node.height}|${node.radius}|${scale}|${blur}`;
+      const key = `image|${imageKey(node)}|${node.radius}|${scale}|${blur}`;
       return [{ sprite: cache.get(key, () => imageSprite(node, image, scale, blur)), tint: null, dx: 0, dy: 0 }];
     }
   }

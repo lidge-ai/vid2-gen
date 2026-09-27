@@ -7,6 +7,7 @@ import { Canvas, intersect, union } from "./composite.ts";
 import type { Rect } from "./composite.ts";
 import { frameItems, tintOf } from "./scene.ts";
 import type { DrawItem } from "./scene.ts";
+import { resetFonts } from "./raster.ts";
 import { SpriteCache } from "./sprites.ts";
 import type { DecodedImage } from "./sprites.ts";
 import { indexTracks } from "./tracks.ts";
@@ -19,9 +20,7 @@ function paint(canvas: Canvas, items: DrawItem[], region: Rect): void {
   canvas.clear(region);
   for (const item of items) {
     if (!item.rect || !intersect(item.rect, region)) continue;
-    for (const part of item.parts) {
-      canvas.draw(part.piece.sprite, part.matrix, tintOf(part.piece.tint), item.opacity * part.weight, region, item.clips);
-    }
+    for (const layer of item.layers) canvas.draw(layer.variants, tintOf(layer.tint), item.opacity, region, item.clips);
   }
   canvas.export(region);
 }
@@ -50,6 +49,7 @@ export class StageRenderer {
   /** Test hook: always recomposite the full canvas. */
   forceFull = false;
   constructor(spec: StageSpec, images: Map<string, DecodedImage> = new Map()) {
+    resetFonts();
     this.spec = spec;
     this.canvas = new Canvas(spec.width, spec.height);
     this.index = indexTracks(spec.tracks);
@@ -57,7 +57,8 @@ export class StageRenderer {
   }
   /** Straight-alpha RGBA bytes of frame n (the returned view is reused by the next call). */
   frame(n: number): Uint8Array {
-    const items = frameItems(this.spec, this.index, n, this.sprites);
+    // Spare tail frames hold the last visible state (holdFrame) instead of evaluating tracks past the layer end.
+    const items = frameItems(this.spec, this.index, Math.min(n, this.spec.holdFrame ?? n), this.sprites);
     const full = this.canvas.full();
     let region: Rect | null = full;
     if (!this.forceFull && this.last && this.last.frame === n - 1) {

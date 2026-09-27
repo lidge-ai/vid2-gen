@@ -6,7 +6,7 @@ import { cacheDir, hashFile, hashJson, Vid2Error } from "../shared/index.ts";
 import { decodeImage } from "../stage/images.ts";
 import { encodeFrames } from "../stage/encode.ts";
 import { StageRenderer } from "../stage/render.ts";
-import { scaleBucket } from "../stage/sprites.ts";
+import { imageKey, scaleBucket } from "../stage/sprites.ts";
 import type { DecodedImage } from "../stage/sprites.ts";
 import type { StageNode, StageSpec } from "../stage/types.ts";
 import { STAGE_VERSION } from "../stage/types.ts";
@@ -39,12 +39,15 @@ function maxScale(node: StageNode, spec: StageSpec): number {
 }
 
 async function loadImages(spec: StageSpec, ffmpeg: string): Promise<Map<string, DecodedImage>> {
-  const images = new Map<string, DecodedImage>();
+  const largest = new Map<string, { node: Extract<StageNode, { kind: "image" }>; k: number }>();
   for (const node of spec.nodes) {
     if (node.kind !== "image") continue;
     const k = scaleBucket(maxScale(node, spec));
-    images.set(node.image, await decodeImage(ffmpeg, node.image, node.width * k, node.height * k, node.fit));
+    const key = imageKey(node);
+    if ((largest.get(key)?.k ?? 0) < k) largest.set(key, { node, k });
   }
+  const images = new Map<string, DecodedImage>();
+  for (const [key, { node, k }] of largest) images.set(key, await decodeImage(ffmpeg, node.image, node.width * k, node.height * k, node.fit));
   return images;
 }
 

@@ -1,7 +1,7 @@
 /** Coverage rasterizers for stage content: analytic rounded rectangles, OpenType glyph runs and stroked polylines. */
 import opentype from "opentype.js";
 import type { Font, FontPath } from "opentype.js";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { rasterizePaths } from "../compile/text/raster/rasterize.ts";
 
 export interface Mask { width: number; height: number; data: Float32Array }
@@ -34,10 +34,21 @@ export function roundedRectMask(w: number, h: number, radius: number, pad: numbe
   return mask;
 }
 
-const fonts = new Map<string, Font>();
+const fonts = new Map<string, { font: Font; stamp: string }>();
+const metrics = new Map<string, TextMetrics>();
+
+/** Forget parsed fonts and metrics (each stage clip starts fresh, so a font replaced at the same path is re-read). */
+export function resetFonts(): void { fonts.clear(); metrics.clear(); }
+
+/** Parsed font, re-read when the file's size or mtime changes. */
 export function loadFont(path: string): Font {
-  let font = fonts.get(path);
-  if (!font) { font = opentype.parse(readFileSync(path)); fonts.set(path, font); }
+  const st = statSync(path);
+  const stamp = `${st.size}|${st.mtimeMs}`;
+  const hit = fonts.get(path);
+  if (hit && hit.stamp === stamp) return hit.font;
+  const font = opentype.parse(readFileSync(path));
+  fonts.set(path, { font, stamp });
+  for (const key of metrics.keys()) if (key.startsWith(path + "|")) metrics.delete(key);
   return font;
 }
 
@@ -46,6 +57,9 @@ export interface TextMetrics { width: number; height: number; emSize: number; as
 /** Metrics of a single-line run at a libass-normalized size; advances[i] is the pen x before glyph i (length = glyphs + 1). */
 export function measureText(fontPath: string, text: string, size: number, letterSpacing = 0): TextMetrics {
   const font = loadFont(fontPath);
+  const key = `${fontPath}|${size}|${letterSpacing}|${text}`;
+  const hit = metrics.get(key);
+  if (hit) return hit;
   const emSize = size * font.unitsPerEm / (font.ascender - font.descender);
   const scale = emSize / font.unitsPerEm;
   const glyphs = [...text].map((ch) => font.charToGlyph(ch));
@@ -58,7 +72,9 @@ export function measureText(fontPath: string, text: string, size: number, letter
     advances.push(pen);
   });
   const width = Math.max(0, pen - (glyphs.length ? letterSpacing : 0));
-  return { width, height: size, emSize, ascent: emSize * font.ascender / font.unitsPerEm, advances };
+  const result = { width, height: size, emSize, ascent: emSize * font.ascender / font.unitsPerEm, advances };
+  metrics.set(key, result);
+  return result;
 }
 
 /** Coverage of the first `count` glyphs of a run, drawn at scale into a mask with padding pad (node px × scale). */

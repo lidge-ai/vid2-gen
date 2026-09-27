@@ -74,6 +74,8 @@ export interface StageSpec {
   /** Stage frame rate: output fps × the segment's internal rate. */
   fps: Fps;
   frames: number;
+  /** Frames after this one repeat it (the segment's spare tail frames past the layer end). */
+  holdFrame?: number | undefined;
   nodes: StageNode[];
   tracks: StageTrack[];
   events: StageEvent[];
