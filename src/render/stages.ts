@@ -6,7 +6,6 @@ import { cacheDir, hashFile, hashJson, Vid2Error } from "../shared/index.ts";
 import { decodeImage } from "../stage/images.ts";
 import { encodeFrames } from "../stage/encode.ts";
 import { StageRenderer } from "../stage/render.ts";
-import { imageKey, scaleBucket } from "../stage/sprites.ts";
 import type { DecodedImage } from "../stage/sprites.ts";
 import type { StageNode, StageSpec } from "../stage/types.ts";
 import { STAGE_VERSION } from "../stage/types.ts";
@@ -32,22 +31,12 @@ export async function stageCacheKey(render: StageRender, ffmpegVersion: string):
   return hashJson({ spec: { ...render.spec, nodes }, version: STAGE_VERSION, ffmpegVersion });
 }
 
-function maxScale(node: StageNode, spec: StageSpec): number {
-  const values = spec.tracks.filter((t) => t.node === node.key && ["scale", "scaleX", "scaleY"].includes(t.prop))
-    .flatMap((t) => t.keys.map((k) => (typeof k.value === "number" ? Math.abs(k.value) : 1)));
-  return Math.max(node.scale * Math.max(node.scaleX, node.scaleY), ...values.map((v) => v * node.scale));
-}
-
-async function loadImages(spec: StageSpec, ffmpeg: string): Promise<Map<string, DecodedImage>> {
-  const largest = new Map<string, { node: Extract<StageNode, { kind: "image" }>; k: number }>();
-  for (const node of spec.nodes) {
-    if (node.kind !== "image") continue;
-    const k = scaleBucket(maxScale(node, spec));
-    const key = imageKey(node);
-    if ((largest.get(key)?.k ?? 0) < k) largest.set(key, { node, k });
-  }
+/** One native-resolution decode per image file; sprites apply fit and size per frame. */
+async function loadImages(spec: StageSpec, ffmpeg: string, ffprobe: string): Promise<Map<string, DecodedImage>> {
   const images = new Map<string, DecodedImage>();
-  for (const [key, { node, k }] of largest) images.set(key, await decodeImage(ffmpeg, node.image, node.width * k, node.height * k, node.fit));
+  for (const path of new Set(spec.nodes.flatMap((n: StageNode) => (n.kind === "image" ? [n.image] : [])))) {
+    images.set(path, await decodeImage(ffmpeg, ffprobe, path));
+  }
   return images;
 }
 
@@ -58,7 +47,7 @@ async function exists(path: string): Promise<boolean> {
 const expected = (r: StageRender) => ({ width: r.width, height: r.height, frames: r.frames, pixFmt: "bgra" });
 
 async function renderFresh(plan: RenderPlan, render: StageRender, cached: string, opts: StageOptions): Promise<void> {
-  const images = await loadImages(render.spec, plan.tool.ffmpeg);
+  const images = await loadImages(render.spec, plan.tool.ffmpeg, plan.tool.ffprobe);
   const renderer = new StageRenderer(render.spec, images);
   const tmp = join(plan.workDir, `${render.id}.${process.pid}.tmp.mkv`);
   await encodeFrames({ ffmpeg: plan.tool.ffmpeg, out: tmp, width: render.width, height: render.height, fps: render.spec.fps,

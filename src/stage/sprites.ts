@@ -44,8 +44,28 @@ export function nodeBox(node: StageNode): { width: number; height: number } {
   }
 }
 
-/** Decoded-image lookup key: the same file may be decoded at several sizes and fits. */
-export function imageKey(node: ImageNode): string { return `${node.image}|${node.fit}|${node.width}x${node.height}`; }
+/** Source rectangle of the decoded image and destination rectangle inside a w×h box for a fit mode. */
+function fitRects(image: DecodedImage, w: number, h: number, fit: ImageNode["fit"]) {
+  const s = fit === "cover" ? Math.max(w / image.width, h / image.height) : Math.min(w / image.width, h / image.height);
+  const dw = fit === "cover" ? w : image.width * s;
+  const dh = fit === "cover" ? h : image.height * s;
+  return { s, dx: (w - dw) / 2, dy: (h - dh) / 2, dw, dh, sx: (image.width - dw / s) / 2, sy: (image.height - dh / s) / 2 };
+}
+
+/** Box-filtered straight RGBA of the decoded image over a source footprint (x0..x1, y0..y1) in source pixels. */
+function area(image: DecodedImage, x0: number, y0: number, x1: number, y1: number, out: number[]): void {
+  const ix0 = Math.max(0, Math.floor(x0)); const iy0 = Math.max(0, Math.floor(y0));
+  const ix1 = Math.min(image.width, Math.max(ix0 + 1, Math.ceil(x1))); const iy1 = Math.min(image.height, Math.max(iy0 + 1, Math.ceil(y1)));
+  out.fill(0);
+  let n = 0;
+  for (let y = iy0; y < iy1; y++) for (let x = ix0; x < ix1; x++) {
+    const i = (y * image.width + x) * 4;
+    const a = image.data[i + 3]! / 255;
+    out[0]! += image.data[i]! / 255 * a; out[1]! += image.data[i + 1]! / 255 * a; out[2]! += image.data[i + 2]! / 255 * a; out[3]! += a;
+    n++;
+  }
+  for (let c = 0; c < 4; c++) out[c] = out[c]! / Math.max(1, n);
+}
 
 function maskSprite(mask: Mask, pad: number, scale: number, sigma: number): Sprite {
   const data = blurChannel(mask.data, mask.width, mask.height, sigma * scale);
@@ -81,15 +101,16 @@ function imageSprite(node: ImageNode, image: DecodedImage, scale: number, blur: 
   const width = w + pad * 2;
   const height = h + pad * 2;
   const channels = [0, 1, 2, 3].map(() => new Float32Array(width * height));
+  const f = fitRects(image, w, h, node.fit);
+  const px = [0, 0, 0, 0];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const sx = Math.min(image.width - 1, Math.floor((x + 0.5) * image.width / w));
-    const sy = Math.min(image.height - 1, Math.floor((y + 0.5) * image.height / h));
-    const src = (sy * image.width + sx) * 4;
+    if (x + 1 <= f.dx || y + 1 <= f.dy || x >= f.dx + f.dw || y >= f.dy + f.dh) continue;
+    const sx0 = f.sx + (x - f.dx) / f.s;
+    const sy0 = f.sy + (y - f.dy) / f.s;
+    area(image, sx0, sy0, sx0 + 1 / f.s, sy0 + 1 / f.s, px);
     const cover = Math.max(0, Math.min(1, 0.5 - roundedBoxDistance(x + 0.5 - w / 2, y + 0.5 - h / 2, w / 2, h / 2, node.radius * scale)));
-    const a = image.data[src + 3]! / 255 * cover;
     const i = (y + pad) * width + x + pad;
-    for (let c = 0; c < 3; c++) channels[c]![i] = image.data[src + c]! / 255 * a;
-    channels[3]![i] = a;
+    for (let c = 0; c < 4; c++) channels[c]![i] = px[c]! * cover;
   }
   const blurred = channels.map((ch) => blurChannel(ch, width, height, blur * scale));
   const data = new Float32Array(width * height * 4);
@@ -130,9 +151,9 @@ export function nodePieces(node: StageNode, cache: SpriteCache, scale: number, b
       return [{ sprite: cache.get(key, () => iconSprite(node, scale, blur)), tint: node.color, dx: 0, dy: 0 }];
     }
     case "image": {
-      const image = cache.images.get(imageKey(node));
+      const image = cache.images.get(node.image);
       if (!image) return [];
-      const key = `image|${imageKey(node)}|${node.radius}|${scale}|${blur}`;
+      const key = `image|${node.image}|${node.fit}|${node.width}x${node.height}|${node.radius}|${scale}|${blur}`;
       return [{ sprite: cache.get(key, () => imageSprite(node, image, scale, blur)), tint: null, dx: 0, dy: 0 }];
     }
   }

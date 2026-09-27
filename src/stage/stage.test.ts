@@ -92,6 +92,23 @@ void test("animated stroke width redraws: sequential frames equal cold frames", 
   for (let n = 0; n < 3; n++) assert.ok(Buffer.from(seq.frame(n)).equals(Buffer.from(renderStageFrame(spec, n))), `frame ${n}`);
 });
 
+void test("an image with animated width stays visible and fits each frame's size", () => {
+  const data = new Uint8Array(8 * 8 * 4);
+  for (let i = 0; i < 64; i++) data.set((i % 8) < 4 ? [255, 0, 0, 255] : [0, 0, 255, 255], i * 4);
+  const images = new Map([["/img.png", { width: 8, height: 8, data }]]);
+  const spec: StageSpec = { version: 1, width: 80, height: 40, fps, frames: 4, events: [], nodes: [
+    { key: "i", kind: "image", image: "/img.png", width: 10, height: 20, radius: 0, fit: "contain", x: 40, y: 20, ...base }],
+    tracks: [{ node: "i", prop: "width", keys: [{ frame: 0, value: 10 }, { frame: 1, value: 20, ease: "linear" }] }] };
+  const seq = new StageRenderer(spec, images);
+  for (let n = 0; n < 3; n++) {
+    const f = seq.frame(n);
+    assert.equal(f[(20 * 80 + 40) * 4 + 3], 255, `centre visible at frame ${n}`);
+    assert.ok(Buffer.from(f).equals(Buffer.from(renderStageFrame(spec, n, images))), `frame ${n} sequential = cold`);
+  }
+  const last = seq.frame(3);
+  assert.ok(last[(20 * 80 + 33) * 4]! > 200 && last[(20 * 80 + 47) * 4 + 2]! > 200, "contain keeps the left red and right blue halves");
+});
+
 void test("intermediate blur keeps an opaque centre opaque", () => {
   // Big enough that a true Gaussian of these radii leaves the centre fully covered; mixing levels must not lose alpha.
   for (const blur of [2, 3, 5, 6]) {
