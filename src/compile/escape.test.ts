@@ -54,13 +54,12 @@ test("escaped paths survive a real ffmpeg graph file", async (t) => {
   if (!requireFfmpeg(t)) return;
   const dir = join(tempDir(), "it's, [odd] dir");
   mkdirSync(dir, { recursive: true });
-  const ass = join(dir, "t.ass");
-  writeFileSync(ass, "[Script Info]\nScriptType: v4.00+\nPlayResX: 64\nPlayResY: 36\n\n[V4+ Styles]\n" +
-    "Format: Name, Fontname, Fontsize, PrimaryColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV\n" +
-    "Style: D,Arial,20,&H00FFFFFF,&H00000000,0,0,1,0,0,5,0,0,0\n\n[Events]\nFormat: Layer, Start, End, Style, Text\n" +
-    "Dialogue: 0,0:00:00.00,0:00:01.00,D,A\n");
+  // movie (file path) and metadata (free text) exist in every ffmpeg build, unlike ass/drawtext.
+  const png = join(dir, "it's [1], x.png");
+  const made = await run("ffmpeg", ["-hide_banner", "-v", "error", "-f", "lavfi", "-i", "color=c=red:s=8x8", "-frames:v", "1", "-y", png]);
+  assert.equal(made.code, 0, made.stderr);
   const graphFile = join(dir, "g.txt");
-  writeFileSync(graphFile, `[0:v]ass=filename=${escapePath(ass)}:fontsdir=${escapePath(dir)},drawtext=text=${escapeValue("a: 'b', c")}:fontsize=8[out]`);
+  writeFileSync(graphFile, `movie=filename=${escapePath(png)}[m];[0:v][m]overlay=0:0,metadata=mode=add:key=vid2:value=${escapeValue("a: 'b', c")}[out]`);
   const info = await probeFfmpeg();
   const flag = info.major > 7 || (info.major === 7 && info.minor >= 1) ? "-/filter_complex" : "-filter_complex_script";
   const res = await run("ffmpeg", ["-hide_banner", "-v", "error", "-f", "lavfi", "-i", "color=c=black:s=64x36:d=0.2", flag, graphFile,

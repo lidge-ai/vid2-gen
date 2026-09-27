@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { test } from "node:test";
 import { run, runChecked, Vid2Error } from "../shared/index.ts";
@@ -21,6 +22,13 @@ function segment(index: number, color: string, frames: number): SegmentPlan {
     graph: "[0:v]format=yuv420p[vout]", outLabel: "vout", assFiles: [], fontFiles: [], textBackend: "ass" as const, internalRate: 1, hash: color };
 }
 
+/** The installed ffmpeg's version picks the graph transport (-/filter_complex needs 7.1+; CI Ubuntu has 6.1). */
+const localVersion = (() => {
+  const text = spawnSync("ffmpeg", ["-hide_banner", "-version"], { encoding: "utf8" }).stdout ?? "";
+  const m = /ffmpeg version n?(\d+)\.(\d+)/.exec(text);
+  return m ? { version: `${m[1]}.${m[2]}`, major: Number(m[1]), minor: Number(m[2]) } : { version: "8.0", major: 8, minor: 0 };
+})();
+
 function plan(root: string): RenderPlan {
   const graph = `[0:v]fps=${num(FPS.num)},settb=AVTB,setpts=PTS-STARTPTS,format=yuv420p,setsar=1,` +
     `scale=out_range=tv,trim=end_frame=${num(15)},setpts=PTS-STARTPTS[a];` +
@@ -35,7 +43,7 @@ function plan(root: string): RenderPlan {
     join: { segments: [{ id: "s0", frames: 15, renderFrames: 17 }, { id: "s1", frames: 15, renderFrames: 15 }],
       steps: [{ kind: "xfade", transition: "fade", frames: 8, offsetFrames: 7 }], totalFrames: 22, graph },
     post: { overlays: [], effects: [], inputs: [], graph: null }, audio: null, workDir: join(root, "work"),
-    tool: { ffmpeg: "ffmpeg", ffprobe: "ffprobe", version: "8.0.1", major: 8, minor: 0 } };
+    tool: { ffmpeg: "ffmpeg", ffprobe: "ffprobe", ...localVersion } };
 }
 
 async function luma(path: string, frame: number): Promise<number> {
