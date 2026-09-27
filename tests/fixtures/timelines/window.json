@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": { "clip": { "type": "video", "path": "media/motion.mp4" } },
+  "scenes": [{
+    "id": "window", "duration": "2s", "background": "#101010",
+    "layers": [{ "type": "media", "source": "clip", "window": { "x": 80, "y": 45, "width": 160, "height": 90, "radius": 12, "shadow": true, "border": true, "perspective": { "rx": 0, "ry": 10 } } }]
+  }]
+}

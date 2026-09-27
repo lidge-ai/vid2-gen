@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": { "clip": { "type": "video", "path": "media/motion.mp4" } },
+  "scenes": [{
+    "id": "motion", "duration": "2s", "background": "#202020",
+    "layers": [{ "type": "media", "source": "clip" }],
+    "effects": [{ "type": "motionblur", "frames": 3 }]
+  }]
+}

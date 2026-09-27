@@ -47,14 +47,25 @@ vid2 resolve timeline.json --json
 vid2 schema --json
 ```
 
-`validate` checks the schema and relationships, while `resolve` turns authored times into frames. The committed [JSON Schema](schema/timeline.v1.json) describes authored input; runtime validation also checks relationships such as source references and transition lengths. **The foundations release does not produce a video file.** The render command arrives in wp3.
+`validate` checks the schema and relationships, while `resolve` turns authored times into frames. The committed [JSON Schema](schema/timeline.v1.json) describes authored input; runtime validation also checks relationships such as source references and transition lengths.
+
+## Render a timeline
+
+```bash
+vid2 render timeline.json -o intro.mp4 --profile proxy   # half size, fast
+vid2 render timeline.json -o intro.mp4                   # final quality
+vid2 compile timeline.json -o intro.plan.json            # inspect the ffmpeg plan
+```
+
+Each scene renders as its own cached segment, transitions are joined with exact frame math, and the output is checked with ffprobe (frame count, size, pixel format, faststart). Text uses libass with the bundled Geist, Geist Mono and Instrument Serif fonts (SIL OFL).
 
 ## Commands and delivery
 
 | Command | Availability | Purpose |
 |---|---|---|
 | `doctor`, `schema`, `validate`, `resolve`, `help`, `version` | 0.1 foundations (wp2) | Discover tools, inspect the contract, and validate or resolve timelines |
-| `compile`, `render`, `preview` | Planned wp3 and wp7 | Build and render video; inspect a composed frame |
+| `compile`, `render` | wp3 | Compile a timeline to an ffmpeg plan and render it |
+| `preview` | Planned wp7 | Inspect a composed frame |
 | `capture` | Planned wp4 | Record real product footage and events |
 | `audio` | Planned wp5 | Beat grid, sound synthesis, and mixing |
 | `assets` | Planned wp6 | Resolve local and optional generated media |

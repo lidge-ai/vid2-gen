@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": { "still": { "type": "image", "path": "media/red.png" } },
+  "scenes": [{
+    "id": "zoom", "duration": "2s", "background": "#000000",
+    "layers": [{ "type": "media", "source": "still", "camera": [
+      { "at": "0s", "zoom": 0.5 }, { "at": "1s", "zoom": 1 }
+    ] }]
+  }]
+}

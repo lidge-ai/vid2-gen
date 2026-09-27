@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "scenes": [
+    { "id": "red", "duration": "2s", "background": "#ff0000", "transition": { "type": "fade", "duration": "0.5s" } },
+    { "id": "blue", "duration": "2s", "background": "#0000ff" }
+  ]
+}

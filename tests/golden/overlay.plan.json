@@ -1,0 +1,94 @@
+{
+  "planVersion": 1,
+  "timelineHash": "<HASH>",
+  "profile": "final",
+  "output": {
+    "width": 320,
+    "height": 180,
+    "fps": {
+      "num": 15,
+      "den": 1
+    },
+    "background": "#000000",
+    "container": "mp4",
+    "videoCodec": "h264",
+    "quality": "high"
+  },
+  "totalFrames": 30,
+  "segments": [
+    {
+      "id": "seg-0-glow",
+      "sceneId": "glow",
+      "index": 0,
+      "frames": 30,
+      "renderFrames": 30,
+      "width": 320,
+      "height": 180,
+      "fps": {
+        "num": 15,
+        "den": 1
+      },
+      "inputs": [
+        {
+          "id": "in0",
+          "kind": "lavfi",
+          "lavfi": "color=c=#202020:s=320x180:r=15:d=2",
+          "args": [
+            "-f",
+            "lavfi",
+            "-i",
+            "color=c=#202020:s=320x180:r=15:d=2"
+          ]
+        },
+        {
+          "id": "in1",
+          "kind": "image",
+          "path": "<FIXTURES>/media/glow.png",
+          "args": [
+            "-framerate",
+            "15/1",
+            "-loop",
+            "1",
+            "-t",
+            "1",
+            "-i",
+            "<FIXTURES>/media/glow.png"
+          ]
+        }
+      ],
+      "graph": "[0:v]format=rgba,setsar=1[s1];\n[1:v]scale=in_range=auto:out_range=tv,scale=320:180:force_original_aspect_ratio=increase:flags=lanczos,crop=320:180,fps=15/1,format=rgba,setsar=1[s2];\n[s2]format=gbrp,tpad=start_duration=0.533333:stop_duration=0.466667:color=black,trim=end_frame=30,setpts=PTS-STARTPTS[s3];\n[s1]format=gbrp[s4];\n[s4][s3]blend=all_mode=screen:all_opacity=1,format=rgba[s5];\n[s5]trim=end_frame=30,setpts=PTS-STARTPTS,format=yuv420p,setsar=1[vout]",
+      "outLabel": "vout",
+      "assFiles": [],
+      "fontFiles": [],
+      "internalRate": 1,
+      "hash": "<HASH>"
+    }
+  ],
+  "join": {
+    "segments": [
+      {
+        "id": "seg-0-glow",
+        "frames": 30,
+        "renderFrames": 30
+      }
+    ],
+    "steps": [],
+    "totalFrames": 30,
+    "graph": null
+  },
+  "post": {
+    "overlays": [],
+    "effects": [],
+    "inputs": [],
+    "graph": null
+  },
+  "audio": null,
+  "workDir": "<WORK>",
+  "tool": {
+    "ffmpeg": "ffmpeg",
+    "ffprobe": "ffprobe",
+    "version": "8.0.1",
+    "major": 8,
+    "minor": 0
+  }
+}

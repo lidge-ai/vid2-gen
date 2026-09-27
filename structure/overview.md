@@ -7,15 +7,19 @@ timeline.json → strict schema → relational validation → frame resolution
                                          ↓
                                    CLI JSON result
 ffmpeg/ffprobe → capability probe → doctor report
+
+resolved timeline → compile (RenderPlan) → render: segments → join → post → verified mp4
 ```
 
-The planned pipeline extends the resolved timeline with capture, asset materialization, compilation, rendering, and QA. Those stages are not part of the foundations implementation.
+Capture, audio, asset materialization, and QA extend this pipeline in later phases.
 
 | Module | Responsibility | Boundary |
 |---|---|---|
 | `src/shared` | Errors, process execution, time and path utilities | No feature ownership |
 | `src/timeline` | Schema, time resolution, relational validation | Imports shared; no CLI output |
 | `src/probe` | Tool location and capability inspection | Imports shared; no timeline mutation |
+| `src/compile` | Timeline → RenderPlan (filtergraphs, ASS text, joins) | Imports timeline, probe, shared; never render |
+| `src/render` | Runs a RenderPlan with ffmpeg; cache, progress, verification | Imports compile types only |
 | `src/cli` | Parsing, command registration, output contract | Calls timeline and probe public indexes |
 | `src/index.ts` | Package API | Exposes supported public types/functions |
 | `bin/vid2.js` | npm executable | Loads `dist/cli/index.js`, with checkout source fallback |

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,4 +27,16 @@ test("packed install runs outside the checkout", { skip: process.env["VID2_PACK_
   const data = JSON.parse(command(launcher, args, root)) as { ok: boolean; data: Record<string, unknown> };
   assert.equal(data.ok, true);
   assert.equal(data.data["version"], "0.1.0");
+
+  // wp3 package contract: the installed CLI renders a 1 s timeline with bundled fonts, verified by ffprobe.
+  const timeline = join(root, "smoke.json");
+  writeFileSync(timeline, JSON.stringify({ version: 1, output: { width: 160, height: 90, fps: 15 },
+    scenes: [{ id: "smoke", duration: "1s", layers: [{ type: "text", text: "vid2", size: 24 }] }] }));
+  const out = join(root, "smoke.mp4");
+  const renderArgs = ["render", timeline, "-o", out, "--profile", "final", "--json"];
+  const rendered = JSON.parse(command(launcher, process.platform === "win32" ? [args[0]!, ...renderArgs] : renderArgs, root)) as { ok: boolean };
+  assert.equal(rendered.ok, true);
+  const frames = command("ffprobe", ["-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
+    "-of", "csv=p=0", out], root).trim();
+  assert.equal(frames, "15");
 });

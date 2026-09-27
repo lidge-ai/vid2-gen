@@ -40,6 +40,7 @@
     "bin",
     "dist",
     "schema",
+    "assets/fonts",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"

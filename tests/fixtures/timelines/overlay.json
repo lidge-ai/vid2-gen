@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": { "glow": { "type": "image", "path": "media/glow.png" } },
+  "scenes": [{
+    "id": "glow", "duration": "2s", "background": "#202020",
+    "layers": [{ "type": "overlay", "source": "glow", "blend": "screen", "opacity": 1, "start": "0.5s", "end": "1.5s" }]
+  }]
+}

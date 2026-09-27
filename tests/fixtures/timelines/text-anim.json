@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "scenes": [{
+    "id": "title", "duration": "2s", "background": "#202020",
+    "layers": [{ "type": "text", "text": "VID2", "size": 54, "color": "#ffffff", "animation": "rise", "start": "0.5s", "end": "1.8s" }]
+  }]
+}

@@ -5,6 +5,8 @@ import { validate } from "./commands/validate.ts";
 import { resolve } from "./commands/resolve.ts";
 import { version } from "./commands/version.ts";
 import { help } from "./commands/help.ts";
+import { compile } from "./commands/compile.ts";
+import { render } from "./commands/render.ts";
 
 export interface CommandOption {
   type: "string" | "boolean";
@@ -28,4 +30,4 @@ export function register(spec: CommandSpec): void {
   commands.set(spec.name, spec);
 }
 
-for (const spec of [doctor, schema, validate, resolve, version, help]) register(spec);
+for (const spec of [doctor, schema, validate, resolve, compile, render, version, help]) register(spec);

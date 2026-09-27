@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": { "still": { "type": "image", "path": "media/red.png" } },
+  "scenes": [{
+    "id": "delayed", "duration": "3s", "background": "#000000",
+    "layers": [{ "type": "media", "source": "still", "start": "2s", "end": "3s" }]
+  }]
+}

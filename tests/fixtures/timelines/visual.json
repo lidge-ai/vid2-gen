@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": { "clip": { "type": "video", "path": "media/motion.mp4" } },
+  "scenes": [
+    { "id": "opening", "duration": "4.25s", "background": "#201010", "transition": { "type": "fade", "duration": "0.5s" },
+      "layers": [
+        { "type": "media", "source": "clip", "window": { "x": 48, "y": 34, "width": 224, "height": 112, "radius": 12, "shadow": false, "border": true } },
+        { "type": "text", "text": "VID2", "x": 160, "y": 158, "size": 36, "animation": "rise", "start": "0.5s", "end": "2.5s" }
+      ] },
+    { "id": "ending", "duration": "4.25s", "background": "#101020", "layers": [
+      { "type": "text", "text": "CUT TO THE BEAT", "size": 32, "animation": "rise" }
+    ] }
+  ]
+}
