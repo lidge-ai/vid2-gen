@@ -26,7 +26,7 @@ confidences for review; "b" literals always index the fixed grid.
 | `music: {provider: "elevenlabs" or "acestep", prompt}` | provider music from the cache |
 | `cues: [{at, sfx, volume?, anchor?}]` | `sfx` is `preset:<name>`, a source id, or `elevenlabs:<prompt>` |
 | `voice: [{source, at}] or [{tts: {text, voice?, language?, provider?}, at}]` | voice-over; music ducks under it |
-| `autoCues` | whoosh on transitions, impact on drops, click and typing ticks on capture actions (default on with synth music) |
+| `autoCues` | whoosh on transitions, impact on drops, click and typing ticks on capture actions, and stage events (glyph → type at −6 dB, icon → pop, click, grow → riser ending on the event, state → swoosh-up, tick → soft click; tokens silent) with per-stage limits of 55 ms between cues of one preset and 10 per rolling second; an auto cue within 80 ms of an authored cue is dropped (default on with synth music) |
 | `loudness: {target, truePeak}` | default −14 LUFS, −1 dBTP |
 
 SFX presets (pure lavfi, no files): whoosh, riser, click, impact, pop, type, swoosh-up, shimmer. Each has an anchor: `start` (click, impact, pop:

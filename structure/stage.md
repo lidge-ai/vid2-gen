@@ -84,3 +84,31 @@ pixels once. The rest of the pipeline treats the result as a stage clip.
 - **Validation** (`src/timeline/validate-kinetic.ts`): unknown icons, empty states, duplicate keys in one state, an `expand` token not on
   screen, and (on resolved frames) states out of order or at/after the layer end. It imports the dependency-free token and icon tables
   from `src/stage` so validation and compilation tokenize identically.
+
+## UI components (`field`, `bars`, `ticker`, `chips`)
+
+`src/compile/layers/components.ts` resolves fonts, icons and times, and calls the presets in `src/stage/presets/{field,bars,ticker,chips}.ts`
+on a `SpecBuilder`. All four share `presets/style.ts` (`theme: dark|light` plus per-layer overrides of fill, stroke, radius, glow, text,
+muted, accent, track, shadow).
+
+- **field**: pill (fill, stroke, glow, shadow) with an optional placeholder; typed glyphs are one text node each, revealed at their
+  typing time and tinted by `accent` (decays); `grow` widens the pill (critically damped, centred on `x`) to text + 2·padX up to
+  `maxWidth`; the caret rect follows the advance and blinks when idle; `mask` swaps glyphs for evenly spaced bullets; `clear` fades
+  them; `cursor` (I-beam, arrow or hand from `src/stage/icons/cursors.ts`) glides to the field, and `click` scales it and emits a ripple
+  and a `click` event. Events: `glyph` every third character, `click`.
+- **bars**: per row a track, a bar growing (ease out) to value/max × width in stagger order, the highlighted row in the accent colour
+  with a glow, a label and note inside the bar, and a value that counts up through `TextNode.counter` (renderer-evaluated). Event:
+  `grow` when the highlighted bar finishes.
+- **ticker**: an optional prefix and a column of items (optional icon) that rolls up one row per `interval` on the move spring; depth
+  opacity 1 / 0.45 / 0.25 / 0.12, rows above the active one fade out. Event: `tick` per step.
+- **chips**: pills (icon, text, note) entering at their `at` with a slide, fade and blur; an optional connector is a `path` node (SVG path
+  in node pixels, drawn by `progress`) from `connector.from` to the chip, with a travelling dot. Event: `token` per chip.
+
+The `path` node kind (`types.ts` `PathNode`) draws an arbitrary stroked path inside explicit bounds; `TextNode.counter` and
+`TextNode.scramble` are the two text effects evaluated by the renderer rather than keyed.
+
+## QA
+
+`src/compile/layers/stage-text.ts` compiles each stage-family layer at scale 1 (fonts resolved into `cacheDir("qa-fonts")`) and
+`src/stage/settle.ts` finds every text node's first frame after 0.4 s of full opacity. `vid2 qa` samples the background just outside each
+box on that frame and warns below 4.5:1 (text under 40 px) or 3:1.

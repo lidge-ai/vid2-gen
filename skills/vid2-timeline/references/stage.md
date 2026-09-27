@@ -52,3 +52,28 @@ layer start. Presets (`kinetic`, `field`, `bars`, `ticker`, `chips`) build on th
 - Reading highlight on light scenes: `"color":"#1C1C1E","highlight":{"dim":"#C7C7CC","sweep":"0.12s"}`.
 - App-opens reveal: a state with `"expand": {"token":"icon:app#0","to":"frame"}` grows that icon (image source) to full frame; cut or fade
   to the next scene when it covers the frame.
+
+## UI components
+
+```json
+{ "type": "field", "x": 960, "y": 540, "width": 520, "grow": { "maxWidth": 1300 }, "placeholder": "Describe an image…",
+  "accent": {}, "cursor": { "from": { "x": 1500, "y": 900 }, "at": "0.7s", "click": "0.8s" },
+  "typing": [ { "at": "1s", "text": "a cat astronaut, 35mm film" } ], "mask": { "at": "3s" } }
+{ "type": "bars", "x": 360, "y": 380, "width": 1000, "max": 12, "unit": "", "delay": "0.2s",
+  "items": [ { "label": "ima2", "note": "12 parallel", "value": 12, "highlight": true }, { "label": "Chat tab", "value": 1 } ] }
+{ "type": "ticker", "x": 520, "y": 540, "prefix": "ima2 can", "items": [ { "text": "text to image", "icon": "image" }, { "text": "edit", "icon": "wand" } ] }
+{ "type": "chips", "x": 900, "y": 300, "connector": { "from": { "x": 600, "y": 540 } },
+  "items": [ { "at": "0.4s", "text": "Spawned job", "icon": "sparkles", "note": "cat astronaut" } ] }
+```
+
+`theme` is `dark` (default) or `light`; `style` overrides colours. Bars and ticker use `delay` (relative to the layer start) because
+`start` is the layer span. Rebuild real UI with these instead of screen-recording it when the moment is about one input, one number or
+one list; keep real capture for proof shots.
+
+## Transitions that feel like the app opening
+
+- `{ "type": "zoomfrom", "duration": "0.6s", "rect": { "x": 900, "y": 480, "width": 120, "height": 120, "radius": 28 } }` grows the next
+  scene out of that rect (for example the app icon's position in the previous scene); the next scene is rescaled into it.
+- `{ "type": "iris", "duration": "0.5s", "center": { "x": 960, "y": 540 } }` opens a circle from a point.
+- With `audio.autoCues: true` every non-cut transition gets a whoosh, and stage events add typing ticks, pops, clicks, a riser that ends
+  when an expand fills the frame, and a swoosh when three or more words move. Authored cues within 80 ms win.

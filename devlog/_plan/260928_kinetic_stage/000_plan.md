@@ -118,3 +118,20 @@ briefly; the stroke-icon expand hands off to a flat fill plate rather than morph
 if the dogfood film needs per-token timing that states cannot express (e.g. words entering mid-state on audio beats), states must gain
 per-token `at`.
 Next: wp4 components, transitions and auto SFX (030 + 040).
+
+### wp4 (components, transitions, sound from motion) — D, 2026-09-28
+
+Conclusion: the UI moments of the reference are now presets — `field` (grow, accent, caret, cursor + click ripple, mask), `bars`
+(stagger grow, glow, count-up), `ticker` (prefix + rolling list with depth fade) and `chips` (connector path + travelling dot) — plus the
+`zoomfrom`/`iris` transitions and SFX derived from animation. Evidence: `src/stage/presets/components.test.ts` (5),
+`src/compile/transitions.test.ts` (off-centre zoomfrom: (225,75) samples B's top-right quadrant where a mask would show top-left;
+outside = A; iris; preview ≤ 2 mean diff; proxy rect scaled), `src/audio/stage-cues.test.ts`, `src/compile/stage-audio.test.ts`
+(absolute clock through a 0.5 s fade and motion blur rate 3; authored-cue precedence; riser end = expand settle frame),
+`src/qa/stage-contrast.test.ts` (light-grey field flagged, dark field clean, custom font), and a smoke render reviewed as a contact sheet
+(`/tmp/vid2-comp`, master −14.1 LUFS).
+Found during build: ffmpeg expression registers (`st`/`ld`) race across xfade slice threads and produced noisy frames; the custom
+expressions are now register-free (recorded in structure/compiler.md). Did not improve / open: component sizes and paddings are tuned by
+eye on one smoke timeline; stroke-only cursors read lighter than the filled pointers in the reference. What would prove the direction
+wrong: if the dogfood film needs layouts the four presets cannot express, raw `stage` becomes the main authoring path and needs a
+friendlier schema.
+Next: wp5 dogfood film, kinetic-launch template and direction guidance (050).

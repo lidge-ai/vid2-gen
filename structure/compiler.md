@@ -29,6 +29,9 @@ expanded background canvas and rescales keys to ≥ 1; the expanded canvas is ca
 
 ## Joins
 
+Custom transitions `zoomfrom` (next scene rescaled into a rect that grows to the frame) and `iris` (circle from a point) are `xfade=transition=custom` expressions built by `src/compile/transitions.ts` on `gbrp` input: progress is `1 − P` (ffmpeg's `P` runs 1 → 0), resampling selects `b0/b1/b2` by `PLANE`, and the expression uses no `st()/ld()` registers because xfade's slice threads share them. `JoinStep.spec` keeps the definition (geometry scaled to the output) so preview rebuilds the same filter with its local offset.
+
+
 Segment inputs are normalized (`fps, settb=AVTB, setpts=PTS-STARTPTS`). Before each step the accumulated stream is trimmed to
 `start_i + T_i` frames; cuts use `concat`, transitions use `xfade=offset=start_i/fps:duration=T_i/fps` computed from the rational fps.
 The runner rejects any step with `offset + duration > len(acc)` (xfade would silently drop the second clip).

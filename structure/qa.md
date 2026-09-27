@@ -15,7 +15,7 @@
 | frozen | warn | freezedetect n=−60 dB d=3 (stills are legitimate; `--strict-motion` makes it a failure) |
 | loudness | warn (fail when TP > target + 0.5) | ebur128 integrated within target ± 1 LU |
 | silence | warn | silencedetect when audio is expected |
-| text_safe, contrast | warn | from the timeline: text boxes inside 5 % margins; WCAG ratio ≥ 3 against the sampled background |
+| text_safe, contrast | warn | from the timeline: text boxes inside 5 % margins; WCAG ratio ≥ 3 against the sampled background; stage-family text (kinetic, field, bars, ticker, chips) at its settled frame with ≥ 4.5 under 40 px, ≥ 3 above (structure/stage.md) |
 
 Audio checks are `skipped` for a video without an audio stream unless `--expect-audio` or the timeline has `audio`. Waivers (CLI or `qa.waive` in the
 timeline) keep the issue in the report with its reason. Exit 6 only when an open `fail` issue remains.
