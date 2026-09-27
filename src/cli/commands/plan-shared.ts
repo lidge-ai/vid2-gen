@@ -8,6 +8,7 @@ import { applyProfile } from "../../render/index.ts";
 import { cacheDir, Vid2Error } from "../../shared/index.ts";
 import { resolveTimeline, validateTimeline } from "../../timeline/index.ts";
 import { loadTimeline } from "./timeline-file.ts";
+import { decorateCaptureLayers, loadCaptures } from "../../capture/index.ts";
 
 export function profileOf(value: unknown): ProfileName {
   if (value === undefined) return "final";
@@ -18,9 +19,11 @@ export function profileOf(value: unknown): ProfileName {
 export async function planFromTimeline(file: string | undefined, cwd: string, profile: ProfileName): Promise<{ plan: RenderPlan; path: string }> {
   const { timeline, path } = await loadTimeline(file, cwd);
   const baseDir = dirname(path);
-  const issues = validateTimeline(timeline, { baseDir });
+  const captures = await loadCaptures(timeline.sources, baseDir);
+  const issues = validateTimeline(timeline, { baseDir, ...(captures ? { events: captures.events } : {}) });
   if (issues.length) throw new Vid2Error("E_INPUT", "timeline validation failed", { details: { issues } });
-  const resolved = resolveTimeline(timeline, { baseDir });
+  const base = resolveTimeline(timeline, { baseDir, ...(captures ? { events: captures.events } : {}) });
+  const resolved = captures ? decorateCaptureLayers(base, captures.sessions) : base;
   const tools = locateTools();
   const ffmpeg = await probeFfmpeg({ tools });
   const hash = timelineHash(resolved);

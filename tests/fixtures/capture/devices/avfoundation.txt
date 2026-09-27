@@ -1,0 +1,10 @@
+[AVFoundation indev @ 0xADDR] AVFoundation video devices:
+[AVFoundation indev @ 0xADDR] [0] MacBook Pro Camera
+[AVFoundation indev @ 0xADDR] [1] MacBook Pro Desk View Camera
+[AVFoundation indev @ 0xADDR] [2] Capture screen 0
+[AVFoundation indev @ 0xADDR] AVFoundation audio devices:
+[AVFoundation indev @ 0xADDR] [0] ZoomAudioDevice
+[AVFoundation indev @ 0xADDR] [1] MacBook Pro Microphone
+[in#0 @ 0xADDR] Error opening input: Input/output error
+Error opening input file .
+Error opening input files: Input/output error

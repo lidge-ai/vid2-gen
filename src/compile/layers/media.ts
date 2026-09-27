@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { Vid2Error } from "../../shared/errors.ts";
 import { framesToSeconds } from "../../shared/time.ts";
 import { escapeValue, num } from "../escape.ts";
@@ -7,6 +9,16 @@ import { buildWindowLayer } from "./window.ts";
 
 type Media = LayerOf<"media">;
 type Source = BuildContext["sources"][string];
+
+/** Footage file of a capture session directory (session.json "footage", default footage.mp4). */
+export function captureFootage(sessionDir: string): string {
+  try {
+    const meta = JSON.parse(readFileSync(join(sessionDir, "session.json"), "utf8")) as { footage?: string };
+    return join(sessionDir, meta.footage ?? "footage.mp4");
+  } catch (cause) {
+    throw new Vid2Error("E_NOT_FOUND", `capture session not found: ${sessionDir}`, { cause, fix: "run vid2 capture first or fix the source path" });
+  }
+}
 
 export function layerRate(ctx: BuildContext): string {
   return `${num(ctx.fps.num * ctx.rate)}/${num(ctx.fps.den)}`;
@@ -23,8 +35,14 @@ export function pngInput(path: string, seconds: number, ctx: BuildContext): stri
 }
 
 export function sourceInput(source: Source, seconds: number, ctx: BuildContext, opts: { inSeconds?: number; speed?: number } = {}): string {
-  if (source.type === "generate" || source.type === "capture" || source.type === "audio") {
-    throw new Vid2Error("E_CAPABILITY", `source type ${source.type} cannot be rendered as video in wp3`);
+  if (source.type === "generate" || source.type === "audio") {
+    throw new Vid2Error("E_CAPABILITY", `source type ${source.type} cannot be rendered as video`,
+      { fix: source.type === "generate" ? "run vid2 assets to materialize generated sources first" : "use audio sources in timeline.audio" });
+  }
+  if (source.type === "capture") {
+    const footage = captureFootage(source.session);
+    const speed = opts.speed ?? 1;
+    return ctx.inputs.add({ kind: "video", path: footage, args: ["-ss", num(opts.inSeconds ?? 0), "-t", num(seconds * speed), "-i", footage] });
   }
   if (source.type === "color") {
     const lavfi = `color=c=${escapeValue(source.color)}:s=${num(ctx.width)}x${num(ctx.height)}:r=${layerRate(ctx)}:d=${num(seconds)}`;
@@ -61,7 +79,10 @@ export function prepareMedia(layer: Media, ctx: BuildContext, width: number, hei
   const duration = spanSeconds(layer, ctx);
   const input = sourceInput(source, duration, ctx, { ...(layer.inSeconds === undefined ? {} : { inSeconds: layer.inSeconds }), speed: layer.speed });
   const rate = layerRate(ctx);
-  const speed = source.type === "video" ? [`setpts=(PTS-STARTPTS)/${num(layer.speed)}`, `fps=${rate}`] : [`fps=${rate}`];
+  // Footage shorter than its layer holds the last frame (no black tail); the stream is then cut to the span.
+  const moving = source.type === "video" || source.type === "capture";
+  const speed = moving ? [`setpts=(PTS-STARTPTS)/${num(layer.speed)}`, `fps=${rate}`,
+    `tpad=stop_mode=clone:stop_duration=${num(duration)}`, `trim=duration=${num(duration)}`] : [`fps=${rate}`];
   const fit = fitted(input, layer.fit, width, height, ctx);
   const video = ctx.graph.add([fit], speed);
   if (!layer.camera && layer.motion === "none") return video;

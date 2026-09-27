@@ -723,6 +723,30 @@
                       "minimum": 0,
                       "maximum": 4
                     },
+                    "cursor": {
+                      "type": "object",
+                      "properties": {
+                        "style": {
+                          "default": "arrow",
+                          "type": "string",
+                          "enum": [
+                            "arrow",
+                            "dot",
+                            "none"
+                          ]
+                        },
+                        "ripple": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "scale": {
+                          "default": 1,
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "additionalProperties": false
+                    },
                     "start": {
                       "default": 0,
                       "anyOf": [

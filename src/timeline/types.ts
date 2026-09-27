@@ -37,7 +37,9 @@ export interface ResolvedSpan {
 
 export type Layer = Timeline["scenes"][number]["layers"][number];
 export type Effect = Timeline["effects"][number];
-export type ResolvedLayer = Layer & ResolvedSpan & { inFrame?: number; outFrame?: number; inSeconds?: number; outSeconds?: number };
+/** Cursor position in canvas px (after fit and camera) per layer-relative frame; produced from capture actions (030). */
+export interface CursorTrackSample { frame: number; x: number; y: number; scale: number; alpha: number; ripples: { x: number; y: number; age: number }[] }
+export type ResolvedLayer = Layer & ResolvedSpan & { inFrame?: number; outFrame?: number; inSeconds?: number; outSeconds?: number; cursorTrack?: CursorTrackSample[] };
 export type ResolvedEffect = Effect & { atFrame?: number; atSeconds?: number; absoluteAtFrame?: number; absoluteAtSeconds?: number };
 
 export interface ResolvedTransition { type: string; frames: number }

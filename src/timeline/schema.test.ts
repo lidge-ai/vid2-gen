@@ -38,3 +38,14 @@ test("font path or family is required at runtime", () => {
   assert.equal(TimelineSchema.safeParse(fixture("invalid-font")).success, false);
   assert.equal(TimelineSchema.safeParse({ version: 1, fonts: { display: { family: "Instrument Serif" } }, scenes: [{ id: "one", duration: 1 }] }).success, true);
 });
+
+test("media cursor is optional, defaulted and closed", () => {
+  const base = { version: 1, sources: { cap: { type: "capture", session: "demo.vid2cap" } } };
+  const layer = (cursor: unknown) => ({ ...base, scenes: [{ id: "one", duration: "1s", layers: [{ type: "media", source: "cap", cursor }] }] });
+  const parsed = TimelineSchema.parse(layer({}));
+  const media = parsed.scenes[0]!.layers[0]!;
+  assert.deepEqual(media.type === "media" ? media.cursor : null, { style: "arrow", ripple: true, scale: 1 });
+  assert.equal(TimelineSchema.safeParse(layer({ style: "dot", typo: 1 })).success, false);
+  assert.equal(TimelineSchema.safeParse(layer({ style: "laser" })).success, false);
+});
+

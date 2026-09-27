@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,9 @@ test("packed install runs outside the checkout", { skip: process.env["VID2_PACK_
   const packed = JSON.parse(command("npm", ["pack", "--json", "--pack-destination", root], repo)) as { filename: string }[];
   const tarball = join(root, packed[0]!.filename);
   command("npm", ["install", "--prefix", root, "--ignore-scripts", tarball], root);
+  // W4-05: the optional native input hook is never a package dependency.
+  const installed = JSON.parse(readFileSync(join(root, "node_modules", "vid2-gen", "package.json"), "utf8")) as Record<string, Record<string, string> | undefined>;
+  for (const field of ["dependencies", "optionalDependencies", "peerDependencies"]) assert.equal(installed[field]?.["uiohook-napi"], undefined);
   const executable = join(root, "node_modules", ".bin", "vid2");
   const launcher = process.platform === "win32" ? process.execPath : executable;
   const args = process.platform === "win32"

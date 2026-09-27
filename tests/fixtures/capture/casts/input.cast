@@ -1,0 +1,5 @@
+{"version":2,"width":80,"height":24,"timestamp":0,"env":{"TERM":"xterm-256color"}}
+[0.1,"o","hello"]
+[0.25,"i","v"]
+[0.4,"i","id2"]
+[0.5,"o","done"]

@@ -51,9 +51,13 @@ jobs:
       - if: runner.os == 'Windows'
         run: choco install ffmpeg -y --no-progress
       - run: npm ci
+      - if: runner.os == 'Linux'
+        run: npx playwright-core install --with-deps chromium
       - run: npm test
         env:
           VID2_REQUIRE_FFMPEG: '1'
+          # Ubuntu must run the web capture e2e (Chromium installed above); other OSes may skip it.
+          VID2_REQUIRE_PLAYWRIGHT: ${{ runner.os == 'Linux' && '1' || '' }}
           # Homebrew ffmpeg ships without libass; macOS exercises the raster text backend.
           VID2_REQUIRE_LIBASS: ${{ runner.os != 'macOS' && '1' || '' }}
 

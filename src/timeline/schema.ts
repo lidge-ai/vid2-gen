@@ -43,7 +43,9 @@ export const MediaLayer = z.strictObject({ type: z.literal("media"), source: z.s
   in: Time.optional(), out: Time.optional(), speed: z.number().positive().default(1), camera: Camera.optional(), window: Window.optional(),
   motion: z.enum(["none", "kenburns", "punch", "drift"]).default("none"), opacity: z.number().min(0).max(1).default(1),
   chroma: z.strictObject({ color: Color, similarity: z.number().default(0.2), blend: z.number().default(0.05) }).optional(),
-  volume: z.number().min(0).max(4).default(0), ...Span });
+  volume: z.number().min(0).max(4).default(0),
+  cursor: z.strictObject({ style: z.enum(["arrow", "dot", "none"]).default("arrow"), ripple: z.boolean().default(true), scale: z.number().positive().default(1) }).optional(),
+  ...Span });
 export const TextLayer = z.strictObject({ type: z.literal("text"), text: z.string().min(1), font: z.string().default("sans"),
   weight: z.enum(["regular", "semibold", "bold", "black", "italic"]).default("bold"), size: z.number().positive().default(72), color: Color.default("#F5F5F2"),
   x: z.union([z.number(), z.literal("center")]).default("center"), y: z.union([z.number(), z.literal("center")]).default("center"),

@@ -8,5 +8,7 @@ Current implementation contracts live here. Read the owning document before chan
 4. [Probe](probe.md) — ffmpeg discovery, capabilities, doctor.
 5. [Compiler](compiler.md) — render IR, segments, layers, motion, joins, escaping.
 6. [Render](render.md) — profiles, cache, runner, verification.
+7. [Text](text.md) — libass and raster text backends.
+8. [Capture](capture.md) — sessions, surfaces, clock rule, auto camera and cursor.
 
 The [active roadmap](../devlog/_plan/260927_vid2_roadmap/000_plan.md) records future work; these documents describe the current implementation.

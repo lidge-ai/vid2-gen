@@ -59,6 +59,17 @@ vid2 compile timeline.json -o intro.plan.json            # inspect the ffmpeg pl
 
 Each scene renders as its own cached segment, transitions are joined with exact frame math, and the output is checked with ffprobe (frame count, size, pixel format, faststart). Text uses libass with the bundled Geist, Geist Mono and Instrument Serif fonts (SIL OFL).
 
+## Capture your real app
+
+```bash
+vid2 capture web --url http://localhost:3000 --steps flow.json --out demo      # Chromium, action log + footage
+vid2 capture native --display 0 --duration 10 --out desk                        # macOS screen via ffmpeg
+```
+
+Every capture keeps an action log (clicks, typing, marks) next to the footage. A timeline can then say `"camera": {"auto": "events"}`
+to zoom where things happen, draw a smooth synthetic cursor, or cue a sound on `{"event": "buy"}`. Typed text is redacted unless you pass
+`--record-text`. See [structure/capture.md](structure/capture.md).
+
 ## Commands and delivery
 
 | Command | Availability | Purpose |
@@ -66,7 +77,7 @@ Each scene renders as its own cached segment, transitions are joined with exact 
 | `doctor`, `schema`, `validate`, `resolve`, `help`, `version` | 0.1 foundations (wp2) | Discover tools, inspect the contract, and validate or resolve timelines |
 | `compile`, `render` | wp3 | Compile a timeline to an ffmpeg plan and render it |
 | `preview` | Planned wp7 | Inspect a composed frame |
-| `capture` | Planned wp4 | Record real product footage and events |
+| `capture` | wp4 | Record web (Chromium), Electron, native screen and terminal footage with an action log |
 | `audio` | Planned wp5 | Beat grid, sound synthesis, and mixing |
 | `assets` | Planned wp6 | Resolve local and optional generated media |
 | `qa`, `init`, `skill` | Planned wp7 | Review output and install an agent workflow |

@@ -1,0 +1,8 @@
+# Representative DirectShow/ddagrab listing; Windows host did not have ffmpeg installed.
+[dshow @ 0xADDR] DirectShow video devices (some may be both video and audio devices)
+[dshow @ 0xADDR]  "Integrated Camera"
+[dshow @ 0xADDR]     Alternative name "@device_pnp_\\?\\usb#vid_0000"
+[dshow @ 0xADDR] DirectShow audio devices
+[dshow @ 0xADDR]  "Microphone Array"
+[dshow @ 0xADDR]     Alternative name "@device_cm_{0000}"
+[Parsed_ddagrab_0 @ 0xADDR] DDA capture source available for output_idx=0
