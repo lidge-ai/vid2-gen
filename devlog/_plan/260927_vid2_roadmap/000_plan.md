@@ -154,3 +154,8 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   sources in every CLI entry path, `render --generate`. Receipt: 222 tests (216 pass); live ima2 generated real images on the ready OAuth
   lane; Grok video is an honest gap (disconnected, "Grok login required"). Findings folded: listed models are not readiness; the default model
   is a constant sentinel so hashes are computable offline. Direction for wp7: qa, preview, packaged skill, templates.
+- **wp7 D (2026-09-28):** agent layer shipped (36ead0e8..296bf28b): qa evidence report, preview through the real composition, six packaged
+  skills with install, four templates with init (feature-demo ships a recorded session), --placeholders, capabilities. Receipt: 246 tests
+  (240 pass), all templates init → render → qa, second skill install changes nothing; CI green. Finding folded: opentype.js 2 always runs ccmp
+  and crashes on Instrument Serif, so raster text is shaped glyph by glyph (macOS CI found it). Direction for wp8: a dogfood launch video for
+  vid2 made with vid2 (real capture + ima2 hero + synth music), QA'd, embedded in the README.
