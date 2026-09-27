@@ -1,0 +1,4 @@
+{"id":"a1","seq":0,"kind":"goto","tMs":1.240625,"endMs":14.797208,"frame":0,"source":"agent"}
+{"id":"a2","seq":1,"kind":"hover","tMs":3834.864208,"endMs":3881.4535,"frame":115,"point":{"x":1732.6094055175781,"y":144.25000762939453},"bbox":{"x":1675.21875,"y":109.00000762939453,"width":114.78131103515625,"height":70.5},"source":"agent"}
+{"id":"a3","seq":2,"kind":"click","label":"run","tMs":4184.624791,"endMs":4221.471958,"frame":126,"point":{"x":1732.6094055175781,"y":144.25000762939453},"bbox":{"x":1675.21875,"y":109.00000762939453,"width":114.78131103515625,"height":70.5},"source":"agent"}
+{"id":"a4","seq":3,"kind":"mark","label":"done","tMs":8422.328666,"endMs":8422.328666,"frame":253,"source":"agent"}

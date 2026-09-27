@@ -1,0 +1,21 @@
+[
+  {
+    "goto": "/index.html"
+  },
+  {
+    "wait": 900
+  },
+  {
+    "hover": "#publish"
+  },
+  {
+    "wait": 500
+  },
+  {
+    "click": "#publish",
+    "label": "publish"
+  },
+  {
+    "wait": 1800
+  }
+]

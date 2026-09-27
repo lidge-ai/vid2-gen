@@ -45,7 +45,7 @@ export function sourceInput(source: Source, seconds: number, ctx: BuildContext, 
     return ctx.inputs.add({ kind: "video", path: footage, args: ["-ss", num(opts.inSeconds ?? 0), "-t", num(seconds * speed), "-i", footage] });
   }
   if (source.type === "color") {
-    const lavfi = `color=c=${escapeValue(source.color)}:s=${num(ctx.width)}x${num(ctx.height)}:r=${layerRate(ctx)}:d=${num(seconds)}`;
+    const lavfi = `color=c=${escapeValue(source.color)}:s=${num(ctx.width)}x${num(ctx.height)}:r=${layerRate(ctx)}:d=${num(seconds)},format=rgba`;
     return ctx.inputs.add({ kind: "lavfi", lavfi, args: ["-f", "lavfi", "-i", lavfi] });
   }
   const path = source.path;

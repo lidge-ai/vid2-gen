@@ -1,0 +1,24 @@
+[
+  {
+    "goto": "/index.html"
+  },
+  {
+    "wait": 3800
+  },
+  {
+    "hover": "#run"
+  },
+  {
+    "wait": 300
+  },
+  {
+    "click": "#run",
+    "label": "run"
+  },
+  {
+    "wait": 4200
+  },
+  {
+    "mark": "done"
+  }
+]

@@ -180,3 +180,25 @@ void test("faster video still fills its declared output span", async (t) => {
   assert.ok(pixel(data, 9, 32, 18)[0] > 180);
   assert.ok(pixel(data, 11, 32, 18)[0] < 30);
 });
+
+
+void test("a perspective window keeps the canvas visible outside its frame (transparent lavfi canvas)", async (t) => {
+  if (!requireFfmpeg(t)) return;
+  const dir = tempDir();
+  const path = join(dir, "red.png");
+  writeFileSync(path, solidRect(64, 36, 0, [255, 0, 0, 255]));
+  const timeline = TimelineSchema.parse({ version: 1, output: { width: 64, height: 36, fps: 10 },
+    sources: { still: { type: "image", path } }, scenes: [{ id: "s", duration: "4s", layers: [{ type: "media", source: "still",
+      window: { x: 16, y: 9, width: 32, height: 18, radius: 6, shadow: false, border: false, perspective: { rx: 0, ry: 10 } } }] }] });
+  const resolved = resolveTimeline(timeline, { baseDir: dir });
+  const { ctx, canvas: black, specs } = context(1, dir, resolved.sources);
+  const canvas = ctx.graph.add([black], ["drawbox=x=0:y=0:w=iw:h=ih:color=0x00FF00:t=fill", "format=rgba"]);
+  const layer = resolved.scenes[0]!.layers[0]!;
+  assert.equal(layer.type, "media");
+  const output = composite(ctx, canvas, buildMediaLayer(layer, ctx));
+  const data = await frames(ctx, specs, output);
+  assert.ok(pixel(data, 0, 32, 18)[0] > 180, "window content is red");
+  const [r, g] = pixel(data, 0, 2, 2);
+  assert.ok(g > 180 && r < 60, `canvas outside the window stays green, got ${r},${g}`);
+});
+

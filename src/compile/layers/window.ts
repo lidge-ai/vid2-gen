@@ -33,7 +33,8 @@ function localWindow(layer: Media, ctx: BuildContext, width: number, height: num
 }
 
 function transparentCanvas(ctx: BuildContext, seconds: number): string {
-  const lavfi = `color=c=black@0:s=${num(ctx.width)}x${num(ctx.height)}:r=${layerRate(ctx)}:d=${num(seconds)}`;
+  // format=rgba inside the lavfi input: a command-line lavfi color source otherwise negotiates a format without alpha (opaque black).
+  const lavfi = `color=c=black@0:s=${num(ctx.width)}x${num(ctx.height)}:r=${layerRate(ctx)}:d=${num(seconds)},format=rgba`;
   const input = ctx.inputs.add({ kind: "lavfi", lavfi, args: ["-f", "lavfi", "-i", lavfi] });
   return ctx.graph.add([input], ["format=rgba"]);
 }

@@ -1,8 +1,23 @@
 # vid2-gen
 
-**A video CLI for coding agents.** Describe scenes in JSON, inspect their timing, and check the ffmpeg capabilities on your machine. The 0.1 foundations establish the timeline and command contracts; rendering, capture, audio, asset generation, and agent skills follow in the [roadmap](devlog/_plan/260927_vid2_roadmap/000_plan.md).
+**The video CLI for coding agents.** Your agent writes a `timeline.json`, records your real app, pulls in generated images, and vid2 renders
+a finished, loudness-mastered, QA-checked video with ffmpeg. No editor, no timeline UI: the edit is a file.
+
+[![vid2 launch video — made with vid2](assets/readme/preview.webp)](https://github.com/lidge-ai/vid2-gen/releases/latest)
+
+*The launch video above was made with vid2 from [examples/vid2-launch](examples/vid2-launch) — real captures, ima2-gen stills, synthesized
+music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 
 [![npm](https://img.shields.io/npm/v/vid2-gen?label=npm)](https://www.npmjs.com/package/vid2-gen) [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Node.js](https://img.shields.io/node/v/vid2-gen)](package.json) [![CI](https://github.com/lidge-ai/vid2-gen/actions/workflows/ci.yml/badge.svg)](https://github.com/lidge-ai/vid2-gen/actions/workflows/ci.yml)
+
+| You get | How |
+|---|---|
+| Real product footage | `vid2 capture web` (Chromium) and `capture native` record an action log next to the pixels; the camera zooms where you clicked and a synthetic cursor follows |
+| Motion design without an editor | sub-pixel camera moves, window cards with perspective, 30+ transitions, kinetic typography (libass, or pure-JS text when ffmpeg lacks it) |
+| Sound that fits | synthesized music beds, sound effects anchored to cuts and clicks, voice ducking, two-pass loudness to −14 LUFS |
+| Generated assets | optional [ima2-gen](https://github.com/lidge-ai/ima2-gen) images and Grok clips, cached so renders stay offline and repeatable |
+| Proof, not vibes | `vid2 qa` writes a contact sheet, seam stills, loudness and black/freeze checks; `vid2 preview` renders any frame exactly |
+| Agent-ready | JSON everywhere, typed exit codes, `vid2 capabilities`, six packaged Agent Skills, four templates |
 
 ## Install
 

@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "command": "render",
+  "data": {
+    "frames": 900,
+    "profile": "proxy",
+    "width": 960,
+    "height": 540,
+    "seconds": 3.843,
+    "segments": [
+      {
+        "id": "seg-0-signal",
+        "cached": true
+      },
+      {
+        "id": "seg-1-reveal",
+        "cached": true
+      },
+      {
+        "id": "seg-2-three-points",
+        "cached": true
+      },
+      {
+        "id": "seg-3-resolve",
+        "cached": true
+      }
+    ],
+    "audio": {
+      "integrated": -14.1,
+      "truePeak": -1.2
+    }
+  },
+  "warnings": [
+    "W_PLACEHOLDER hero"
+  ]
+}
