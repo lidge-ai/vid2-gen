@@ -159,3 +159,8 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   (240 pass), all templates init → render → qa, second skill install changes nothing; CI green. Finding folded: opentype.js 2 always runs ccmp
   and crashes on Instrument Serif, so raster text is shaped glyph by glyph (macOS CI found it). Direction for wp8: a dogfood launch video for
   vid2 made with vid2 (real capture + ima2 hero + synth music), QA'd, embedded in the README.
+- **wp8 D (2026-09-28):** dogfood launch video shipped (0833b709..cad77609): examples/vid2-launch renders a 30 s 1920x1080 film from real
+  captures, three ima2 stills and synth music; QA pass with 0 issues (-14 LUFS, -1.3 dBTP); README hero poster + 10 s WebP. Findings folded: a
+  command-line lavfi colour source loses alpha unless the lavfi string ends in format=rgba (perspective windows went black); creative review
+  caught placeholder evidence inside the film and a mislabelled demo app. Direction for wp9: release workflow, npm publish (NEEDS_HUMAN if no
+  token), GitHub release with the full MP4.
