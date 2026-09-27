@@ -87,6 +87,8 @@ export const Audio = z.strictObject({ music: z.union([z.strictObject({ source: z
 export const TimelineSchema = z.strictObject({ $schema: z.string().optional(), version: z.literal(1), output: Output.prefault({}),
   beat: Beat.optional(), sources: z.record(z.string(), Source).default({}), fonts: z.record(z.string(), Font).default({}),
   markers: z.record(z.string(), z.union([TimeLiteral, BarRef])).default({}),
-  scenes: z.array(Scene).min(1), overlays: z.array(OverlayLayer).default([]), effects: z.array(Effect).default([]), audio: Audio.optional() });
+  scenes: z.array(Scene).min(1), overlays: z.array(OverlayLayer).default([]), effects: z.array(Effect).default([]), audio: Audio.optional(),
+  qa: z.strictObject({ waive: z.array(z.strictObject({ check: z.enum(["format", "duration", "black", "frozen", "silence", "loudness", "av_sync", "text_safe", "contrast"]),
+    from: TimeLiteral, to: TimeLiteral, reason: z.string().min(3) })).default([]) }).prefault({}) });
 export type Timeline = z.infer<typeof TimelineSchema>;
 export type AuthoredTimeline = z.input<typeof TimelineSchema>;

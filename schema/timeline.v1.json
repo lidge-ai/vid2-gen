@@ -2051,6 +2051,71 @@
         }
       },
       "additionalProperties": false
+    },
+    "qa": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "waive": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "check": {
+                "type": "string",
+                "enum": [
+                  "format",
+                  "duration",
+                  "black",
+                  "frozen",
+                  "silence",
+                  "loudness",
+                  "av_sync",
+                  "text_safe",
+                  "contrast"
+                ]
+              },
+              "from": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                  }
+                ]
+              },
+              "to": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                  }
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 3
+              }
+            },
+            "required": [
+              "check",
+              "from",
+              "to",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

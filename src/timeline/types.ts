@@ -83,6 +83,7 @@ export interface ResolvedTimeline {
   effects: ResolvedEffect[];
   audio?: ResolvedAudio;
   captureEvents?: CaptureEvent[];
+  qa: { waivers: { check: string; fromFrame: number; toFrame: number; fromS: number; toS: number; reason: string }[] };
   totalFrames: number;
   totalSeconds: number;
 }

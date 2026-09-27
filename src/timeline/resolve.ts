@@ -183,5 +183,7 @@ export function resolveTimeline(t: Timeline, opts: ResolveOptions): ResolvedTime
     overlays: t.overlays.map(layer => resolvedLayer(layer, totalFrames, 0, ctx)),
     effects: t.effects.map(effect => resolvedEffect(effect, 0, ctx, opts.baseDir)),
     ...(t.audio === undefined ? {} : { audio: resolvedAudio(t.audio, ctx) }),
+    qa: { waivers: t.qa.waive.map((w) => { const a = frame(w.from, ctx, "position"), b = frame(w.to, ctx, "position");
+      return { check: w.check, fromFrame: a, toFrame: b, fromS: framesToSeconds(a, fps), toS: framesToSeconds(b, fps), reason: w.reason }; }) },
     totalFrames, totalSeconds: framesToSeconds(totalFrames, fps) };
 }

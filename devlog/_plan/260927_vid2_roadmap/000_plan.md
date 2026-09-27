@@ -150,3 +150,7 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   actions, provider audio via `vid2 audio generate` + manifest, mix/master/mux in render. Receipt: 202 tests (197 pass), synth bed detected at
   120 BPM, hello-audio −14.1 LUFS / −1.4 dBFS; CI green on Ubuntu ffmpeg 6.1.1. Finding folded: AAC overshoots true peak (−0.8 on 6.1.1), so the
   master ceiling sits 0.5 dB under the target. Direction for wp6: ima2 adapter through its JSON CLI, materialized into the same cache/manifest idea.
+- **wp6 D (2026-09-28):** assets shipped (02fc4ece..ed02790c): ima2 adapter, content-keyed cache in `$VID2_HOME/cache/assets`, generate
+  sources in every CLI entry path, `render --generate`. Receipt: 222 tests (216 pass); live ima2 generated real images on the ready OAuth
+  lane; Grok video is an honest gap (disconnected, "Grok login required"). Findings folded: listed models are not readiness; the default model
+  is a constant sentinel so hashes are computable offline. Direction for wp7: qa, preview, packaged skill, templates.

@@ -83,3 +83,13 @@ test("voices resolve by kind and beats.json offset seconds convert at the timeli
   assert.equal(r.audio!.voice[1]!.frame, 30);
 });
 
+
+test("qa.waive parses, rejects unknown keys and resolves to frames", () => {
+  const t = TimelineSchema.parse({ version: 1, output: { fps: 30 }, scenes: [{ id: "one", duration: "5s" }],
+    qa: { waive: [{ check: "black", from: "0s", to: "0.5s", reason: "intentional fade from black" }] } });
+  const r = resolveTimeline(t, { baseDir: "/" });
+  assert.deepEqual(r.qa.waivers, [{ check: "black", fromFrame: 0, toFrame: 15, fromS: 0, toS: 0.5, reason: "intentional fade from black" }]);
+  assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: 1 }], qa: { waive: [], typo: 1 } }).success, false);
+  assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: 1 }], qa: { waive: [{ check: "vibes", from: 0, to: 1, reason: "xyz" }] } }).success, false);
+});
+
