@@ -53,6 +53,7 @@
       "fontFiles": [
         "<WORK>/fonts/Geist-Bold.ttf"
       ],
+      "textBackend": "ass",
       "internalRate": 1,
       "hash": "<HASH>"
     }

@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { runChecked, Vid2Error } from "../shared/index.ts";
+import { run, runChecked, Vid2Error } from "../shared/index.ts";
 import { escapeValue, num, quoteExpr } from "../compile/escape.ts";
 import type { RenderPlan, SegmentPlan } from "../compile/ir.ts";
 import { requireFfmpeg } from "../../tests/helpers.ts";
@@ -18,7 +18,7 @@ function segment(index: number, color: string, frames: number): SegmentPlan {
     width: SIZE, height: SIZE, fps: FPS, inputs: [{ id: "color", kind: "lavfi", lavfi: color,
       args: ["-f", "lavfi", "-i", `color=c=${escapeValue(color)}:s=${num(SIZE)}x${num(SIZE)}:` +
         `r=${num(FPS.num)}:d=${num(frames / FPS.num)}`] }],
-    graph: "[0:v]format=yuv420p[vout]", outLabel: "vout", assFiles: [], fontFiles: [], internalRate: 1, hash: color };
+    graph: "[0:v]format=yuv420p[vout]", outLabel: "vout", assFiles: [], fontFiles: [], textBackend: "ass" as const, internalRate: 1, hash: color };
 }
 
 function plan(root: string): RenderPlan {
@@ -78,8 +78,15 @@ test("real two-segment xfade is visible, cached, and verified", async (t) => {
   }
 });
 
+async function hasLegacyScriptOption(): Promise<boolean> {
+  const help = await run("ffmpeg", ["-hide_banner", "-h", "full"]);
+  return help.stdout.toString("utf8").includes("filter_complex_script");
+}
+
 test("legacy graph transport renders and invalid xfade is rejected", async (t) => {
   if (!requireFfmpeg(t)) return;
+  // ffmpeg 8+/9 builds may drop -filter_complex_script; the legacy path only matters for ffmpeg < 7.1.
+  if (!(await hasLegacyScriptOption())) { t.skip("this ffmpeg has no -filter_complex_script"); return; }
   const root = mkdtempSync(join(tmpdir(), "vid2-render-legacy-"));
   const render = plan(root);
   render.tool.version = "6.1";

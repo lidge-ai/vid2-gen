@@ -42,6 +42,8 @@ function normalized(value: unknown, workDir: string, pngDir: string): unknown {
     for (const [path, token] of paths) {
       text = text.replaceAll(escapePath(path), token).replaceAll(path, token);
     }
+    // Windows: token-prefixed paths use backslashes; goldens store forward slashes.
+    text = text.replaceAll(/<(FIXTURES|WORK|PNG)>[^\s'",]*/g, (m) => m.replaceAll("\\", "/"));
     return text.replaceAll(/\b[a-f0-9]{64}\b/g, "<HASH>");
   }
   if (Array.isArray(value)) return value.map((item) => normalized(item, workDir, pngDir));

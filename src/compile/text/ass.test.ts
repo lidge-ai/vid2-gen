@@ -8,7 +8,7 @@ import { GraphBuilder } from "../graph.ts";
 import type { BuildContext, LayerOf } from "../ir.ts";
 import { buildTextRuns } from "../layers/text.ts";
 import { TimelineSchema, resolveTimeline } from "../../timeline/index.ts";
-import { requireFfmpeg, tempDir } from "../../../tests/helpers.ts";
+import { requireLibass, tempDir } from "../../../tests/helpers.ts";
 import { assColor } from "./ass.ts";
 import { cjkFontWarning } from "./fonts.ts";
 import { packageRoot, Vid2Error } from "../../shared/index.ts";
@@ -18,7 +18,7 @@ import type { FfmpegInfo } from "../../probe/index.ts";
 function context(workDir: string, scale = 1): BuildContext {
   return { graph: new GraphBuilder(), inputs: { add: () => "0:v", list: () => [] }, width: Math.round(320 * scale), height: Math.round(180 * scale),
     scale, fps: { num: 15, den: 1 }, rate: 1, frames: 30, renderFrames: 30, background: "#000000", oversample: 1,
-    profile: "final", sceneId: "one", sources: {}, fonts: {}, workDir, pngDir: join(workDir, "png") };
+    profile: "final", sceneId: "one", sources: {}, fonts: {}, workDir, pngDir: join(workDir, "png"), textBackend: "ass" };
 }
 
 function layer(extra: Record<string, unknown> = {}): LayerOf<"text"> {
@@ -93,7 +93,7 @@ async function regionLuma(file: string, at: number): Promise<number> {
 }
 
 test("live ASS render is dark before entrance and visibly bright after", async t => {
-  if (!requireFfmpeg(t)) return;
+  if (!requireLibass(t)) return;
   const ctx = context(tempDir("vid2-ass-live-"));
   const text = buildTextRuns([layer({ text: "VISIBLE", size: 52, color: "#FFFFFF", animation: "none" })], ctx, 0);
   writeFileSync(text.ass.path, text.ass.content);

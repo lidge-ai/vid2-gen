@@ -5,6 +5,7 @@ import { GraphBuilder } from "./graph.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { run } from "../shared/index.ts";
+import { probeFfmpeg } from "../probe/index.ts";
 import { requireFfmpeg, tempDir } from "../../tests/helpers.ts";
 
 test("escapeValue applies option and graph escaping", () => {
@@ -60,7 +61,9 @@ test("escaped paths survive a real ffmpeg graph file", async (t) => {
     "Dialogue: 0,0:00:00.00,0:00:01.00,D,A\n");
   const graphFile = join(dir, "g.txt");
   writeFileSync(graphFile, `[0:v]ass=filename=${escapePath(ass)}:fontsdir=${escapePath(dir)},drawtext=text=${escapeValue("a: 'b', c")}:fontsize=8[out]`);
-  const res = await run("ffmpeg", ["-hide_banner", "-v", "error", "-f", "lavfi", "-i", "color=c=black:s=64x36:d=0.2", "-/filter_complex", graphFile,
+  const info = await probeFfmpeg();
+  const flag = info.major > 7 || (info.major === 7 && info.minor >= 1) ? "-/filter_complex" : "-filter_complex_script";
+  const res = await run("ffmpeg", ["-hide_banner", "-v", "error", "-f", "lavfi", "-i", "color=c=black:s=64x36:d=0.2", flag, graphFile,
     "-map", "[out]", "-f", "null", "-"]);
   assert.equal(res.code, 0, res.stderr);
 });

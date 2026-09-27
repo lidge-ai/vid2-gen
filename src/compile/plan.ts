@@ -5,7 +5,7 @@ import type { FfmpegInfo } from "../probe/index.ts";
 import type { ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import { effectFilters, requiredFilters } from "./effects/registry.ts";
 import { GraphBuilder } from "./graph.ts";
-import type { BuildContext, EffectOp, OverlayOp, PostPlan, ProfileName, RenderPlan, ResolvedOutput, SegmentPlan } from "./ir.ts";
+import type { TextBackend, BuildContext, EffectOp, OverlayOp, PostPlan, ProfileName, RenderPlan, ResolvedOutput, SegmentPlan } from "./ir.ts";
 import { planJoin } from "./joins.ts";
 import { buildOverlayLayer as buildOverlayFor } from "./layers/overlay.ts";
 import { requireTextCapability } from "./layers/text.ts";
@@ -23,6 +23,8 @@ export interface CompileOptions {
   ffprobe: string;
   timelineHash: string;
   pngDir?: string;
+  /** Force a text engine; default: "ass" when ffmpeg has libass, else "raster". VID2_TEXT_BACKEND overrides. */
+  textBackend?: TextBackend;
 }
 
 /** Output settings of a resolved timeline before any profile is applied. */
@@ -32,9 +34,17 @@ export function timelineOutput(t: ResolvedTimeline): ResolvedOutput {
     videoCodec: o.videoCodec, quality: o.quality };
 }
 
-function checkCapabilities(t: ResolvedTimeline, info: FfmpegInfo): void {
+/** libass when available (best typography); pure-JS raster text otherwise (e.g. Homebrew ffmpeg without libass). */
+export function pickTextBackend(info: FfmpegInfo, requested?: TextBackend): TextBackend {
+  const env = process.env["VID2_TEXT_BACKEND"];
+  const want = requested ?? (env === "ass" || env === "raster" ? env : undefined);
+  if (want) return want;
+  return info.libs.ass && info.filters.has("ass") ? "ass" : "raster";
+}
+
+function checkCapabilities(t: ResolvedTimeline, info: FfmpegInfo, backend: TextBackend): void {
   const layers = [...t.scenes.flatMap((s) => s.layers), ...t.overlays];
-  if (layers.some((l) => l.type === "text")) requireTextCapability(info);
+  if (backend === "ass" && layers.some((l) => l.type === "text")) requireTextCapability(info);
   const effects = [...t.scenes.flatMap((s) => s.effects), ...t.effects];
   const transitions = t.scenes.some((s) => s.transitionOut && s.transitionOut.frames > 0);
   const hasWindow = layers.some((l) => l.type === "media" && l.window);
@@ -73,11 +83,12 @@ function postPlan(t: ResolvedTimeline, base: SegmentBase, totalFrames: number): 
 
 export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): RenderPlan {
   if (!t.scenes.length) throw new Vid2Error("E_INPUT", "timeline has no scenes");
-  checkCapabilities(t, opts.ffmpeg);
+  const textBackend = pickTextBackend(opts.ffmpeg, opts.textBackend);
+  checkCapabilities(t, opts.ffmpeg, textBackend);
   const o = opts.output;
   const base: SegmentBase = { width: o.width, height: o.height, scale: o.scale, oversample: o.oversample, profile: opts.profile,
     fps: o.fps, background: o.background, sources: t.sources, fonts: t.fonts, workDir: opts.workDir,
-    pngDir: opts.pngDir ?? cacheDir("png") };
+    pngDir: opts.pngDir ?? cacheDir("png"), textBackend, ...(t.beat ? { beat: t.beat } : {}) };
   const segments: SegmentPlan[] = t.scenes.map((s, i) => compileSegment(s, base, i === t.scenes.length - 1));
   const join = planJoin(segments.map(({ id, frames, renderFrames }) => ({ id, frames, renderFrames })),
     t.scenes.map((s) => s.transitionOut), o.fps);

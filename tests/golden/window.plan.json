@@ -110,10 +110,11 @@
           ]
         }
       ],
-      "graph": "[0:v]format=rgba,setsar=1[s1];\n[1:v]scale=in_range=auto:out_range=tv[s2];\n[s2]scale=160:90:force_original_aspect_ratio=increase:flags=lanczos,crop=160:90,format=rgba,setsar=1[s3];\n[s3]setpts=(PTS-STARTPTS)/1,fps=15/1[s4];\n[2:v]format=gray[s5];\n[s4][s5]alphamerge,format=rgba[s6];\n[3:v]format=rgba[s7];\n[s6][s7]overlay=x=0:y=0:eof_action=pass:format=auto[s8];\n[4:v]format=rgba[s9];\n[s9][s8]overlay=x=40:y=40:eof_action=pass:format=auto,format=rgba[s10];\n[5:v]format=rgba[s11];\n[s11][s10]overlay=x=40:y=5:eof_action=pass:format=auto,format=rgba[s12];\n[s12]perspective=x0='13.062209':y0='6.072445':x1='329.859127':y1='-7.019706':x2='13.062209':y2='173.927555':x3='329.859127':y3='187.019706':interpolation=cubic:sense=destination:eval=init,format=rgba[s13];\n[s13]setpts=PTS-STARTPTS+0/TB[s14];\n[s1][s14]overlay=x='0':y='0':eof_action=pass:format=auto:enable='between(n,0,29)',format=rgba[s15];\n[s15]trim=end_frame=30,setpts=PTS-STARTPTS,format=yuv420p,setsar=1[vout]",
+      "graph": "[0:v]format=rgba,setsar=1[s1];\n[1:v]scale=in_range=auto:out_range=tv[s2];\n[s2]scale=160:90:force_original_aspect_ratio=increase:flags=lanczos,crop=160:90,format=rgba,setsar=1[s3];\n[s3]setpts=(PTS-STARTPTS)/1,fps=15/1[s4];\n[2:v]format=gray[s5];\n[s4][s5]alphamerge,format=rgba[s6];\n[3:v]format=rgba[s7];\n[s6][s7]overlay=x=0:y=0:eof_action=pass:format=auto[s8];\n[4:v]format=rgba[s9];\n[s9][s8]overlay=x=40:y=40:eof_action=pass:format=auto,format=rgba[s10];\n[5:v]format=rgba[s11];\n[s11][s10]overlay=x=40:y=5:eof_action=pass:format=auto,format=rgba[s12];\n[s12]perspective=x0='13.062209':y0='6.072445':x1='329.859127':y1='-7.019706':x2='13.062209':y2='173.927555':x3='329.859127':y3='187.019706':interpolation=cubic:sense=destination:eval=init,format=rgba[s13];\n[s13]setpts=PTS-STARTPTS+0/TB[s14];\n[s1][s14]overlay=x='0':y='0':eof_action=pass:format=auto:enable='gte(t,-0.033333)*lt(t,1.966667)',format=rgba[s15];\n[s15]trim=end_frame=30,setpts=PTS-STARTPTS,format=yuv420p,setsar=1[vout]",
       "outLabel": "vout",
       "assFiles": [],
       "fontFiles": [],
+      "textBackend": "ass",
       "internalRate": 1,
       "hash": "<HASH>"
     }

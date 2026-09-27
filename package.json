@@ -61,6 +61,7 @@
     "vid2": "node src/cli/index.ts"
   },
   "dependencies": {
+    "opentype.js": "^2.0.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -73,4 +74,3 @@
     "typescript-eslint": "8.70.1"
   }
 }
-

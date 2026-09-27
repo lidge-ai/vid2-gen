@@ -22,7 +22,7 @@ function context(rate: number, pngDir: string, sources: BuildContext["sources"] 
   const graph = new GraphBuilder();
   const ctx: BuildContext = { graph, inputs, width: 64, height: 36, scale: 1, fps: { num: 10, den: 1 }, rate,
     frames: 40, renderFrames: 40, background: "#000000", oversample: 1, profile: "proxy", sceneId: "s",
-    sources, fonts: {}, workDir: pngDir, pngDir };
+    sources, fonts: {}, workDir: pngDir, pngDir, textBackend: "ass" as const };
   inputs.add({ kind: "lavfi", lavfi: `color=c=black:s=64x36:r=${10 * rate}:d=4`,
     args: ["-f", "lavfi", "-i", `color=c=black:s=64x36:r=${10 * rate}:d=4`] });
   const canvas = graph.add(["0:v"], ["format=rgba"]);

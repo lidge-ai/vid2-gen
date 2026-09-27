@@ -52,7 +52,7 @@
           ]
         }
       ],
-      "graph": "[0:v]format=rgba,setsar=1[s1];\n[s1]ass=filename=<WORK>/order-text-0.ass:fontsdir=<WORK>/fonts,format=rgba[s2];\n[1:v]format=rgba,drawbox=x=0:y=0:w=iw:h=ih:color=#ff0000:t=fill[s3];\n[s3]setpts=PTS-STARTPTS+0/TB[s4];\n[s2][s4]overlay=x='0':y='0':eof_action=pass:format=auto:enable='between(n,0,29)',format=rgba[s5];\n[s5]ass=filename=<WORK>/order-text-1.ass:fontsdir=<WORK>/fonts,format=rgba[s6];\n[s6]trim=end_frame=30,setpts=PTS-STARTPTS,format=yuv420p,setsar=1[vout]",
+      "graph": "[0:v]format=rgba,setsar=1[s1];\n[s1]ass=filename=<WORK>/order-text-0.ass:fontsdir=<WORK>/fonts,format=rgba[s2];\n[1:v]format=rgba,drawbox=x=0:y=0:w=iw:h=ih:color=#ff0000:t=fill[s3];\n[s3]setpts=PTS-STARTPTS+0/TB[s4];\n[s2][s4]overlay=x='0':y='0':eof_action=pass:format=auto:enable='gte(t,-0.033333)*lt(t,1.966667)',format=rgba[s5];\n[s5]ass=filename=<WORK>/order-text-1.ass:fontsdir=<WORK>/fonts,format=rgba[s6];\n[s6]trim=end_frame=30,setpts=PTS-STARTPTS,format=yuv420p,setsar=1[vout]",
       "outLabel": "vout",
       "assFiles": [
         {
@@ -69,6 +69,7 @@
       "fontFiles": [
         "<WORK>/fonts/Geist-Bold.ttf"
       ],
+      "textBackend": "ass",
       "internalRate": 1,
       "hash": "<HASH>"
     }

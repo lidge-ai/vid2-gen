@@ -15,7 +15,7 @@ function fixture(root: string, workDir: string, media: string): RenderPlan {
     width: 64, height: 64, fps: { num: 15, den: 1 }, inputs: [{ id: "media", kind: "video", path: media,
       args: ["-i", media] }], graph: `[0:v]ass=filename=${escapePath(join(workDir, "title.ass"))}[vout]`,
     outLabel: "vout", assFiles: [{ path: join(workDir, "title.ass"), content: "text", fontsDir: workDir }],
-    fontFiles: [font], internalRate: 1, hash: root };
+    fontFiles: [font], textBackend: "ass" as const, internalRate: 1, hash: root };
   return { planVersion: 1, timelineHash: "timeline", profile: "final", output: { width: 64, height: 64,
     fps: { num: 15, den: 1 }, background: "#000000", container: "mp4", videoCodec: "h264", quality: "high" },
     totalFrames: 15, segments: [segment], join: { segments: [{ id: "one", frames: 15, renderFrames: 15 }],

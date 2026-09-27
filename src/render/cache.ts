@@ -2,6 +2,7 @@ import { copyFile, rename, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { cacheDir, hashFile, hashJson, Vid2Error } from "../shared/index.ts";
 import type { RenderPlan, SegmentPlan } from "../compile/ir.ts";
+import { escapePath } from "../compile/escape.ts";
 
 async function hashOrMissing(path: string): Promise<string> {
   try { return await hashFile(path); }
@@ -10,7 +11,8 @@ async function hashOrMissing(path: string): Promise<string> {
 
 /** Cache key includes media, fonts, graph and the ffmpeg implementation version. */
 export async function segmentCacheKey(segment: SegmentPlan, plan: RenderPlan): Promise<string> {
-  const normalize = (value: string) => value.replaceAll(plan.workDir, "<workDir>");
+  const escapedWork = escapePath(plan.workDir);
+  const normalize = (value: string) => value.replaceAll(escapedWork, "<workDir>").replaceAll(plan.workDir, "<workDir>");
   const paths = [...segment.inputs.map((input) => input.path).filter((value): value is string => !!value), ...segment.fontFiles];
   const inputHashes = await Promise.all(paths.map(async (path) => [normalize(path), await hashOrMissing(path)]));
   const { hash: _hash, ...fields } = segment;

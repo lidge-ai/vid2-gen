@@ -45,6 +45,7 @@
       "outLabel": "vout",
       "assFiles": [],
       "fontFiles": [],
+      "textBackend": "ass",
       "internalRate": 1,
       "hash": "<HASH>"
     },
@@ -77,6 +78,7 @@
       "outLabel": "vout",
       "assFiles": [],
       "fontFiles": [],
+      "textBackend": "ass",
       "internalRate": 1,
       "hash": "<HASH>"
     }

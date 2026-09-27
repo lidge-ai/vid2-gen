@@ -4,3 +4,9 @@
 *.mjs text eol=lf
 *.json text eol=lf
 *.md text eol=lf
+*.ass text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.ttf binary
+*.png binary
+*.mp4 binary

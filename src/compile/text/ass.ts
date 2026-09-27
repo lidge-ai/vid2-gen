@@ -1,7 +1,6 @@
 /** Build one ASS document for one consecutive run of text layers. */
 import { parseTimeLiteral } from "../../shared/time.ts";
 import { Vid2Error } from "../../shared/errors.ts";
-import type { BeatGrid } from "../../shared/time.ts";
 import type { BuildContext, LayerOf } from "../ir.ts";
 import { animationOverride, escapeAssText, karaokeText } from "./animations.ts";
 import { cjkFontWarning, resolveFont } from "./fonts.ts";
@@ -37,7 +36,7 @@ function durationMs(layer: TextLayer, ctx: BuildContext): number {
   const lit = parseTimeLiteral(layer.animationDuration);
   if (lit.unit === "s") return Math.max(1, Math.round(lit.value * 1000));
   if (lit.unit === "f") return Math.max(1, Math.round(lit.value * ctx.fps.den * 1000 / ctx.fps.num));
-  const beat = (ctx as BuildContext & { beat?: BeatGrid }).beat;
+  const beat = ctx.beat;
   if (!beat) throw new Vid2Error("E_SCHEMA", "beat animation duration needs a beat grid");
   return Math.max(1, Math.round(lit.value * 60000 / beat.bpm));
 }

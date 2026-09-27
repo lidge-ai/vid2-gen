@@ -2,11 +2,12 @@
  * Render IR: the typed contract between the compiler (src/compile) and the runner (src/render).
  * Owned by main (020 lane 0). Lanes build against these names; changes go through main.
  */
-import type { Fps } from "../shared/index.ts";
+import type { BeatGrid, Fps } from "../shared/index.ts";
 import type { ResolvedEffect, ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import type { GraphBuilder } from "./graph.ts";
 
 export type ProfileName = "proxy" | "final";
+export type TextBackend = "ass" | "raster";
 
 /** Output settings after the profile is applied (proxy halves width/height to even numbers). */
 export interface ResolvedOutput {
@@ -60,6 +61,10 @@ export interface BuildContext {
   workDir: string;
   /** Cache directory for generated PNGs (masks, shadows). */
   pngDir: string;
+  /** Text engine: libass ("ass") when ffmpeg has it, else pure-JS rasterized PNG text ("raster"). */
+  textBackend: TextBackend;
+  /** Beat grid of the timeline, when it has one (beat-based animation durations). */
+  beat?: BeatGrid;
 }
 
 /**
@@ -105,6 +110,7 @@ export interface SegmentPlan {
   /** Ordered ASS files, one per text run; the runner writes each before running the segment. */
   assFiles: { path: string; content: string; fontsDir: string }[];
   fontFiles: string[];
+  textBackend: TextBackend;
   internalRate: number;
   hash: string;
 }

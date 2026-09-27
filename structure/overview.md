@@ -28,7 +28,14 @@ Capture, audio, asset materialization, and QA extend this pipeline in later phas
 
 ## Dependency policy
 
-`zod` is the only foundations runtime dependency. ffmpeg/ffprobe are external executables. Playwright and native input support belong to later phases and remain optional. A new runtime dependency requires a short architecture decision here: the need, alternatives considered, package size and platform impact, and validation plan.
+Runtime dependencies: `zod` (schema) and `opentype.js` (see ADR-1). ffmpeg/ffprobe are external executables. Playwright and native input support belong to later phases and remain optional. A new runtime dependency requires a short architecture decision here: the need, alternatives considered, package size and platform impact, and validation plan.
+
+**ADR-1 opentype.js (2026-09-27).** Need: Homebrew's ffmpeg 9 (and so a default macOS setup and the macOS CI runner) ships without
+libass and freetype, so neither `ass` nor `drawtext` exists and text could not render. Alternatives: require a custom ffmpeg (bad first
+run), download static ffmpeg builds (large, per-OS, licensing), render text in a browser (Playwright is optional and heavy). Choice:
+opentype.js 2.0.0 (MIT, no dependencies, pure JS) parses the bundled fonts; vid2 lays out and rasterizes glyphs to PNG and animates them with
+basic overlay filters (the raster text backend, structure/text.md). libass stays the default when present. Validation: raster and ASS
+bounding boxes are compared in tests, and macOS CI runs every text test through the raster backend.
 
 ## Testing and packaging
 

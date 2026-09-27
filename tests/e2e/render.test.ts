@@ -5,12 +5,16 @@ import { join, resolve } from "node:path";
 import { run } from "../../src/shared/exec.ts";
 import { solidRect } from "../../src/compile/png.ts";
 import { requireFfmpeg, tempDir } from "../helpers.ts";
+import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "../..");
 const fixtures = join(root, "tests/fixtures/timelines");
 const ffmpeg = process.env["VID2_FFMPEG"] ?? "ffmpeg";
 const ffprobe = process.env["VID2_FFPROBE"] ?? "ffprobe";
 const size = { width: 320, height: 180 };
+/** Text renders through libass when present, otherwise through the raster backend; ASS-file checks apply only to libass. */
+const libass = /^\s*[T.][S.][C.]?\s+ass\s/m.test(spawnSync(ffmpeg, ["-hide_banner", "-filters"], { encoding: "utf8" }).stdout ?? "")
+  && process.env["VID2_TEXT_BACKEND"] !== "raster";
 type RenderData = { output: string; frames: number; segments: { id: string; cached: boolean }[]; width: number; height: number };
 
 async function command(cmd: string, args: string[], env?: NodeJS.ProcessEnv): Promise<{ stdout: Buffer; stderr: string }> {
@@ -114,15 +118,17 @@ void test("wp3 render fixtures produce visible, frame-exact output", async (t) =
     assert.ok(blend[0] > 25 && blend[2] > 25);
   });
 
-  await t.test("animated ASS text is compiled and rendered", async () => {
+  await t.test("animated text is compiled and rendered", async () => {
     const result = await render("text-anim", dir, paths);
     assert.equal((await probe(result.path)).frames, 30);
-    const ass = assContents(dir).find((content) => content.includes("VID2"));
-    assert.ok(ass);
-    assert.match(ass, /\\move|\\fad/);
-    const golden = JSON.parse(readFileSync(join(root, "tests/golden/text-anim.plan.json"), "utf8")) as {
-      segments: { assFiles: { content: string }[] }[] };
-    assert.equal(ass, golden.segments[0]!.assFiles[0]!.content);
+    if (libass) {
+      const ass = assContents(dir).find((content) => content.includes("VID2"));
+      assert.ok(ass);
+      assert.match(ass, /\\move|\\fad/);
+      const golden = JSON.parse(readFileSync(join(root, "tests/golden/text-anim.plan.json"), "utf8")) as {
+        segments: { assFiles: { content: string }[] }[] };
+      assert.equal(ass, golden.segments[0]!.assFiles[0]!.content);
+    }
     const before = mean(await rawFrame(result.path, 4), 90, 60, 140, 60);
     const after = mean(await rawFrame(result.path, 16), 90, 60, 140, 60);
     assert.ok(after > before + 3);
@@ -200,8 +206,10 @@ void test("wp3 render fixtures produce visible, frame-exact output", async (t) =
       assert.ok(red > 180 && green < 90 && blue < 90, `covered text at ${x},${y}`);
     }
     assert.ok(mean(frame, 180, 110, 120, 50) > 6);
-    const files = assContents(dir).filter((content) => content.includes("FIRST") || content.includes("SECOND"));
-    assert.equal(files.length, 2);
+    if (libass) {
+      const files = assContents(dir).filter((content) => content.includes("FIRST") || content.includes("SECOND"));
+      assert.equal(files.length, 2);
+    }
   });
 
   await t.test("zoom 0.5 shows a smaller subject than zoom 1", async () => {
