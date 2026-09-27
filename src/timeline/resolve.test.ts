@@ -42,7 +42,8 @@ test("event references use the adapter's timeline frame and clamp negative offse
   const t = TimelineSchema.parse({ version: 1, scenes: [{ id: "one", duration: "2s" }],
     audio: { cues: [{ at: { event: "click", offset: "-0.5s" }, sfx: "hit" },
       { at: { event: "click", offset: "-1s" }, sfx: "hit" }] } });
-  const events = { resolve: (ref: { event: string; source?: string }) => ({ frame: ref.event === "click" ? 12 : 0, sourceId: "cap" }) };
+  const events = { resolve: (ref: { event: string; source?: string }) => ({ frame: ref.event === "click" ? 12 : 0, sourceId: "cap" }),
+    footageSeconds: () => ({ seconds: 0, sourceId: "cap" }), place: () => undefined };
   assert.deepEqual(resolveTimeline(t, { baseDir, events }).audio?.cues.map(c => c.frame), [0, 0]);
   assert.throws(() => resolveTimeline(t, { baseDir }), (e: unknown) => e instanceof Vid2Error && e.code === "E_INPUT");
 });

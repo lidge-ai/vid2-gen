@@ -3,5 +3,5 @@ export { TimelineSchema, TimeLiteral, Time, EventRef, MarkerRef, BarRef, Color, 
 export type { Timeline, AuthoredTimeline } from "./schema.ts";
 export { resolveTimeline } from "./resolve.ts";
 export { validateTimeline } from "./validate.ts";
-export type { EventResolver, ResolveOptions, ResolvedTimeline, ResolvedScene, ResolvedLayer, ResolvedEffect, ResolvedAudio,
+export type { CapturePlacement, EventResolver, ResolveOptions, ResolvedTimeline, ResolvedScene, ResolvedLayer, ResolvedEffect, ResolvedAudio,
   ResolvedSpan, ResolvedTime, ResolvedCue, ResolvedVoice, ResolvedTransition, ValidationIssue } from "./types.ts";

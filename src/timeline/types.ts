@@ -1,8 +1,16 @@
 import type { BeatGrid, Fps } from "../shared/time.ts";
 import type { Timeline } from "./schema.ts";
 
-/** Capture adapter boundary: returned frames are already on the timeline clock. */
+/** Where the first media layer using a capture source sits: absolute timeline start frame, footage in-point, speed, timeline fps. */
+export interface CapturePlacement { startFrame: number; inSeconds: number; speed: number; fps: Fps }
+
+/**
+ * Capture adapter boundary (030). footageSeconds: event time on the footage clock (used by a capture layer's own in/out).
+ * place: records the first placement per source (later calls ignored). resolve: event time on the timeline clock after placement.
+ */
 export interface EventResolver {
+  footageSeconds(ref: { event: string; source?: string }): { seconds: number; sourceId: string };
+  place(sourceId: string, placement: CapturePlacement): void;
   resolve(ref: { event: string; source?: string }): { frame: number; sourceId: string };
 }
 
