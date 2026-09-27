@@ -1,0 +1,75 @@
+{
+  "name": "vid2-gen",
+  "version": "0.1.0",
+  "description": "The video CLI for coding agents: capture your real app, generate assets, cut to the beat. Powered by ffmpeg.",
+  "type": "module",
+  "license": "MIT",
+  "author": "lidge-ai",
+  "homepage": "https://github.com/lidge-ai/vid2-gen#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lidge-ai/vid2-gen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lidge-ai/vid2-gen/issues"
+  },
+  "keywords": [
+    "video",
+    "ffmpeg",
+    "cli",
+    "agents",
+    "codex",
+    "claude-code",
+    "screen-recording",
+    "motion-graphics",
+    "timeline"
+  ],
+  "bin": {
+    "vid2": "bin/vid2.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema/timeline.v1.json": "./schema/timeline.v1.json",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "bin",
+    "dist",
+    "schema",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "node scripts/test.mjs",
+    "test:unit": "node scripts/test.mjs --unit",
+    "test:e2e": "node scripts/test.mjs --e2e",
+    "schema:json": "node scripts/schema-json.mjs",
+    "privacy:scan": "node scripts/privacy-scan.mjs",
+    "prepack": "npm run build",
+    "vid2": "node src/cli/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "^22.20.1",
+    "eslint": "10.11.0",
+    "globals": "17.12.0",
+    "playwright-core": "1.63.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "8.70.1"
+  }
+}
+

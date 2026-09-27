@@ -2,6 +2,16 @@
 
 Consumes: 000 decisions ARCH-01/02/03/05/10, 001 conventions. Produces the contracts every later phase builds on.
 
+## wp2 architect consultation
+
+Architect Gibbs (01a0e327-89a3-7dd1-82df-f4bfaab3a280) proposal W2-01..W2-06 (2026-09-27). Dispositions: W2-01 accept (src/index.ts added,
+main writes shared/ and package config first); W2-02 accept (no strip flag; bin fallback error; packed-install test outside the checkout);
+W2-03 accept and verified locally (schema generated with io: input); W2-04 accept (lanes table below; projectService for typed lint);
+W2-05 accept (runner rules, skip policy, zero-test failure); W2-06 accept (canary in a child process, platform-neutral assertions). Reflection: MISALIGNED on one contradiction (schema-json
+instruction lacked `io: "input"`), fixed; all six decisions otherwise mapped.
+Local proof before B: a scratch package on Node 24.17 ran a `.ts` test through `node --test`, built with tsc 5.9 rewriting `.ts` imports to
+`.js`, and zod 4.6.5 strictObject rejected unknown keys with `additionalProperties: false` in the generated schema.
+
 ## Scope
 
 IN: repository scaffold and governance files; npm package wiring; CLI dispatcher with the JSON/exit contract;
@@ -18,6 +28,7 @@ package.json  package-lock.json  tsconfig.json  tsconfig.build.json  eslint.conf
 bin/vid2.js
 scripts/test.mjs  scripts/schema-json.mjs  scripts/privacy-scan.mjs
 schema/timeline.v1.json                     (generated, committed; drift-tested)
+src/index.ts  (package root export: timeline schema/types, resolveTimeline, validateTimeline, Vid2Error, EXIT — W2-01)
 src/cli/main.ts  src/cli/args.ts  src/cli/output.ts  src/cli/registry.ts  src/cli/index.ts
 src/cli/commands/{doctor,schema,validate,resolve,version,help}.ts
 src/shared/{errors,exec,time,hash,json,paths,log}.ts  src/shared/index.ts
@@ -26,7 +37,9 @@ src/timeline/{schema,types,resolve,validate}.ts  src/timeline/index.ts
 colocated tests: src/shared/time.test.ts, src/shared/errors.test.ts, src/cli/output.test.ts, src/cli/main.test.ts,
   src/probe/ffmpeg.test.ts, src/probe/bugs.test.ts, src/probe/tools.test.ts, src/timeline/schema.test.ts, src/timeline/resolve.test.ts,
   src/timeline/validate.test.ts, src/timeline/json-schema-drift.test.ts
-tests/e2e/cli.test.ts  tests/e2e/pack.test.ts  tests/fixtures/timelines/{minimal,beats,invalid-*}.json
+tests/helpers.ts  tests/e2e/cli.test.ts  tests/e2e/pack.test.ts  tests/e2e/bin.test.ts  tests/e2e/runner.test.ts
+tests/fixtures/timelines/{minimal,beats,markers,invalid-*}.json  tests/fixtures/probe/{filters,encoders,devices,version-5.1,version-8.0}.txt
+tests/fixtures/bin/fake-ffmpeg.mjs (prints a configurable `ffmpeg version X` banner and fixture outputs; invoked through the injectable runner, below)
 structure/INDEX.md  structure/overview.md  structure/cli-contract.md  structure/timeline.md  structure/probe.md
 .github/workflows/ci.yml  .github/pull_request_template.md  .github/dependabot.yml
 devlog/README.md  devlog/_fin/.gitkeep
@@ -62,7 +75,7 @@ package.json (complete):
     "schema:json": "node scripts/schema-json.mjs",
     "privacy:scan": "node scripts/privacy-scan.mjs",
     "prepack": "npm run build",
-    "vid2": "node --experimental-strip-types src/cli/index.ts"
+    "vid2": "node src/cli/index.ts"
   },
   "dependencies": { "zod": "^4.6.5" },
   "optionalDependencies": { "uiohook-napi": "^1.5.5" },
@@ -84,14 +97,24 @@ tsconfig.json: `{"compilerOptions":{"target":"ES2023","module":"NodeNext","modul
 "skipLibCheck":true,"types":["node"],"noEmit":true},"include":["src","scripts","tests","eslint.config.js"]}`
 tsconfig.build.json: extends tsconfig.json with `{"noEmit":false,"outDir":"dist","rootDir":"src","declaration":true,
 "sourceMap":true}`, include `["src"]`, exclude `["src/**/*.test.ts"]`.
-eslint.config.js: `@eslint/js` recommended + `typescript-eslint` recommendedTypeChecked on `src/**/*.ts`, `tests/**/*.ts`,
-globals.node; ignores dist, node_modules, schema; rules: no-floating-promises error, consistent-type-imports error.
+eslint.config.js (flat config): `@eslint/js` recommended for all; `typescript-eslint` recommendedTypeChecked scoped to `**/*.ts` with
+`languageOptions.parserOptions.projectService: true` and `tsconfigRootDir: import.meta.dirname` (W2-04); `*.mjs`/`*.js` files get plain
+recommended + globals.node; ignores dist, node_modules, schema, coverage; rules: no-floating-promises error, consistent-type-imports error.
 bin/vid2.js: `#!/usr/bin/env node` → `import('../dist/cli/index.js')`; if dist is missing and a src/ tree exists
-(repo checkout), fall back to `import('../src/cli/index.ts')` (Node >= 22.18 strips types) — this lets `npm link` work before build.
-scripts/test.mjs: collects `src/**/*.test.ts` (+ `tests/e2e/*.test.ts` unless --unit), sets `VID2_HOME` to
-`fs.mkdtempSync(os.tmpdir()/vid2-test-)`, runs `node --test --test-concurrency=4 <files>`, exits with its code.
-scripts/schema-json.mjs: imports src/timeline/schema.ts, writes `z.toJSONSchema(TimelineSchema, {target:"draft-2020-12"})`
+(repo checkout), fall back to `import('../src/cli/index.ts')` (Node >= 22.18 strips types) — this lets `npm link` work before build; if
+neither exists it prints "vid2: build output missing (run npm run build)" to stderr and exits 1 (W2-02).
+scripts/test.mjs: enumerates test files with `fs.readdirSync(…, {recursive: true})` (no shell globs): `src/**/*.test.ts` plus
+`tests/e2e/*.test.ts` unless `--unit` (and `--e2e` for only e2e) under `--root <dir>` (default: the repository root, used by runner.test.ts);
+fails with exit 1 when zero files are found; sets `VID2_HOME` to a fresh
+`fs.mkdtempSync(os.tmpdir()/vid2-test-)`; spawns `node --test --test-concurrency=4 <files>` without a shell and exits with the child's status
+(W2-05). Skip policy: helpers `requireFfmpeg(t)`/`requirePlaywright(t)` in tests/helpers.ts call `t.skip(reason)` only when the matching
+`VID2_REQUIRE_*` variable is unset; when set, a missing tool fails the test.
+scripts/schema-json.mjs: imports src/timeline/schema.ts, writes `z.toJSONSchema(TimelineSchema, {target:"draft-2020-12", io:"input"})`
 with `$id: "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json"` to schema/timeline.v1.json (2-space JSON + newline).
+The published schema describes **authored input** (W2-03): `z.toJSONSchema(TimelineSchema, {target: "draft-2020-12", io: "input"})` so defaulted
+fields are optional (verified locally: `io: "input"` drops defaulted keys from `required`, output mode keeps them). Refinements JSON Schema
+cannot express (font needs path or family) stay runtime-only and are listed in structure/timeline.md; schema.test.ts asserts defaulted fields
+are not required, unknown keys are rejected by both zod and the JSON Schema (`additionalProperties: false`), and fixtures behave identically.
 
 ## CLI contract (src/cli, src/shared/errors.ts)
 
@@ -133,7 +156,9 @@ unknown command → E_INPUT with the command list in details; `--help` per comma
 - time.ts: `type Fps = {num: number; den: number}`; `parseFps(v: number|string): Fps` ("30", 30, "30000/1001", "29.97"→30000/1001);
   `fpsValue(f)`; `secondsToFrames(s, f) = Math.round(s * f.num / f.den)`; `framesToSeconds(n, f)`;
   `parseTimeLiteral(v: number|string): {unit: "s"|"f"|"b"; value: number}` (number → seconds; "1.5s","1500ms","45f","2b");
-  `toFrames(lit, ctx: {fps: Fps; beat?: {bpm: number; offsetFrames: number}}): number` — beats: `offset + round(value*60/bpm * fps)`
+  `toFrames(lit: TimeLiteralValue, ctx: {fps: Fps; beat?: BeatGrid}, kind: "position"|"duration"): number` with
+  `BeatGrid = {bpm: number; offsetFrames: number; meter: number}` — beats: position = `offsetFrames + round(value*60/bpm * fps)`, duration =
+  `round(value*60/bpm * fps)`; `fps` multiplication uses `num/den`
   only for absolute positions; durations in beats use `round(value*60/bpm*fps)` without offset (function takes `kind: "position"|"duration"`).
   Invalid literal → Vid2Error E_SCHEMA.
 - json.ts: `stableStringify(v)` (sorted keys, no whitespace). hash.ts: `sha256(data: string|Buffer)`, `hashJson(v)`, `hashFile(path)` (stream).
@@ -142,6 +167,11 @@ unknown command → E_INPUT with the command list in details; `--help` per comma
 
 ## Probe (src/probe)
 
+- Test seam (audit wp2 round 2 blocker 1): probe functions take an optional `runner: (cmd, args) => ReturnType<typeof run>` defaulting to
+  shared/exec `run`; tests pass a runner that executes `process.execPath` with `tests/fixtures/bin/fake-ffmpeg.mjs <args>` and env
+  `FAKE_FFMPEG_VERSION=5.1|7.0|8.0`, so no `.cmd` shim or shell is needed on Windows. The CLI e2e doctor test sets `VID2_FFMPEG` only for the
+  missing-path case (a path that does not exist); version cases are covered at the probe level plus one e2e through the hidden test hook
+  `VID2_TEST_FFMPEG_RUNNER=node-fake` (read only when `NODE_ENV=test`, documented as internal).
 - ffmpeg.ts: `locateTools(): {ffmpeg: string; ffprobe: string}` from `VID2_FFMPEG`/`VID2_FFPROBE` or PATH (`where` on win32 via
   PATH scan, no shell); missing → E_FFMPEG_MISSING with install hints per OS (brew, winget/choco, apt).
   `probeFfmpeg(opts?: {refresh?: boolean}): Promise<FfmpegInfo>` where
@@ -251,6 +281,11 @@ regenerated schema/timeline.v1.json (drift test), (3) its resolved form in resol
 unknown-key rejection, drift and resolve round-trip. Schema v1 may only grow optional fields; renames/removals need `version: 2` + an upgrade
 function.
 
+types.ts (wp2 boundary for wp4, audit wp2 blocker 1): `export interface EventResolver { resolve(ref: {event: string; source?: string}):
+{frame: number; sourceId: string} }` — frame is on the **timeline** clock (the capture layer's placement is applied by the resolver owner in
+030). wp2 ships no implementation; tests use an in-memory fake `{resolve: (r) => ({frame: table[r.event], sourceId: "cap"})}`.
+Offsets: every `offset` literal (EventRef, MarkerRef) is a signed duration parsed by `parseSignedLiteral` and added in frames after the
+base reference resolves (`base + toFrames(|off|, ctx, "duration") * sign`), result clamped to ≥ 0.
 resolve.ts: `resolveTimeline(t: Timeline, opts: {baseDir: string; events?: EventResolver}): ResolvedTimeline` where
 `ResolvedTimeline = {fps: Fps; width; height; totalFrames; scenes: ResolvedScene[]; ...}`,
 `ResolvedScene = {id; index; startFrame; frames; transitionIn: {type; frames} | null; transitionOut: {...} | null; layers: ResolvedLayer[]; effects}`.
@@ -265,6 +300,19 @@ text start < end; overlay/media source kinds compatible (overlay needs image/vid
 sum rules produce `ValidationIssue{path; code; message}` list; `vid2 validate <timeline.json> [--json]` prints issues and resolved
 summary (scenes with start/frames, total seconds); exit 2 when issues exist.
 
+## Implementation lanes (W2-04, disjoint write scopes)
+
+| Lane | Owner | Exclusive write scope |
+|---|---|---|
+| 0 (first, sequential) | main | package.json, package-lock.json, tsconfig*.json, `src/shared/**`, `src/index.ts` stub, `tests/helpers.ts`, `devlog/_fin/.gitkeep` |
+| Tooling | sol executor | eslint.config.js, .editorconfig, .gitattributes, .gitignore, LICENSE, README.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md, `bin/**`, `scripts/test.mjs`, `scripts/privacy-scan.mjs` (+ `scripts/privacy-scan.test.mjs`), `.github/**`, `tests/e2e/{pack,bin,runner}.test.ts`, `structure/INDEX.md`, `structure/overview.md`, devlog/README.md |
+| Timeline | sol executor | `src/timeline/**`, `schema/**`, `scripts/schema-json.mjs`, `tests/fixtures/timelines/**`, `structure/timeline.md` |
+| Probe | sol executor | `src/probe/**`, `tests/fixtures/probe/**`, `tests/fixtures/bin/**`, `structure/probe.md` |
+| CLI | sol executor | `src/cli/**`, `tests/e2e/cli.test.ts`, `structure/cli-contract.md` |
+
+Lanes code against the boundary exports named in this doc (`src/timeline/index.ts`, `src/probe/index.ts`); package.json changes requested by
+a lane go through main. After all lanes stop, main integrates (src/index.ts exports, command registration), then runs the full gate.
+
 ## Tests (must exist and pass)
 
 - time.test.ts: parseFps cases (30, "30000/1001", "29.97", invalid→throws); literal parsing; beats 120 bpm "2b" at 30 fps = 30 frames duration; position with offset.
@@ -275,8 +323,22 @@ summary (scenes with start/frames, total seconds); exit 2 when issues exist.
 - schema.test.ts: minimal fixture parses with defaults; invalid fixtures fail with paths; json-schema-drift.test.ts: regenerated JSON Schema deep-equals committed file.
 - resolve.test.ts: 3 scenes 2s/2s/2s with 0.5s fade transitions → starts 0,45,90, total 150 frames @30; cut transitions → 0,60,120.
 - validate.test.ts: missing source id, transition longer than scene, beats without bpm.
-- e2e cli.test.ts: spawn `node bin/vid2.js` doctor/schema/validate with --json; pack.test.ts (CI only via VID2_PACK_TEST=1): `npm pack` then install
-  tarball into temp prefix and run `vid2 version --json`.
+- e2e cli.test.ts: spawn `node bin/vid2.js` doctor/schema/validate/resolve with --json; pack.test.ts (CI only via VID2_PACK_TEST=1): `npm pack` then
+  install the tarball into a temp prefix and run `vid2 version --json` from outside the checkout.
+- Conditional-path activation tests (audit wp2 blocker 2):
+  - bin.test.ts: copy `bin/vid2.js` into temp layouts — (a) with `dist/cli/index.js` stub → uses dist; (b) only `src/cli/index.ts` stub → uses
+    source; (c) neither → exit 1 and stderr "build output missing".
+  - runner.test.ts: run scripts/test.mjs with `--root <tmp>` over (a) an empty tree → exit 1 "no test files"; (b) a tree with one test calling
+    `requireFfmpeg(t)` and `PATH` without ffmpeg → skip when `VID2_REQUIRE_FFMPEG` unset, failure when set to 1; (c) a tree with one test calling
+    `requirePlaywright(t)` and the child process started with `PLAYWRIGHT_BROWSERS_PATH` (Playwright's own variable) set to an empty temp dir
+    before playwright-core is imported, so `chromium.executablePath()` points at a missing file and the helper sees no browser → skip when `VID2_REQUIRE_PLAYWRIGHT` unset, failure when set to 1.
+  - doctor tests in src/probe/ffmpeg.test.ts + tests/e2e/cli.test.ts: `VID2_FFMPEG`/`VID2_FFPROBE` pointing to a missing path → exit 3
+    E_FFMPEG_MISSING; to fake-ffmpeg reporting `version 5.1` → exit 3 with the upgrade fix; reporting `7.0` → exit 0 with a < 7.1 warning;
+    reporting `8.0` → exit 0. The e2e variant spawns `node bin/vid2.js doctor --json` with env `NODE_ENV=test`,
+    `VID2_TEST_FFMPEG_RUNNER=node-fake` and `FAKE_FFMPEG_VERSION=<v>` (the hook is ignored without NODE_ENV=test; a test asserts that too).
+  - tools.test.ts: temp PATH with/without fake `vhs`/`agg`/`asciinema` → paths vs null.
+  - resolve.test.ts additions: EventRef via the fake resolver; EventRef without resolver → E_INPUT; MarkerRef with offset "-0.5s" and a BarRef
+    marker at 120 bpm (bar 3 beat 1 = 4 s = 120 frames @30); negative result clamps to 0.
 
 ## CI (.github/workflows/ci.yml)
 
@@ -304,6 +366,6 @@ LICENSE MIT © 2026 lidge-ai. .gitignore: node_modules, dist, .vid2, coverage, *
 ## Verification (C for wp2)
 
 `npm ci && npm run typecheck && npm run lint && npm run build && npm test` (exit 0, test count > 0, no skipped ffmpeg tests locally);
-`node bin/vid2.js doctor --json` on this Mac shows libs.ass true and the drawtext canary "present" with --deep;
+`node bin/vid2.js doctor --deep --json` on this Mac shows libs.ass true and reports the drawtext canary result (expected "present" on 8.0.1);
 `node bin/vid2.js validate tests/fixtures/timelines/minimal.json --json` ok; `VID2_PACK_TEST=1 node --test tests/e2e/pack.test.ts` passes.
 Each command reads the change target: the test runner globs `src/**/*.test.ts` (scripts/test.mjs) and lint uses `eslint .`.

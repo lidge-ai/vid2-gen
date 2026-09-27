@@ -89,6 +89,9 @@ Non-blocking folded: src/probe/tools.test.ts named in the 010 file map.
 Round 4 (same reviewer): **VERDICT: GO-WITH-FIXES (blockers=0)**; the one file-map note (resolve.ts listed NEW twice) folded in 060.
 Architect recheck: no documented ARCH decision changed (all fixes refine contracts inside ARCH-03/04/06/09/10), so no reflection call is needed.
 
+wp2 A rounds (same reviewer Euler): FAIL(3: EventResolver boundary, activation tests, lane gaps) → FAIL(2: Windows .cmd shim vs shell-free
+runner, requirePlaywright untested) → FAIL(1: wrong Playwright env var) → PASS; all folded into 010.
+
 ## Work-phase map (dependency order)
 
 | Work-phase | Decade doc | Builds | Proves |
@@ -123,4 +126,7 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
 
 ## Attestation log
 
-(appended at each D)
+- **wp1 D (2026-09-27):** roadmap unit committed as e18dfca2 and verified (16 docs, 0 structural issues). Conclusion: the roadmap is
+  locked; implementation starts with wp2 foundations from 010 exactly as audited. Direction for wp2: build shared/ first (errors, exec, time,
+  json, hash, paths, log) because cli/probe/timeline import it, then run cli, probe, timeline and repo-scaffold lanes in parallel with
+  disjoint write scopes.
