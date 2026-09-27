@@ -6,6 +6,7 @@ import type { BeatGrid, Fps } from "../shared/index.ts";
 import type { StageEvent, StageSpec } from "../stage/types.ts";
 import type { ResolvedEffect, ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import type { GraphBuilder } from "./graph.ts";
+import type { TransitionSpec } from "./transitions.ts";
 
 export type ProfileName = "proxy" | "final";
 export type TextBackend = "ass" | "raster";
@@ -74,7 +75,8 @@ export interface BuildContext {
 
 /** A stage clip the runner materializes before any dependent segment: FFV1 bgra Matroska at the segment's internal rate. */
 export interface StageRender { id: string; hash: string; spec: StageSpec; out: string; frames: number; width: number; height: number }
-export interface AbsoluteStageEvent extends StageEvent { absoluteFrame: number }
+/** A stage event on the output frame clock; source is the stage render id (cue caps apply per source). */
+export interface AbsoluteStageEvent extends StageEvent { absoluteFrame: number; source: string }
 
 /**
  * A built layer. "overlay": an rgba stream placed at x/y (expressions allowed, evaluated per frame) during the
@@ -126,7 +128,8 @@ export interface SegmentPlan {
   hash: string;
 }
 
-export interface JoinStep { kind: "xfade" | "concat"; transition?: string; frames: number; offsetFrames: number }
+/** spec: the transition definition (geometry in output pixels) so preview can rebuild it with its own offset (040); absent in 0.1 plans. */
+export interface JoinStep { kind: "xfade" | "concat"; transition?: string; frames: number; offsetFrames: number; spec?: TransitionSpec }
 /** Join graph: inputs are the segment files in order ("0:v".."k:v"); output label is "vjoin". null graph = single segment (copy). */
 export interface JoinPlan { segments: { id: string; frames: number; renderFrames: number }[]; steps: JoinStep[]; totalFrames: number; graph: string | null }
 

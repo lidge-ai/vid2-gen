@@ -29,7 +29,8 @@ export const capabilities: CommandSpec = {
         acestep: await settle(audioProvider("acestep")!.capabilities()),
       },
       schemas: { timeline: "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json", steps: "vid2 schema --steps --json" },
-      layers: ["media", "text", "shape", "overlay", "stage", "kinetic"],
+      layers: ["media", "text", "shape", "overlay", "stage", "kinetic", "field", "bars", "ticker", "chips"],
+      transitions: { custom: ["zoomfrom", "iris"], note: "zoomfrom needs rect; iris takes center" },
       icons: Object.keys(ICONS).sort(),
     } };
   },

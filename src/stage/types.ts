@@ -47,6 +47,8 @@ export interface TextNode extends NodeBase {
   reveal?: number | undefined;
   /** Before `until` (stage frame) the node shows chars[floor((frame - from) / step) mod length] instead of `text` (scramble/decode). */
   scramble?: { chars: string; from: number; until: number; step: number } | undefined;
+  /** Between stage frames start and end the text shows a number counting from → to (ease out), with fixed decimals. */
+  counter?: { from: number; to: number; start: number; end: number; decimals: number; prefix: string; suffix: string } | undefined;
 }
 
 export interface ImageNode extends NodeBase { kind: "image"; image: string; width: number; height: number; radius: number; fit: "cover" | "contain" }
@@ -64,7 +66,10 @@ export interface IconNode extends NodeBase { kind: "icon"; paths: string[]; size
 
 export interface GroupNode extends NodeBase { kind: "group"; clip?: { x: number; y: number; width: number; height: number; radius: number } | undefined }
 
-export type StageNode = TextNode | ImageNode | RectNode | IconNode | GroupNode;
+/** Stroked SVG path in node pixels inside a width×height box (connectors, underlines, arrows); progress draws part of its length. */
+export interface PathNode extends NodeBase { kind: "path"; d: string[]; width: number; height: number; color: string; strokeWidth: number; progress: number }
+
+export type StageNode = TextNode | ImageNode | RectNode | IconNode | GroupNode | PathNode;
 
 export type StageEventKind = "glyph" | "token" | "icon" | "click" | "grow" | "state" | "tick";
 export interface StageEvent { frame: number; kind: StageEventKind; sfx?: string | undefined }

@@ -30,7 +30,10 @@ function kineticIssues(layer: Kinetic, path: string, t: Timeline): ValidationIss
 }
 
 export function kineticLayerIssues(layer: Layer, path: string, t: Timeline): ValidationIssue[] {
-  return layer.type === "kinetic" ? kineticIssues(layer, path, t) : [];
+  if (layer.type === "kinetic") return kineticIssues(layer, path, t);
+  if (layer.type !== "ticker" && layer.type !== "chips") return [];
+  return layer.items.flatMap((item, i) => (item.icon === undefined || iconPaths(item.icon) || t.sources[item.icon]?.type === "image" ? []
+    : [issue(`${path}.items.${i}.icon`, `unknown icon: ${item.icon} (built-in name or image source id)`)]));
 }
 
 /** State times on the resolved frame grid (any time unit, beats included): in order and inside the layer span. */

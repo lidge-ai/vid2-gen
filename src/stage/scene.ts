@@ -88,10 +88,18 @@ export function tintOf(color: string | null): [number, number, number, number] |
 
 /** Text node showing its scramble character for this frame (before resolving to its own text). */
 function scrambled(node: StageNode, frame: number): StageNode {
-  if (node.kind !== "text" || !node.scramble || frame >= node.scramble.until) return node;
+  if (node.kind !== "text") return node;
+  if (node.counter) return { ...node, text: counterText(node.counter, frame) };
+  if (!node.scramble || frame >= node.scramble.until) return node;
   const { chars, from, step } = node.scramble;
   const i = Math.max(0, Math.floor((frame - from) / Math.max(1, step))) % [...chars].length;
   return { ...node, text: [...chars][i]! };
+}
+
+function counterText(c: NonNullable<Extract<StageNode, { kind: "text" }>["counter"]>, frame: number): string {
+  const t = c.end <= c.start ? 1 : Math.max(0, Math.min(1, (frame - c.start) / (c.end - c.start)));
+  const eased = 1 - (1 - t) * (1 - t);
+  return c.prefix + (c.from + (c.to - c.from) * eased).toFixed(c.decimals) + c.suffix;
 }
 
 export type { Fps };

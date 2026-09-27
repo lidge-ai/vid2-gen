@@ -10,7 +10,7 @@ import { sfxArgs } from "../audio/sfx/render.ts";
 import { synthArgs } from "../audio/synth/engine.ts";
 import { hashJson, parseTimeLiteral, toFrames, Vid2Error } from "../shared/index.ts";
 import type { ResolvedTimeline } from "../timeline/index.ts";
-import type { AudioPlan, AudioRender, AudioStem, ProvenanceEntry } from "./ir.ts";
+import type { AbsoluteStageEvent, AudioPlan, AudioRender, AudioStem, ProvenanceEntry } from "./ir.ts";
 
 const RATE = 48000;
 type Audio = NonNullable<ResolvedTimeline["audio"]>;
@@ -116,7 +116,10 @@ function voices(b: Builder, a: Audio): void {
   });
 }
 
-function automatic(b: Builder, a: Audio, synth: boolean): void {
+/** Authored cues win: an auto cue anchored within 80 ms of an authored cue is dropped (040). */
+const AUTHORED_WINDOW = Math.round(0.08 * RATE);
+
+function automatic(b: Builder, a: Audio, synth: boolean, stageEvents: AbsoluteStageEvent[]): void {
   if (!(a.autoCues ?? synth)) return;
   const t = b.t;
   const transitions = t.scenes.slice(0, -1).flatMap((s, i) => {
@@ -129,8 +132,11 @@ function automatic(b: Builder, a: Audio, synth: boolean): void {
   const captureEvents: AutoCueInput["captureEvents"] = (t.captureEvents ?? []).flatMap((e) => e.kind === "click" || e.kind === "type"
     ? [{ atSample: b.sample(e.frame), kind: e.kind === "click" ? "click" : "type", ...(e.chars === undefined ? {} : { chars: e.chars }),
       ...(e.endFrame === undefined ? {} : { durationSamples: b.sample(e.endFrame) - b.sample(e.frame) }) }] : []);
-  autoCues({ transitions, drops, captureEvents, synthMusic: synth }).forEach((c, i) =>
-    b.place({ id: `auto-${i}`, role: "sfx", path: b.sfx(c.sfx), atSample: c.atSample, gain: c.gain }));
+  const stage = stageEvents.map((e) => ({ atSample: b.sample(e.absoluteFrame), kind: e.kind, source: e.source }));
+  const authored = a.cues.map((c) => b.sample(c.frame));
+  autoCues({ transitions, drops, captureEvents, synthMusic: synth, stageEvents: stage })
+    .filter((c) => !authored.some((s) => Math.abs(s - c.anchorSample) <= AUTHORED_WINDOW))
+    .forEach((c, i) => b.place({ id: `auto-${i}`, role: "sfx", path: b.sfx(c.sfx), atSample: c.atSample, gain: c.gain }));
 }
 
 function mediaAudio(b: Builder): void {
@@ -144,12 +150,13 @@ function mediaAudio(b: Builder): void {
 }
 
 /** null when the timeline has no audio section and no audible media layers (video-only render). */
-export function buildAudioPlan(t: ResolvedTimeline, opts: { workDir: string; container: string; timelinePath: string; mix: (stems: AudioStem[], o: { durationSamples: number; duck: boolean }) => string }): AudioPlan | null {
+export function buildAudioPlan(t: ResolvedTimeline, opts: { workDir: string; container: string; timelinePath: string;
+  mix: (stems: AudioStem[], o: { durationSamples: number; duck: boolean }) => string; stageEvents?: AbsoluteStageEvent[] }): AudioPlan | null {
   const dir = join(opts.workDir, "audio");
   const b = new Builder(t, dir, opts.timelinePath);
   const a = t.audio;
   const synth = a ? music(b, a) : false;
-  if (a) { voices(b, a); cues(b, a); automatic(b, a, synth); }
+  if (a) { voices(b, a); cues(b, a); automatic(b, a, synth, opts.stageEvents ?? []); }
   mediaAudio(b);
   if (!b.stems.length) return null;
   const durationSamples = b.sample(t.totalFrames);

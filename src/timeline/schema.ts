@@ -3,9 +3,10 @@ import { z } from "zod";
 import { Color, Span, TimeLiteral } from "./primitives.ts";
 import { StageLayer } from "./stage-schema.ts";
 import { KineticLayer } from "./kinetic-schema.ts";
+import { BarsLayer, ChipsLayer, FieldLayer, TickerLayer } from "./components-schema.ts";
 
 export { Color, TimeLiteral };
-export { KineticLayer, StageLayer };
+export { BarsLayer, ChipsLayer, FieldLayer, KineticLayer, StageLayer, TickerLayer };
 const SignedOffset = z.string().regex(/^-?\d+(\.\d+)?(s|ms|f|b)$/);
 export const EventRef = z.strictObject({ event: z.string().min(1), source: z.string().optional(), offset: SignedOffset.optional() });
 export const MarkerRef = z.strictObject({ marker: z.string().min(1), offset: SignedOffset.optional() });
@@ -32,8 +33,11 @@ export const Source = z.discriminatedUnion("type", [
 export const Font = z.strictObject({ path: z.string().optional(), family: z.string().optional() }).refine(f => f.path || f.family);
 export const TRANSITIONS = ["cut", "fade", "fadeblack", "fadewhite", "dissolve", "slideleft", "slideright", "slideup", "slidedown", "wipeleft", "wiperight",
   "wipeup", "wipedown", "circleopen", "circleclose", "radial", "smoothleft", "smoothright", "smoothup", "smoothdown", "pixelize", "zoomin", "diagtl", "diagtr",
-  "diagbl", "diagbr", "hlslice", "hrslice", "vuslice", "vdslice", "squeezeh", "squeezev", "distance", "hblur"] as const;
-export const Transition = z.strictObject({ type: z.enum(TRANSITIONS), duration: TimeLiteral.default("0.3s") });
+  "diagbl", "diagbr", "hlslice", "hrslice", "vuslice", "vdslice", "squeezeh", "squeezev", "distance", "hblur", "zoomfrom", "iris"] as const;
+/** zoomfrom grows the next scene out of `rect` (e.g. an app icon); iris opens a circle from `center` (040). Authored pixels. */
+export const Transition = z.strictObject({ type: z.enum(TRANSITIONS), duration: TimeLiteral.default("0.3s"),
+  rect: z.strictObject({ x: z.number(), y: z.number(), width: z.number().positive(), height: z.number().positive(), radius: z.number().min(0).default(24) }).optional(),
+  center: z.strictObject({ x: z.number(), y: z.number() }).optional() });
 export const Ease = z.enum(["linear", "in", "out", "inout", "punch"]);
 export const CameraKey = z.strictObject({ at: TimeLiteral, zoom: z.number().min(0.2).max(8).default(1), x: z.number().min(0).max(1).default(0.5),
   y: z.number().min(0).max(1).default(0.5), ease: Ease.default("inout") });
@@ -59,7 +63,8 @@ export const ShapeLayer = z.strictObject({ type: z.literal("shape"), shape: z.li
   color: Color, radius: z.number().default(0), ...Span });
 export const OverlayLayer = z.strictObject({ type: z.literal("overlay"), source: z.string(), blend: z.enum(["screen", "add", "normal"]).default("screen"),
   opacity: z.number().min(0).max(1).default(0.9), motion: z.enum(["none", "sweep"]).default("none"), ...Span });
-export const Layer = z.discriminatedUnion("type", [MediaLayer, TextLayer, ShapeLayer, OverlayLayer, StageLayer, KineticLayer]);
+export const Layer = z.discriminatedUnion("type", [MediaLayer, TextLayer, ShapeLayer, OverlayLayer, StageLayer, KineticLayer, FieldLayer, BarsLayer,
+  TickerLayer, ChipsLayer]);
 export const Effect = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("grade"), lut: z.string().optional(), brightness: z.number().default(0), contrast: z.number().default(1),
     saturation: z.number().default(1), temperature: z.number().int().min(1000).max(40000).optional() }),

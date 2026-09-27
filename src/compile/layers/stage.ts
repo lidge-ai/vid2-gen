@@ -81,7 +81,7 @@ export function placeStage(spec: StageSpec, layer: { startFrame: number; startSe
   const id = `stage-${hash.slice(0, 16)}`;
   const out = join(ctx.workDir, `${id}.mkv`);
   ctx.stages.set(id, { id, hash, spec, out, frames: spec.frames, width: spec.width, height: spec.height });
-  ctx.stageEvents?.push(...spec.events.map((e) => ({ ...e, absoluteFrame: layer.absoluteStartFrame + Math.round(e.frame / ctx.rate) })));
+  ctx.stageEvents?.push(...spec.events.map((e) => ({ ...e, source: id, absoluteFrame: layer.absoluteStartFrame + Math.round(e.frame / ctx.rate) })));
   const input = ctx.inputs.add({ kind: "video", path: out, args: ["-i", out] });
   const label = ctx.graph.add([input], ["setpts=PTS-STARTPTS", `fps=${layerRate(ctx)}`, "format=rgba",
     `setpts=PTS-STARTPTS+${num(layer.startSeconds)}/TB`]);

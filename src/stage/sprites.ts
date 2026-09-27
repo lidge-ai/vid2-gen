@@ -5,7 +5,7 @@
 import { blurChannel, measureText, roundedBoxDistance, roundedRectMask, strokeMask, textMask } from "./raster.ts";
 import type { Mask } from "./raster.ts";
 import { iconPolylines } from "./icons/path.ts";
-import type { IconNode, ImageNode, RectNode, StageNode, TextNode } from "./types.ts";
+import type { IconNode, ImageNode, PathNode, RectNode, StageNode, TextNode } from "./types.ts";
 
 export interface Sprite { width: number; height: number; ox: number; oy: number; scale: number; channels: 1 | 4; data: Float32Array }
 export interface DecodedImage { width: number; height: number; data: Uint8Array }
@@ -39,6 +39,7 @@ export function nodeBox(node: StageNode): { width: number; height: number } {
   switch (node.kind) {
     case "text": { const m = measureText(node.font, node.text, node.size, node.letterSpacing); return { width: m.width, height: m.height }; }
     case "rect": case "image": return { width: Math.max(0, node.width), height: Math.max(0, node.height) };
+    case "path": return { width: Math.max(0, node.width), height: Math.max(0, node.height) };
     case "icon": return { width: node.size, height: node.size };
     case "group": return { width: 0, height: 0 };
   }
@@ -91,6 +92,13 @@ function iconSprite(node: IconNode, scale: number, blur: number): Sprite {
   const size = node.size * scale;
   const lines = iconPolylines(node.paths, size / 24, pad, node.progress);
   const mask = strokeMask(lines, Math.ceil(size + pad * 2), Math.ceil(size + pad * 2), node.strokeWidth * size / 24);
+  return maskSprite(mask, pad, scale, blur);
+}
+
+function pathSprite(node: PathNode, scale: number, blur: number): Sprite {
+  const pad = padFor(blur, scale) + Math.ceil(node.strokeWidth * scale);
+  const lines = iconPolylines(node.d, scale, pad, node.progress);
+  const mask = strokeMask(lines, Math.ceil(node.width * scale + pad * 2), Math.ceil(node.height * scale + pad * 2), node.strokeWidth * scale);
   return maskSprite(mask, pad, scale, blur);
 }
 
@@ -149,6 +157,10 @@ export function nodePieces(node: StageNode, cache: SpriteCache, scale: number, b
     case "icon": {
       const key = `icon|${node.size}|${node.strokeWidth}|${node.progress.toFixed(3)}|${scale}|${blur}|${node.paths.join(" ")}`;
       return [{ sprite: cache.get(key, () => iconSprite(node, scale, blur)), tint: node.color, dx: 0, dy: 0 }];
+    }
+    case "path": {
+      const key = `path|${node.width}x${node.height}|${node.strokeWidth}|${node.progress.toFixed(3)}|${scale}|${blur}|${node.d.join(" ")}`;
+      return [{ sprite: cache.get(key, () => pathSprite(node, scale, blur)), tint: node.color, dx: 0, dy: 0 }];
     }
     case "image": {
       const image = cache.images.get(node.image);

@@ -99,7 +99,7 @@ export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): Rend
     pngDir: opts.pngDir ?? cacheDir("png"), textBackend, ...(t.beat ? { beat: t.beat } : {}), stages, stageEvents };
   const segments: SegmentPlan[] = t.scenes.map((s, i) => compileSegment(s, base, i === t.scenes.length - 1));
   const join = planJoin(segments.map(({ id, frames, renderFrames }) => ({ id, frames, renderFrames })),
-    t.scenes.map((s) => s.transitionOut), o.fps);
+    t.scenes.map((s) => s.transitionOut), o.fps, { width: o.width, height: o.height, scale: o.scale });
   if (join.totalFrames !== t.totalFrames) {
     throw new Vid2Error("E_INTERNAL", "join total differs from resolved timeline", { details: { join: join.totalFrames, timeline: t.totalFrames } });
   }
@@ -108,7 +108,8 @@ export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): Rend
   const info = opts.ffmpeg;
   return { planVersion: 1, timelineHash: opts.timelineHash, profile: opts.profile, output, totalFrames: t.totalFrames, segments, join,
     post: postPlan(t, base, t.totalFrames),
-    audio: buildAudioPlan(t, { workDir: opts.workDir, container: o.container, timelinePath: opts.timelinePath ?? "<timeline.json>", mix: mixGraph }),
+    audio: buildAudioPlan(t, { workDir: opts.workDir, container: o.container, timelinePath: opts.timelinePath ?? "<timeline.json>", mix: mixGraph,
+      stageEvents }),
     workDir: opts.workDir,
     stageRenders: [...stages.values()],
     tool: { ffmpeg: info.path, ffprobe: opts.ffprobe, version: info.version, major: info.major, minor: info.minor } };

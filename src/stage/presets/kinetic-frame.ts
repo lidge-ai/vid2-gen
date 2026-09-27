@@ -1,5 +1,6 @@
 /** Kinetic framing (020): the pill behind the line, camera follow, and the expand plate. */
 import { interpolate } from "../tracks.ts";
+import { settleTime } from "../springs.ts";
 import type { SpringParams } from "../types.ts";
 import { NODE_BASE } from "./builder.ts";
 import type { Key, SpecBuilder } from "./builder.ts";
@@ -85,7 +86,8 @@ export function expandKeys(b: SpecBuilder, c: KineticConfig, all: Map<string, Ac
     const node = "kin:" + id;
     if (image) b.key(node, "opacity", [{ t: s.at, v: 1 }, { t: s.at, v: 0, ease: "hold" }]);
     else growIcon(b, node, s.at, valueAt(b, camera, s.at), target, size, spring);
-    b.event(s.at, "grow");
+    // The riser is end-anchored: fire it when the plate has settled over the frame.
+    b.event(s.at + settleTime(spring), "grow");
   }
 }
 

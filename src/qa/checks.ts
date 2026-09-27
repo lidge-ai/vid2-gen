@@ -2,6 +2,7 @@ import { num, quoteExpr } from "../compile/escape.ts";
 import { measureLoudness } from "../audio/loudness.ts";
 import { runChecked } from "../shared/index.ts";
 import type { ResolvedTimeline } from "../timeline/index.ts";
+import { stageTextBoxes } from "../compile/layers/stage-text.ts";
 import type { QaCheck, QaFacts, QaIssue } from "./report.ts";
 
 export interface CheckOptions { video: string; ffmpeg: string; facts: QaFacts; timeline?: ResolvedTimeline;
@@ -83,9 +84,31 @@ async function sampleBackground(video: string, ffmpeg: string, frame: number, x:
   return luminance([...result.stdout.subarray(0, 3)]);
 }
 
+/** Stage-family text (030): settled boxes from the compiled specs; WCAG 4.5:1 under 40 px, 3:1 for large text; severity warn. */
+async function stageContrast(opts: CheckOptions): Promise<QaIssue[]> {
+  const t = opts.timeline!;
+  const issues: QaIssue[] = [];
+  const scale = opts.facts.width / t.width;
+  for (const box of stageTextBoxes(t)) {
+    const color = /^#([0-9a-f]{6})/i.exec(box.color);
+    if (!color) continue;
+    const rgb = [0, 2, 4].map((offset) => Number.parseInt(color[1]!.slice(offset, offset + 2), 16));
+    const x = Math.max(0, Math.min(opts.facts.width - 2, Math.floor(box.x * scale - 4)));
+    const y = Math.max(0, Math.min(opts.facts.height - 2, Math.floor(box.y * scale - 4)));
+    const background = await sampleBackground(opts.video, opts.ffmpeg, Math.max(0, Math.min(opts.facts.frames - 1, box.absoluteFrame)), x, y);
+    const foreground = luminance(rgb);
+    const ratio = (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
+    const threshold = box.size < 40 ? 4.5 : 3;
+    if (ratio < threshold) issues.push(issue("contrast", "CONTRAST", `Stage text in ${box.sceneId} has estimated contrast ${num(ratio)}:1`,
+      "choose a more contrasting text colour or theme", "warn", { measured: ratio, threshold,
+        range: [box.absoluteFrame * t.fps.den / t.fps.num, box.absoluteFrame * t.fps.den / t.fps.num] }));
+  }
+  return issues;
+}
+
 async function textIssues(opts: CheckOptions): Promise<QaIssue[]> {
   if (!opts.timeline) return [];
-  const issues: QaIssue[] = [];
+  const issues: QaIssue[] = await stageContrast(opts);
   const scale = opts.facts.width / opts.timeline.width;
   for (const scene of opts.timeline.scenes) for (const layer of scene.layers) {
     if (layer.type !== "text") continue;
@@ -150,3 +173,4 @@ export async function runChecks(opts: CheckOptions): Promise<{ issues: QaIssue[]
   else skipped.push("text_safe", "contrast");
   return { issues: issues.map((item, i) => ({ ...item, id: `${item.check}-${i + 1}` })), skipped };
 }
+

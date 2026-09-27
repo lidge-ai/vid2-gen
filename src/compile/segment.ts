@@ -14,6 +14,7 @@ import { buildRasterText } from "./layers/text-raster.ts";
 import { buildCursorOverlays } from "./layers/cursor.ts";
 import { buildStageLayer, stageCompositeSpan } from "./layers/stage.ts";
 import { buildKineticLayer } from "./layers/kinetic.ts";
+import { buildComponentLayer } from "./layers/components.ts";
 
 /** Layer types rendered through the stage engine (010). */
 export const STAGE_FAMILY: ReadonlySet<string> = new Set(["stage", "kinetic", "field", "bars", "ticker", "chips"]);
@@ -63,6 +64,7 @@ function buildLayer(layer: ResolvedLayer, ctx: BuildContext): LayerOutput {
     case "overlay": return buildOverlayLayer(layer, ctx);
     case "stage": return buildStageLayer(layer, ctx);
     case "kinetic": return buildKineticLayer(layer, ctx);
+    case "field": case "bars": case "ticker": case "chips": return buildComponentLayer(layer, ctx);
     case "text": throw new Vid2Error("E_INTERNAL", "text layers are compiled as runs");
   }
 }

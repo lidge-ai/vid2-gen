@@ -55,6 +55,10 @@ function checkResolved(r: ResolvedTimeline): ValidationIssue[] {
     if (scene.frames <= 0) issues.push(issue(`scenes.${i}.duration`, "empty_scene", "scene duration must resolve to at least one frame"));
     const next = r.scenes[i + 1];
     if (scene.transitionOut && !next) issues.push(issue(`scenes.${i}.transition`, "last_transition", "last scene cannot transition out"));
+    const tr = scene.transitionOut;
+    if (tr?.type === "zoomfrom" && !tr.rect) issues.push(issue(`scenes.${i}.transition.rect`, "E_SCHEMA", "zoomfrom needs the rect it grows from"));
+    if (tr?.rect && tr.type !== "zoomfrom") issues.push(issue(`scenes.${i}.transition.rect`, "E_SCHEMA", "rect only applies to zoomfrom"));
+    if (tr?.center && tr.type !== "iris") issues.push(issue(`scenes.${i}.transition.center`, "E_SCHEMA", "center only applies to iris"));
     if (scene.transitionOut && next && scene.transitionOut.frames >= Math.min(scene.frames, next.frames)) {
       issues.push(issue(`scenes.${i}.transition.duration`, "transition_length", "transition must be shorter than both scenes"));
     }
