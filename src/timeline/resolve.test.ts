@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { Vid2Error } from "../shared/errors.ts";
 import { TimelineSchema } from "./schema.ts";
 import { resolveTimeline } from "./resolve.ts";
@@ -50,8 +51,8 @@ test("relative source and font paths resolve against timeline directory", () => 
   const t = TimelineSchema.parse({ version: 1, sources: { still: { type: "image", path: "media/still.png" } },
     fonts: { display: { path: "fonts/display.otf" } }, scenes: [{ id: "one", duration: "1s", layers: [{ type: "media", source: "still" }] }] });
   const r = resolveTimeline(t, { baseDir });
-  assert.equal(r.sources.still && "path" in r.sources.still ? r.sources.still.path : "", `${baseDir}media/still.png`);
-  assert.equal(r.fonts.display?.path, `${baseDir}fonts/display.otf`);
+  assert.equal(r.sources.still && "path" in r.sources.still ? r.sources.still.path : "", join(baseDir, "media", "still.png"));
+  assert.equal(r.fonts.display?.path, join(baseDir, "fonts", "display.otf"));
   assert.equal(r.scenes[0]?.layers[0]?.absoluteEndFrame, 30);
 });
 

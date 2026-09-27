@@ -14,6 +14,8 @@ const fake: Runner = (_cmd, args, opts) => run(process.execPath, [fileURLToPath(
 void test("parses captured FFmpeg capability listings", () => {
   assert.ok(parseCapabilities(fixture("filters.txt"), "filters").has("xfade"));
   assert.ok(parseCapabilities(fixture("filters.txt"), "filters").has("drawtext"));
+  const v61 = " T.. = Timeline support\n TSC xfade             VV->V      Cross fade one video with another.\n ..C drawtext          V->V       Draw text.\n";
+  assert.deepEqual([...parseCapabilities(v61, "filters")], ["xfade", "drawtext"]);
   assert.ok(parseCapabilities(fixture("encoders.txt"), "codecs").has("h264_videotoolbox"));
   assert.ok(parseCapabilities(fixture("devices.txt"), "devices").has("avfoundation"));
 });

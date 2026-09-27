@@ -45,7 +45,7 @@ export function locateTools(): ToolPaths {
 export function parseCapabilities(text: string, kind: "filters" | "codecs" | "devices"): Set<string> {
   const out = new Set<string>();
   for (const line of text.split(/\r?\n/)) {
-    const pattern = kind === "filters" ? /^\s*[T.][S.]\s+([\w-]+)\s+\S+->\S+/ :
+    const pattern = kind === "filters" ? /^\s*[T.][S.][C.]?\s+([\w-]+)\s+\S+->\S+/ :
       kind === "devices" ? /^\s*D[ .]\s+([\w-]+)\s/ : /^\s*[VAS][.A-Z]{5}\s+([\w-]+)\s/;
     const match = pattern.exec(line);
     if (match?.[1]) out.add(match[1]);
