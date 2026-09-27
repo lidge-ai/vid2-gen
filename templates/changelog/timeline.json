@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json",
+  "version": 1,
+  "output": { "width": 1920, "height": 1080, "fps": 30, "background": "#0E1820" },
+  "scenes": [
+    { "id": "title", "duration": "4s", "background": "#0E1820", "transition": { "type": "fade", "duration": "0.3s" }, "layers": [
+      { "type": "text", "text": "RELEASE NOTES", "x": 135, "y": 225, "align": "left", "font": "mono", "size": 54, "color": "#DAB680", "animation": "none" },
+      { "type": "text", "text": "What changed.", "x": 135, "y": 575, "align": "left", "font": "serif", "size": 160, "weight": "regular", "color": "#F0F4F3", "animation": "rise" }
+    ] },
+    { "id": "item-one", "duration": "5s", "background": "#F0F4F3", "transition": { "type": "fade", "duration": "0.3s" }, "layers": [
+      { "type": "text", "text": "01 / FASTER", "x": 135, "y": 220, "align": "left", "font": "mono", "size": 58, "color": "#18506A", "animation": "none" },
+      { "type": "text", "text": "Less waiting. More doing.", "x": 135, "y": 550, "align": "left", "font": "sans", "size": 105, "weight": "black", "color": "#0E1820", "animation": "rise" }
+    ] },
+    { "id": "item-two", "duration": "5s", "background": "#DAB680", "transition": { "type": "fade", "duration": "0.3s" }, "layers": [
+      { "type": "text", "text": "02 / CLEARER", "x": 135, "y": 220, "align": "left", "font": "mono", "size": 58, "color": "#0E1820", "animation": "none" },
+      { "type": "text", "text": "The next step is obvious.", "x": 135, "y": 550, "align": "left", "font": "sans", "size": 100, "weight": "black", "color": "#0E1820", "animation": "rise" }
+    ] },
+    { "id": "item-three", "duration": "5s", "background": "#18506A", "transition": { "type": "fade", "duration": "0.3s" }, "layers": [
+      { "type": "text", "text": "03 / YOUR TURN", "x": 135, "y": 220, "align": "left", "font": "mono", "size": 58, "color": "#DAB680", "animation": "none" },
+      { "type": "text", "text": "Ready when you are.", "x": 135, "y": 550, "align": "left", "font": "sans", "size": 112, "weight": "black", "color": "#FFFFFF", "animation": "rise" }
+    ] },
+    { "id": "end", "duration": "2.2s", "background": "#0E1820", "layers": [
+      { "type": "text", "text": "VERSION 1.0  /  AVAILABLE NOW", "font": "mono", "size": 52, "color": "#DAB680", "animation": "fade" }
+    ] }
+  ]
+}

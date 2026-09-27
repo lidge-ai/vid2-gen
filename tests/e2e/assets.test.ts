@@ -45,3 +45,27 @@ void test("generated sources: missing → exit 2 with fix; --generate calls ima2
   const cached = await vid2(dir, ["resolve", "t.json"], env);
   assert.deepEqual((cached.body.data["assets"] as { status: string }[]).map((a) => a.status), ["cached"]);
 });
+
+
+void test("--placeholders renders missing files and uncached generated sources without calling ima2", async (t) => {
+  if (!requireFfmpeg(t)) return;
+  const dir = tempDir("vid2-placeholders-");
+  const count = join(dir, "calls.log");
+  writeFileSync(count, "");
+  const env = { IMA2_BIN: fake, FAKE_IMA2_MODE: "ready", FAKE_IMA2_COUNT: count, VID2_HOME: join(dir, "home") };
+  writeFileSync(join(dir, "t.json"), JSON.stringify({ version: 1, output: { width: 160, height: 90, fps: 15 },
+    sources: { hero: { type: "generate", provider: "ima2", kind: "image", prompt: "x" }, shot: { type: "image", path: "missing.png" },
+      leak: { type: "video", path: "missing-leak.mp4" }, song: { type: "audio", path: "missing.wav" } },
+    scenes: [{ id: "one", duration: "1s", layers: [{ type: "media", source: "hero" }, { type: "media", source: "shot", start: "0.5s" }] }],
+    overlays: [{ type: "overlay", source: "leak" }], audio: { music: { source: "song" } } }));
+  for (const cmd of [["compile", "t.json"], ["render", "t.json", "-o", "p.mp4"]]) {
+    const without = await vid2(dir, cmd, env);
+    assert.equal(without.code, 2, cmd.join(" "));
+    const withFlag = await vid2(dir, [...cmd, "--placeholders"], env);
+    assert.equal(withFlag.body.ok, true, JSON.stringify(withFlag.body));
+    assert.deepEqual([...(withFlag.body.warnings ?? [])].filter((w) => w.startsWith("W_PLACEHOLDER")).sort(),
+      ["W_PLACEHOLDER hero", "W_PLACEHOLDER leak", "W_PLACEHOLDER shot", "W_PLACEHOLDER song"]);
+  }
+  assert.equal(calls(count), 0);
+});
+

@@ -1,0 +1,3 @@
+{"id":"a1","seq":0,"kind":"goto","tMs":1.227208,"endMs":28.588041,"frame":0,"source":"agent"}
+{"id":"a2","seq":1,"kind":"hover","tMs":302.550083,"endMs":336.067625,"frame":5,"point":{"x":1155,"y":199.5},"bbox":{"x":1070,"y":175,"width":170,"height":49},"source":"agent"}
+{"id":"a3","seq":2,"kind":"click","label":"publish","tMs":543.331541,"endMs":574.86525,"frame":8,"point":{"x":1155,"y":199.5},"bbox":{"x":1070,"y":175,"width":170,"height":49},"source":"agent"}

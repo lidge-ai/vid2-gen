@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json",
+  "version": 1,
+  "output": { "width": 1920, "height": 1080, "fps": 30, "background": "#101820" },
+  "beat": { "bpm": 120 },
+  "sources": {
+    "hero": { "type": "generate", "provider": "ima2", "kind": "image", "prompt": "Editorial product photograph of a sculptural object on deep midnight slate, warm copper side light, generous dark negative space for typography, cinematic but restrained", "options": {} }
+  },
+  "scenes": [
+    { "id": "signal", "duration": "4s", "background": "#101820", "transition": { "type": "fade", "duration": "0.5s" }, "layers": [
+      { "type": "shape", "shape": "rect", "x": 112, "y": 122, "width": 12, "height": 690, "color": "#E7AA69" },
+      { "type": "text", "text": "A BETTER WAY", "x": 160, "y": 390, "align": "left", "font": "sans", "size": 132, "weight": "black", "color": "#F4F0E8", "animation": "rise", "start": "0.35s" },
+      { "type": "text", "text": "STARTS HERE", "x": 160, "y": 555, "align": "left", "font": "serif", "size": 125, "weight": "regular", "color": "#E7AA69", "animation": "fade", "start": "1.15s" }
+    ] },
+    { "id": "reveal", "duration": "9s", "background": "#181F29", "transition": { "type": "fade", "duration": "0.5s" }, "layers": [
+      { "type": "media", "source": "hero", "motion": "kenburns", "fit": "cover" },
+      { "type": "shape", "shape": "rect", "x": 0, "y": 790, "width": 1920, "height": 290, "color": "#101820CC" },
+      { "type": "text", "text": "Made to move you.", "x": 115, "y": 920, "align": "left", "font": "serif", "size": 110, "weight": "regular", "color": "#FFFFFF", "animation": "fade", "start": "1s" }
+    ] },
+    { "id": "three-points", "duration": "9s", "background": "#E8E3D8", "transition": { "type": "fade", "duration": "0.5s" }, "layers": [
+      { "type": "text", "text": "01 / FIND THE MOMENT", "x": 120, "y": 285, "align": "left", "font": "mono", "size": 58, "weight": "bold", "color": "#152431", "animation": "rise", "start": "0.35s" },
+      { "type": "text", "text": "02 / SHAPE THE STORY", "x": 120, "y": 520, "align": "left", "font": "mono", "size": 58, "weight": "bold", "color": "#152431", "animation": "rise", "start": "2.25s" },
+      { "type": "text", "text": "03 / MAKE IT MATTER", "x": 120, "y": 755, "align": "left", "font": "mono", "size": 58, "weight": "bold", "color": "#152431", "animation": "rise", "start": "4.25s" },
+      { "type": "shape", "shape": "rect", "x": 1450, "y": 120, "width": 290, "height": 840, "color": "#E7AA69" }
+    ] },
+    { "id": "resolve", "duration": "9.5s", "background": "#101820", "layers": [
+      { "type": "text", "text": "YOUR PRODUCT,", "x": 115, "y": 400, "align": "left", "font": "sans", "size": 145, "weight": "black", "color": "#F4F0E8", "animation": "rise", "start": "0.5s" },
+      { "type": "text", "text": "in motion.", "x": 115, "y": 590, "align": "left", "font": "serif", "size": 150, "weight": "regular", "color": "#E7AA69", "animation": "fade", "start": "1.25s" },
+      { "type": "text", "text": "REPLACE THIS LINE WITH YOUR CALL TO ACTION", "x": 120, "y": 900, "align": "left", "font": "mono", "size": 38, "weight": "regular", "color": "#B6C0C8", "animation": "none" }
+    ] }
+  ],
+  "audio": { "music": { "synth": { "preset": "launch", "key": "Am" }, "volume": 0.7 }, "autoCues": true }
+}

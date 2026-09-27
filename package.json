@@ -41,6 +41,10 @@
     "dist",
     "schema",
     "assets/fonts",
+    "skills",
+    "templates",
+    "skills-manifest.json",
+    ".claude-plugin",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -49,7 +53,8 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/skills-manifest.mjs",
+    "skills:check": "node scripts/skills-lint.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "test": "node scripts/test.mjs",

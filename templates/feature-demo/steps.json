@@ -1,0 +1,8 @@
+[
+  { "goto": "/index.html" },
+  { "wait": 250 },
+  { "hover": "#publish" },
+  { "wait": 200 },
+  { "click": "#publish", "label": "publish" },
+  { "wait": 650 }
+]

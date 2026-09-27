@@ -42,4 +42,16 @@ test("packed install runs outside the checkout", { skip: process.env["VID2_PACK_
   const frames = command("ffprobe", ["-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
     "-of", "csv=p=0", out], root).trim();
   assert.equal(frames, "15");
+
+  // wp7 package contract: skills and templates ship and work from the installed package.
+  const run = (a: string[]) => JSON.parse(command(launcher, process.platform === "win32" ? [args[0]!, ...a] : a, root)) as { ok: boolean; data: Record<string, unknown> };
+  const listed = run(["skill", "list", "--json"]);
+  assert.equal(listed.ok, true);
+  const skillsDir = join(root, "agent-skills");
+  const skillInstall = run(["skill", "install", "--dir", skillsDir, "--json"]);
+  assert.equal(skillInstall.ok, true);
+  assert.ok(readFileSync(join(skillsDir, "vid2", "SKILL.md"), "utf8").includes("name: vid2"));
+  const demo = join(root, "demo");
+  assert.equal(run(["init", "feature-demo", demo, "--json"]).ok, true);
+  assert.equal(run(["validate", join(demo, "timeline.json"), "--json"]).ok, true);
 });

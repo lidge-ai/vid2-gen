@@ -100,11 +100,23 @@ under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step ser
 | `capture` | wp4 | Record web (Chromium), Electron, native screen and terminal footage with an action log |
 | `audio` | wp5 | Beat detection, synth beds, SFX, provider audio; mixing and mastering happen in `render` |
 | `assets` | wp6 | Generate images and Grok clips through ima2-gen (optional), cached by request |
-| `qa`, `init`, `skill` | Planned wp7 | Review output and install an agent workflow |
+| `preview`, `qa`, `probe` | wp7 | Frames through the real composition; evidence report (contact sheet, seams, loudness, black/freeze) |
+| `init`, `skill`, `capabilities` | wp7 | Templates, packaged agent skills, one-call capability summary |
 
 The intended flow is **capture → author one timeline → resolve assets → compile → render → QA**. Rendering will use ffmpeg locally; generated assets remain optional. The [structure guide](structure/INDEX.md) explains module boundaries and the public CLI contract.
 
 ## For coding agents
+
+```bash
+vid2 skill install --agent codex      # or --agent claude, --dir <path>, --tmp
+vid2 init launch-teaser my-video      # launch-teaser, feature-demo, changelog, social-vertical
+vid2 preview my-video/timeline.json --at 0,50%,drop --placeholders
+vid2 render my-video/timeline.json --profile proxy --placeholders -o proxy.mp4
+vid2 qa proxy.mp4 --timeline my-video/timeline.json
+```
+
+The packaged skills teach the loop (validate → preview stills → proxy → qa → final), the timeline contract, directing defaults with concrete
+replacements for common clichés, capture, audio and ima2 recipes.
 
 Use `vid2 help --json` to discover the current command set, `vid2 schema --json` to obtain the timeline contract, and `vid2 validate <file> --json` before later render steps. JSON mode prints one result object to stdout; diagnostics go to stderr. Exit codes distinguish input errors, missing capabilities, access/provider failures, rendering, QA, and interruption. The packaged agent skill and starter templates are planned for wp7.
 

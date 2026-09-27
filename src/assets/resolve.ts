@@ -4,18 +4,20 @@ import { hashFile, Vid2Error } from "../shared/index.ts";
 import type { Timeline } from "../timeline/index.ts";
 import { lookupAsset, materializeRequest, normalizeAssetOptions, requestHash } from "./manifest.ts";
 import { providerById } from "./registry.ts";
+import { placeholderFiles, placeholderPng } from "./placeholders.ts";
 import type { AssetKind, AssetProvider, GenerateRequest, ProviderContext, VideoOptions } from "./provider.ts";
 
 export interface SourceAssetStatus {
-  sourceId: string; provider: string; kind: AssetKind; status: "cached" | "generated" | "missing";
+  sourceId: string; provider: string; kind: AssetKind; status: "cached" | "generated" | "missing" | "placeholder";
   path?: string; requestHash: string;
 }
 export interface MaterializeOptions {
-  mode: "generate" | "require" | "status";
+  /** placeholders: like status, but misses (and missing files) become stripe PNG image sources (060). */
+  mode: "generate" | "require" | "status" | "placeholders";
   ctx?: ProviderContext;
   providers?: (id: string) => AssetProvider;
 }
-export interface MaterializeResult { timeline: Timeline; assets: SourceAssetStatus[] }
+export interface MaterializeResult { timeline: Timeline; assets: SourceAssetStatus[]; warnings: string[] }
 
 async function requestFor(source: Extract<Timeline["sources"][string], { type: "generate" }>, baseDir: string,
   mode: MaterializeOptions["mode"]): Promise<{ req: GenerateRequest; hash: string; seedMissing: boolean }> {
@@ -52,11 +54,17 @@ export async function materializeSources(timeline: Timeline, baseDir: string, op
   const assets: SourceAssetStatus[] = [];
   for (const [sourceId, source] of Object.entries(timeline.sources)) {
     if (source.type !== "generate") continue;
-    const { req, hash, seedMissing } = await requestFor(source, baseDir, opts.mode);
+    const { req, hash, seedMissing } = await requestFor(source, baseDir, opts.mode === "placeholders" ? "status" : opts.mode);
     const hit = seedMissing ? undefined : lookupAsset(hash);
     if (hit) {
       sources[sourceId] = cachedSource(req.kind, hit.path);
       assets.push({ sourceId, provider: source.provider, kind: req.kind, status: "cached", path: hit.path, requestHash: hash });
+      continue;
+    }
+    if (opts.mode === "placeholders") {
+      const path = placeholderPng(sourceId, timeline);
+      sources[sourceId] = { type: "image", path };
+      assets.push({ sourceId, provider: source.provider, kind: req.kind, status: "placeholder", path, requestHash: hash });
       continue;
     }
     if (opts.mode === "status") {
@@ -70,5 +78,9 @@ export async function materializeSources(timeline: Timeline, baseDir: string, op
     sources[sourceId] = cachedSource(req.kind, generated.asset.path);
     assets.push({ sourceId, provider: source.provider, kind: req.kind, status: generated.status, path: generated.asset.path, requestHash: hash });
   }
-  return { timeline: { ...timeline, sources }, assets };
+  const materialized = { ...timeline, sources };
+  const warnings = assets.filter((a) => a.status === "placeholder").map((a) => `W_PLACEHOLDER ${a.sourceId}`);
+  if (opts.mode !== "placeholders") return { timeline: materialized, assets, warnings };
+  const files = placeholderFiles(materialized, baseDir);
+  return { timeline: files.timeline, assets, warnings: [...warnings, ...files.warnings] };
 }

@@ -12,5 +12,7 @@ Current implementation contracts live here. Read the owning document before chan
 8. [Capture](capture.md) — sessions, surfaces, clock rule, auto camera and cursor.
 9. [Audio](audio.md) — AudioPlan, synth beds, SFX anchors, providers, mastering.
 10. [Assets](assets.md) — generated sources, cache, ima2-gen adapter.
+11. [QA and preview](qa.md) — checks, severities, preview fidelity, placeholders.
+12. [Skills](skills.md) — packaged agent skills and install.
 
 The [active roadmap](../devlog/_plan/260927_vid2_roadmap/000_plan.md) records future work; these documents describe the current implementation.

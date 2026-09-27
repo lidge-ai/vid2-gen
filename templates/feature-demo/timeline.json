@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json",
+  "version": 1,
+  "output": { "width": 1280, "height": 720, "fps": 15, "background": "#14252D" },
+  "sources": { "app": { "type": "capture", "session": "demo.vid2cap" } },
+  "scenes": [
+    { "id": "walkthrough", "duration": "5s", "background": "#14252D", "transition": { "type": "fade", "duration": "0.3s" }, "layers": [
+      { "type": "media", "source": "app", "in": { "event": "hover#1", "source": "app" }, "camera": { "auto": "events", "zoom": 1.6 }, "cursor": { "style": "arrow", "ripple": true } }
+    ] },
+    { "id": "result", "duration": "2.3s", "background": "#14252D", "layers": [
+      { "type": "text", "text": "One action. A clearer story.", "x": 70, "y": 316, "align": "left", "font": "sans", "size": 68, "weight": "black", "color": "#F6F3E9", "animation": "rise" },
+      { "type": "text", "text": "REPLACE WITH YOUR PRODUCT OUTCOME", "x": 75, "y": 590, "align": "left", "font": "mono", "size": 26, "color": "#E4AD6F", "animation": "none" }
+    ] }
+  ],
+  "audio": { "music": { "synth": { "preset": "minimal", "key": "C" }, "volume": 0.3, "fadeOut": "0.8s" }, "cues": [{ "at": { "event": "publish", "source": "app" }, "sfx": "preset:click" }], "autoCues": false }
+}

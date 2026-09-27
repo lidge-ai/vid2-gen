@@ -92,6 +92,19 @@ async function renderSegment(plan: RenderPlan, segment: SegmentPlan, opts: Rende
   return { id: segment.id, cached: false, ms };
 }
 
+/** Render only selected segments through the normal verified, content-hash cache path. */
+export async function renderSegments(plan: RenderPlan, ids: string[], opts: RenderOptions): Promise<{ id: string; path: string }[]> {
+  await mkdir(plan.workDir, { recursive: true });
+  const selected = ids.map((id) => {
+    const segment = plan.segments.find((item) => item.id === id || item.sceneId === id);
+    if (!segment) throw new Vid2Error("E_INPUT", `unknown segment: ${id}`);
+    return segment;
+  });
+  const unique = [...new Map(selected.map((segment) => [segment.id, segment])).values()];
+  await Promise.all(unique.map((segment) => renderSegment(plan, segment, opts)));
+  return unique.map((segment) => ({ id: segment.id, path: join(plan.workDir, `segment-${segment.index}.mp4`) }));
+}
+
 async function segmentPool(plan: RenderPlan, opts: RenderOptions): Promise<SegmentResult[]> {
   const count = Math.max(1, Math.min(plan.segments.length, Math.floor(opts.jobs ?? Math.max(1, cpus().length / 2))));
   const results: (SegmentResult | undefined)[] = Array.from({ length: plan.segments.length }, () => undefined);

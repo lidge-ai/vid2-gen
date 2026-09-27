@@ -22,11 +22,13 @@ export const render: CommandSpec = {
     "no-cache": { type: "boolean", description: "Ignore and do not write the segment cache" },
     hw: { type: "boolean", description: "Use a hardware H.264 encoder when available (approximate quality)" },
     jobs: { type: "string", description: "Parallel segment renders (default: half the CPUs)" },
+    placeholders: { type: "boolean", description: "Stand in stripe images for missing media and uncached generated sources (no provider calls)" },
     generate: { type: "boolean", description: "Call asset providers (ima2) for generated sources that are not cached yet" },
   },
   async run({ args, values, cwd, stderr, json }) {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "render needs one timeline or plan path");
-    const { plan, path } = await loadPlanOrTimeline(args[0], cwd, profileOf(values["profile"]), { generate: values["generate"] === true });
+    const { plan, path, warnings: planWarnings } = await loadPlanOrTimeline(args[0], cwd, profileOf(values["profile"]),
+      { generate: values["generate"] === true, placeholders: values["placeholders"] === true });
     const out = typeof values["out"] === "string" ? resolve(cwd, values["out"]) : path.replace(/(\.plan)?\.json$/i, "") + ".mp4";
     const controller = new AbortController();
     const onSigint = (): void => controller.abort();
@@ -40,7 +42,7 @@ export const render: CommandSpec = {
       return { command: "render", data: { output: result.output, seconds: result.seconds, frames: plan.totalFrames, profile: plan.profile,
         width: plan.output.width, height: plan.output.height, segments: result.segments, manifest: result.manifest,
         ...(result.audio ? { audio: result.audio } : {}) },
-        artifacts: [result.output, result.manifest], warnings: result.warnings };
+        artifacts: [result.output, result.manifest], warnings: [...planWarnings, ...result.warnings] };
     } finally {
       process.removeListener("SIGINT", onSigint);
     }

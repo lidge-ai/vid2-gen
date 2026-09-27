@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json",
+  "version": 1,
+  "output": { "width": 1080, "height": 1920, "fps": 30, "background": "#121C22" },
+  "scenes": [
+    { "id": "hook", "duration": "4s", "background": "#121C22", "transition": { "type": "fade", "duration": "0.25s" }, "layers": [
+      { "type": "shape", "shape": "rect", "x": 86, "y": 300, "width": 20, "height": 600, "color": "#EA9E6C" },
+      { "type": "text", "text": "STOP", "x": 155, "y": 610, "align": "left", "size": 190, "weight": "black", "color": "#FFFFFF", "animation": "none" },
+      { "type": "text", "text": "SCROLLING.", "x": 155, "y": 825, "align": "left", "size": 130, "weight": "black", "color": "#EA9E6C", "animation": "rise", "start": "0.45s" }
+    ] },
+    { "id": "proof", "duration": "6s", "background": "#ECE5D9", "transition": { "type": "fade", "duration": "0.25s" }, "layers": [
+      { "type": "text", "text": "ONE IDEA.", "x": 100, "y": 550, "align": "left", "size": 145, "weight": "black", "color": "#14222B", "animation": "rise" },
+      { "type": "text", "text": "A REAL RESULT.", "x": 100, "y": 780, "align": "left", "size": 105, "font": "serif", "weight": "regular", "color": "#B64D33", "animation": "fade", "start": "0.9s" },
+      { "type": "text", "text": "REPLACE WITH YOUR PROOF POINT", "x": 100, "y": 1260, "align": "left", "font": "mono", "size": 40, "color": "#35434B", "animation": "none" }
+    ] },
+    { "id": "action", "duration": "5.533333s", "background": "#B64D33", "layers": [
+      { "type": "text", "text": "SEE IT", "x": 100, "y": 650, "align": "left", "size": 175, "weight": "black", "color": "#FFFFFF", "animation": "rise" },
+      { "type": "text", "text": "FOR YOURSELF.", "x": 100, "y": 875, "align": "left", "font": "serif", "size": 135, "weight": "regular", "color": "#F7E8D2", "animation": "fade", "start": "0.7s" }
+    ] }
+  ]
+}

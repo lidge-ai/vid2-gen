@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "surface": "web",
+  "fps": "15",
+  "width": 1280,
+  "height": 720,
+  "scale": 1,
+  "t0": {
+    "epochMs": 1790535337670,
+    "monoNs": "1849145989401625"
+  },
+  "footage": "footage.mp4",
+  "frames": "frames.jsonl",
+  "actions": "actions.jsonl",
+  "cursorHidden": true,
+  "recordedText": false,
+  "tool": {
+    "vid2": "0.1.0",
+    "ffmpeg": "8.0.1",
+    "playwright": "chromium 153.0.8010.12"
+  },
+  "platform": "darwin",
+  "createdAt": "2026-09-27T18:55:39.252Z",
+  "warnings": []
+}

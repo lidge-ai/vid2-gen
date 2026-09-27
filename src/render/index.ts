@@ -7,5 +7,5 @@ export type { RenderProgress } from "./progress.ts";
 export { segmentCacheKey, segmentCachePath } from "./cache.ts";
 export { verifyVideo } from "./verify.ts";
 export type { ExpectedVideo, VerifiedVideo } from "./verify.ts";
-export { renderPlan } from "./runner.ts";
+export { renderPlan, renderSegments } from "./runner.ts";
 export type { RenderOptions, RenderResult, RenderEvent, SegmentResult } from "./runner.ts";

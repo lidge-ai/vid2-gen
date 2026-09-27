@@ -1,0 +1,50 @@
+{
+  "vid2": {
+    "files": {
+      "SKILL.md": "f68abc00d21b4d89ed7fe249ece7c91c8911df373650b7f628ad6a84746e9287",
+      "agents/openai.yaml": "e7e7e268a9295e740beeecd2b2044b8f7a2c76c3d152cdc1de5b985822bdbd9e"
+    },
+    "sha256": "5f0207d2189b937117ee40609b863420fb9c84e48b3acf9227b05d41a577aca1"
+  },
+  "vid2-audio": {
+    "files": {
+      "SKILL.md": "c7c4b2a2aba89ae8019368aa29100cc5a0be12e2f3263e93e4f2ece72e5e1460"
+    },
+    "sha256": "7f150e7ef8fbd06d23e41e6c77721235792569279b333cb34e881c0f25505d19"
+  },
+  "vid2-capture": {
+    "files": {
+      "SKILL.md": "93b63010a886615ce29c5aa5062575df117b20d72dbd9e976370baea33e0c1ed"
+    },
+    "sha256": "a481950305a828dbdd3d3c5786f7bc4b3630940c9a3b4c7fdd0ae1ddf100013d"
+  },
+  "vid2-cli": {
+    "files": {
+      "SKILL.md": "45235345f582b4d617a3e3c75d0a2a59cc38478087b832ba9aa28dd2b30b3376"
+    },
+    "sha256": "29f4bd109c933ee35a38b6900c92bd7c3ef87aaafe4606b7a4438e68a9d2788c"
+  },
+  "vid2-direction": {
+    "files": {
+      "SKILL.md": "30ba272ef0f8ff1639723f408c70e5dd59c8ea84df9d02bf95634163524c7f89",
+      "references/anti-patterns.md": "ad076caab179fb31f4235d6ceea608ff14db8e78bcb13bb369b0a219dfb7b14f",
+      "references/brief-template.md": "204234226c4d4746068f9908c28396a147b82615fdf9afe35608d041f474c435",
+      "references/camera.md": "cd583f9550403da5bd21a0bb925bb9e980829b8af501b8c4ba39d520977a4848",
+      "references/motion.md": "fb1f5a0ab46312f58b485b91734847144c20f10c3256c0c0239a81f9016ee2ce",
+      "references/storyboard.md": "d316f34f7261a7594a3d815d61593268cbae269e47f554459290aa77bd92c429",
+      "references/typography.md": "83c4817821ff5651cce0f8c14569105411eb1e73ac00c8f0070b5b140ea97867"
+    },
+    "sha256": "d3be61a187ba7602816570d582950b93bc3a69cd4ec472c9ada7a130f560baca"
+  },
+  "vid2-timeline": {
+    "files": {
+      "SKILL.md": "741a55779ab127db859fdc286b6053380dac878cd3edaeff743ff436cfa3aedd",
+      "assets/timeline.v1.json": "eef74e8c129dad3d85baa9302fce50fb8565595d58234c9eee15ebcfba34649a",
+      "references/errors.md": "17c8b9f69788a830f50c4c556c4b80fdfbfefdf270956457adfdb3cbd6e61a99",
+      "references/recipes.md": "66b1042acbdadc680f4a3fc0194690e5250a51dd9d2dfd40c581e9ad168cae15",
+      "references/schema.md": "33c8bb838fbcd42bd52da7da0c330a478ec741ddc2f206eacbc864c6b0014cef",
+      "references/time.md": "d0ff70a8b2922b5f41a5dc4db27003a4667ea740806ddb270c18fc65f269e743"
+    },
+    "sha256": "57c473b82671cf91b3e91f35820fe82ccf483dbcb9137cb8f66dcf0918900930"
+  }
+}

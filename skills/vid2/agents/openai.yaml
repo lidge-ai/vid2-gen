@@ -1,0 +1,4 @@
+interface:
+  display_name: "vid2"
+  short_description: "Direct, build, render, and inspect product videos with vid2"
+  default_prompt: "Create or revise a video using the project's real assets and vid2 timeline. Inspect stills and QA evidence before delivering."

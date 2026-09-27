@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run skills:check
       - run: npm run build
       - run: npm run schema:json
       - run: git diff --exit-code -- schema

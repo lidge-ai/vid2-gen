@@ -10,11 +10,12 @@ export const compile: CommandSpec = {
   usage: "vid2 compile <timeline.json> [--profile proxy|final] [--out plan.plan.json] [--json]",
   options: {
     profile: { type: "string", description: "Render profile: proxy (half size, fast) or final (default)" },
+    placeholders: { type: "boolean", description: "Stand in stripe images for missing media and uncached generated sources" },
     out: { type: "string", short: "o", description: "Write the plan JSON to this path (name it *.plan.json)" },
   },
   async run({ args, values, cwd }) {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "compile needs one timeline path");
-    const { plan } = await planFromTimeline(args[0], cwd, profileOf(values["profile"]));
+    const { plan, warnings } = await planFromTimeline(args[0], cwd, profileOf(values["profile"]), { placeholders: values["placeholders"] === true });
     const artifacts: string[] = [];
     if (typeof values["out"] === "string") {
       const out = resolve(cwd, values["out"]);
@@ -25,6 +26,6 @@ export const compile: CommandSpec = {
       segments: plan.segments.map((s) => ({ id: s.id, frames: s.frames, renderFrames: s.renderFrames, inputs: s.inputs.length,
         textRuns: s.assFiles.length, internalRate: s.internalRate })),
       join: plan.join.steps, post: { overlays: plan.post.overlays.length, effects: plan.post.effects.map((e) => e.type) } };
-    return { command: "compile", data: artifacts.length ? summary : { ...summary, plan }, artifacts };
+    return { command: "compile", data: artifacts.length ? summary : { ...summary, plan }, artifacts, warnings };
   },
 };
