@@ -61,7 +61,9 @@ void test("the app capture reproduces a labelled Publish click with a visible ch
   assert.ok(diff / before.length > 0.2, `visible change after the click (${(diff / before.length).toFixed(3)})`);
 });
 
-void test("two-pass handoff: pass-1 QA stills replace the placeholders and pass 2 needs none", { timeout: 600_000 }, async (t) => {
+// Two full 30 s proxy renders: minutes on shared CI runners, so it runs locally and in release receipts (VID2_EXAMPLE_TEST=1).
+void test("two-pass handoff: pass-1 QA stills replace the placeholders and pass 2 needs none", { timeout: 900_000 }, async (t) => {
+  if (process.env["VID2_EXAMPLE_TEST"] !== "1") { t.skip("set VID2_EXAMPLE_TEST=1 to run the full two-pass example render"); return; }
   if (!requireFfmpeg(t)) return;
   const dir = join(tempDir("vid2-example-2pass-"), "vid2-launch");
   cpSync(example, dir, { recursive: true, filter: (src) => !src.includes(".work") && !/[\\/](raw|seq)([\\/]|$)/.test(src) });
