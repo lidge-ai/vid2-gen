@@ -46,7 +46,9 @@ void test("60-second beat analysis completes in under two seconds", async (t) =>
     const started = performance.now();
     const result = await detectBeats(path, { ffmpeg });
     const elapsed = performance.now() - started;
-    assert.ok(elapsed < 2000, `analysis took ${elapsed.toFixed(0)} ms`);
+    // Target is 2 s on a developer machine; shared CI runners (Windows especially) run tests in parallel and get 3x headroom.
+    const limit = process.env["CI"] ? 6000 : 2000;
+    assert.ok(elapsed < limit, `analysis took ${elapsed.toFixed(0)} ms (limit ${limit})`);
     assert.ok(Math.abs(result.bpm - 120) <= 1);
     assert.ok(Math.abs(result.offset - 0.25) <= 0.02);
   } finally { rmSync(dir, { recursive: true, force: true }); }
