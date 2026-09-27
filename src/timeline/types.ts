@@ -58,8 +58,11 @@ export interface ResolvedScene {
   notes?: string;
 }
 
-export interface ResolvedCue extends ResolvedTime { sfx: string; volume: number }
-export interface ResolvedVoice extends ResolvedTime { source: string; volume: number }
+export interface ResolvedCue extends ResolvedTime { sfx: string; volume: number; anchor?: "start" | "peak" | "end" | undefined }
+export type ResolvedVoice = ResolvedTime & { volume: number } & ({ kind: "file"; source: string } |
+  { kind: "tts"; tts: { provider: string; text: string; voice?: string | undefined; language?: string | undefined } });
+/** A capture action placed on the timeline (inside a visible capture layer span), for auto cues (040). */
+export interface CaptureEvent { frame: number; kind: string; sourceId: string; label?: string; chars?: number; endFrame?: number }
 export type ResolvedAudio = Omit<NonNullable<Timeline["audio"]>, "cues" | "voice"> & {
   cues: ResolvedCue[];
   voice: ResolvedVoice[];
@@ -79,6 +82,7 @@ export interface ResolvedTimeline {
   overlays: ResolvedLayer[];
   effects: ResolvedEffect[];
   audio?: ResolvedAudio;
+  captureEvents?: CaptureEvent[];
   totalFrames: number;
   totalSeconds: number;
 }

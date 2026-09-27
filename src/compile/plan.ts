@@ -7,6 +7,8 @@ import { effectFilters, requiredFilters } from "./effects/registry.ts";
 import { GraphBuilder } from "./graph.ts";
 import type { TextBackend, BuildContext, EffectOp, OverlayOp, PostPlan, ProfileName, RenderPlan, ResolvedOutput, SegmentPlan } from "./ir.ts";
 import { planJoin } from "./joins.ts";
+import { buildAudioPlan } from "./audio-plan.ts";
+import { mixGraph } from "../audio/mix.ts";
 import { buildOverlayLayer as buildOverlayFor } from "./layers/overlay.ts";
 import { requireTextCapability } from "./layers/text.ts";
 import { compileSegment, composite, inputRegistry } from "./segment.ts";
@@ -25,6 +27,8 @@ export interface CompileOptions {
   pngDir?: string;
   /** Force a text engine; default: "ass" when ffmpeg has libass, else "raster". VID2_TEXT_BACKEND overrides. */
   textBackend?: TextBackend;
+  /** Timeline path shown in the fix hint when provider audio is missing (vid2 audio generate <path>). */
+  timelinePath?: string;
 }
 
 /** Output settings of a resolved timeline before any profile is applied. */
@@ -99,7 +103,9 @@ export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): Rend
     videoCodec: o.videoCodec, quality: o.quality };
   const info = opts.ffmpeg;
   return { planVersion: 1, timelineHash: opts.timelineHash, profile: opts.profile, output, totalFrames: t.totalFrames, segments, join,
-    post: postPlan(t, base, t.totalFrames), audio: null, workDir: opts.workDir,
+    post: postPlan(t, base, t.totalFrames),
+    audio: buildAudioPlan(t, { workDir: opts.workDir, container: o.container, timelinePath: opts.timelinePath ?? "<timeline.json>", mix: mixGraph }),
+    workDir: opts.workDir,
     tool: { ffmpeg: info.path, ffprobe: opts.ffprobe, version: info.version, major: info.major, minor: info.minor } };
 }
 

@@ -37,7 +37,8 @@ export const render: CommandSpec = {
         ...(Array.isArray(values["segments"]) ? { segments: values["segments"] as string[] } : {}),
         logger: (e) => { if (!json && e.message) stderr.write(`${e.stage}: ${e.message}\n`); } });
       return { command: "render", data: { output: result.output, seconds: result.seconds, frames: plan.totalFrames, profile: plan.profile,
-        width: plan.output.width, height: plan.output.height, segments: result.segments, manifest: result.manifest },
+        width: plan.output.width, height: plan.output.height, segments: result.segments, manifest: result.manifest,
+        ...(result.audio ? { audio: result.audio } : {}) },
         artifacts: [result.output, result.manifest], warnings: result.warnings };
     } finally {
       process.removeListener("SIGINT", onSigint);

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { Vid2Error } from "../shared/errors.ts";
@@ -68,3 +69,17 @@ test("rational fps and clamped layer spans retain absolute timing", () => {
   assert.equal(r.scenes[0]?.layers[0]?.endFrame, 30);
   assert.equal(r.scenes[0]?.layers[0]?.absoluteStartFrame, 15);
 });
+
+test("voices resolve by kind and beats.json offset seconds convert at the timeline fps", () => {
+  const dir = mkdtempSync(join(tmpdir(), "vid2-beats-"));
+  writeFileSync(join(dir, "beats.json"), JSON.stringify({ version: 1, bpm: 120, offset: 0.25, meter: 4 }));
+  const t = TimelineSchema.parse({ version: 1, output: { fps: 30 }, beat: { map: "beats.json" }, sources: { vo: { type: "audio", path: "vo.wav" } },
+    scenes: [{ id: "one", duration: "4s" }],
+    audio: { cues: [{ at: "2b", sfx: "preset:click", anchor: "start" }], voice: [{ source: "vo", at: 0 }, { tts: { text: "Hi" }, at: "1s" }] } });
+  const r = resolveTimeline(t, { baseDir: dir });
+  assert.equal(r.audio!.cues[0]!.frame, 38);
+  assert.equal(r.audio!.cues[0]!.anchor, "start");
+  assert.deepEqual(r.audio!.voice.map((v) => v.kind), ["file", "tts"]);
+  assert.equal(r.audio!.voice[1]!.frame, 30);
+});
+

@@ -1,8 +1,12 @@
 import { spawn } from "node:child_process";
 import { cpus } from "node:os";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
-import type { RenderPlan, SegmentPlan } from "../compile/ir.ts";
+import { dirname, extname, join, resolve } from "node:path";
+import type { AudioPlan, RenderPlan, SegmentPlan } from "../compile/ir.ts";
+import { premaster } from "../audio/mix.ts";
+import { twoPassLoudnorm } from "../audio/loudness.ts";
+import type { Loudness } from "../audio/loudness.ts";
+import { muxAudio } from "../audio/mux.ts";
 import { probeFfmpeg } from "../probe/index.ts";
 import { fpsString, hashJson, Vid2Error } from "../shared/index.ts";
 import { cacheExists, saveSegmentCache, segmentCacheKey, segmentCachePath } from "./cache.ts";
@@ -16,7 +20,8 @@ export interface RenderEvent { stage: "segment" | "join" | "post"; id?: string; 
 export interface RenderOptions { jobs?: number; signal?: AbortSignal; noCache?: boolean; segments?: string[];
   hw?: boolean; out: string; logger?: (event: RenderEvent) => void }
 export interface SegmentResult { id: string; cached: boolean; ms: number }
-export interface RenderResult { output: string; seconds: number; segments: SegmentResult[]; warnings: string[]; manifest: string }
+export interface AudioResult { master: Loudness; delivered: Loudness; durationDelta: number; normalization: string }
+export interface RenderResult { output: string; seconds: number; segments: SegmentResult[]; warnings: string[]; manifest: string; audio?: AudioResult }
 
 function graphFlag(plan: RenderPlan): string {
   return plan.tool.major > 7 || (plan.tool.major === 7 && plan.tool.minor >= 1) ? "-/filter_complex" : "-filter_complex_script";
@@ -157,10 +162,22 @@ async function finalEncode(plan: RenderPlan, joined: string, opts: RenderOptions
     range: "tv", ...(plan.output.container === "webm" ? {} : { faststart: true }) });
 }
 
+/** Audio stage (040): renders → premaster on the absolute timeline → two-pass loudnorm → mux with explicit duration. */
+async function renderAudio(plan: RenderPlan, audio: AudioPlan, video: string, opts: RenderOptions, warnings: string[]): Promise<AudioResult> {
+  opts.logger?.({ stage: "post", message: "mixing audio" });
+  const pre = await premaster(audio, { ffmpeg: plan.tool.ffmpeg, ...(opts.signal ? { signal: opts.signal } : {}) });
+  const mastered = await twoPassLoudnorm(pre, audio.master, audio.target, plan.tool.ffmpeg);
+  const seconds = (plan.totalFrames * plan.output.fps.den) / plan.output.fps.num;
+  const muxed = await muxAudio({ video, audio: audio.master, out: opts.out, codec: audio.codec, seconds, ffmpeg: plan.tool.ffmpeg,
+    ffprobe: plan.tool.ffprobe, targetTP: audio.target.TP });
+  warnings.push(...muxed.warnings);
+  await verifyVideo(opts.out, plan.tool.ffprobe, { width: plan.output.width, height: plan.output.height, frames: plan.totalFrames });
+  return { master: mastered.loudness, delivered: muxed.loudness, durationDelta: muxed.durationDelta, normalization: mastered.normalizationType };
+}
+
 /** Render, verify and cache all segments, then join and encode the final video. */
 export async function renderPlan(plan: RenderPlan, opts: RenderOptions): Promise<RenderResult> {
   if (!plan.segments.length) throw new Vid2Error("E_INPUT", "render plan has no segments");
-  if (plan.audio) throw new Vid2Error("E_CAPABILITY", "audio plans are not supported until wp5");
   checkJoin(plan);
   opts = { ...opts, out: resolve(opts.out) };
   await mkdir(plan.workDir, { recursive: true });
@@ -169,10 +186,13 @@ export async function renderPlan(plan: RenderPlan, opts: RenderOptions): Promise
   const segments = await segmentPool(plan, opts);
   const joined = await joinSegments(plan, opts);
   const warnings: string[] = [];
-  await finalEncode(plan, joined, opts, warnings);
+  const videoOut = plan.audio ? join(plan.workDir, `video-only${extname(opts.out) || ".mp4"}`) : opts.out;
+  await finalEncode(plan, joined, { ...opts, out: videoOut }, warnings);
+  const audio = plan.audio ? await renderAudio(plan, plan.audio, videoOut, opts, warnings) : null;
   const result: RenderResult = { output: opts.out, seconds: (Date.now() - started) / 1000, segments, warnings,
-    manifest: `${opts.out}.render.json` };
+    manifest: `${opts.out}.render.json`, ...(audio ? { audio } : {}) };
   await writeFile(result.manifest, JSON.stringify({ planHash: hashJson(plan), timelineHash: plan.timelineHash,
-    tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments, warnings }, null, 2) + "\n");
+    tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments, warnings,
+    ...(audio ? { audio: { ...audio, provenance: plan.audio?.provenance ?? [] } } : {}) }, null, 2) + "\n");
   return result;
 }

@@ -71,10 +71,18 @@ export const Scene = z.strictObject({ id: z.string().regex(/^[a-z0-9][a-z0-9_-]*
   layers: z.array(Layer).default([]), effects: z.array(Effect).default([]), transition: Transition.optional(), notes: z.string().optional() });
 export const SynthSpec = z.strictObject({ preset: z.string().default("launch"), key: z.string().default("Am"), progression: z.array(z.string()).optional(),
   sections: z.array(z.strictObject({ at: TimeLiteral, energy: z.enum(["intro", "build", "drop", "break", "outro"]) })).optional() });
-export const Cue = z.strictObject({ at: Time, sfx: z.string(), volume: z.number().min(0).max(4).default(1) });
+/** sfx: "preset:<name>" | "<sourceId>" | "elevenlabs:<prompt>"; anchor overrides the preset's start/peak/end anchor (040). */
+export const Cue = z.strictObject({ at: Time, sfx: z.string().min(1), volume: z.number().min(0).max(4).default(1),
+  anchor: z.enum(["start", "peak", "end"]).optional() });
+export const Tts = z.strictObject({ provider: z.string().default("elevenlabs"), text: z.string().min(1), voice: z.string().optional(),
+  language: z.string().optional() });
+export const Voice = z.union([z.strictObject({ source: z.string(), at: Time, volume: z.number().default(1) }),
+  z.strictObject({ tts: Tts, at: Time, volume: z.number().default(1) })]);
 export const Audio = z.strictObject({ music: z.union([z.strictObject({ source: z.string(), volume: z.number().default(1), fadeOut: TimeLiteral.default("1s") }),
-  z.strictObject({ synth: SynthSpec, volume: z.number().default(1) })]).optional(), cues: z.array(Cue).default([]),
-  voice: z.array(z.strictObject({ source: z.string(), at: Time, volume: z.number().default(1) })).default([]),
+  z.strictObject({ synth: SynthSpec, volume: z.number().default(1), fadeOut: TimeLiteral.default("1.5s") }),
+  z.strictObject({ provider: z.string(), prompt: z.string().optional(), plan: z.unknown().optional(), volume: z.number().default(1),
+    fadeOut: TimeLiteral.default("1s") })]).optional(), cues: z.array(Cue).default([]),
+  voice: z.array(Voice).default([]), autoCues: z.boolean().optional(),
   duckMusicUnderVoice: z.boolean().default(true), loudness: z.strictObject({ target: z.number().default(-14), truePeak: z.number().default(-1) }).default({ target: -14, truePeak: -1 }) });
 export const TimelineSchema = z.strictObject({ $schema: z.string().optional(), version: z.literal(1), output: Output.prefault({}),
   beat: Beat.optional(), sources: z.record(z.string(), Source).default({}), fonts: z.record(z.string(), Font).default({}),

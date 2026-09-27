@@ -61,8 +61,10 @@ function beatGrid(beat: Timeline["beat"], baseDir: string, fps: Fps): BeatGrid |
   if (!data || typeof data !== "object" || !("bpm" in data) || typeof data.bpm !== "number" || data.bpm <= 0) {
     throw new Vid2Error("E_SCHEMA", `beat map needs a positive bpm: ${beat.map}`);
   }
-  const raw = data as { bpm: number; offsetFrames?: number; meter?: number };
-  return { bpm: raw.bpm, offsetFrames: raw.offsetFrames ?? 0, meter: raw.meter ?? 4 };
+  // beats.json offset is seconds (040); a legacy offsetFrames key is still read.
+  const raw = data as { bpm: number; offset?: number; offsetFrames?: number; meter?: number };
+  const offsetFrames = typeof raw.offset === "number" ? Math.round(raw.offset * fps.num / fps.den) : raw.offsetFrames ?? 0;
+  return { bpm: raw.bpm, offsetFrames, meter: raw.meter ?? 4 };
 }
 
 function span(start: number | string, end: number | string | undefined, sceneFrames: number, sceneStart: number, ctx: Context): ResolvedSpan {
@@ -132,7 +134,9 @@ function resolvedAudio(audio: NonNullable<Timeline["audio"]>, ctx: Context): Res
     : audio.music;
   return { ...audio, ...(music === undefined ? {} : { music }),
     cues: audio.cues.map(cue => ({ ...cue, ...atTime(cue.at, ctx) })),
-    voice: audio.voice.map(voice => ({ ...voice, source: voice.source, ...atTime(voice.at, ctx) })) };
+    voice: audio.voice.map(voice => "tts" in voice
+      ? { kind: "tts" as const, tts: voice.tts, volume: voice.volume, ...atTime(voice.at, ctx) }
+      : { kind: "file" as const, source: voice.source, volume: voice.volume, ...atTime(voice.at, ctx) }) };
 }
 
 /** Pass 2 of the clock rule: the first media layer per capture source fixes that source's timeline placement. */

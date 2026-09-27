@@ -49,3 +49,15 @@ test("media cursor is optional, defaulted and closed", () => {
   assert.equal(TimelineSchema.safeParse(layer({ style: "laser" })).success, false);
 });
 
+
+test("audio schema: TTS voice, anchored cue, provider music; strict union rejects mixed voice", () => {
+  const base = { version: 1, scenes: [{ id: "one", duration: "2s" }] };
+  const ok = (audio: unknown) => TimelineSchema.safeParse({ ...base, audio }).success;
+  assert.equal(ok({ voice: [{ tts: { text: "Hello" }, at: 0 }] }), true);
+  assert.equal(ok({ cues: [{ at: 1, sfx: "preset:whoosh", anchor: "peak" }] }), true);
+  assert.equal(ok({ music: { provider: "elevenlabs", prompt: "uplifting synthwave" } }), true);
+  assert.equal(ok({ voice: [{ source: "vo", tts: { text: "x" }, at: 0 }] }), false);
+  assert.equal(ok({ cues: [{ at: 1, sfx: "preset:whoosh", anchor: "middle" }] }), false);
+  assert.equal(ok({ autoCues: true, typo: 1 }), false);
+});
+

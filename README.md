@@ -70,6 +70,17 @@ Every capture keeps an action log (clicks, typing, marks) next to the footage. A
 to zoom where things happen, draw a smooth synthetic cursor, or cue a sound on `{"event": "buy"}`. Typed text is redacted unless you pass
 `--record-text`. See [structure/capture.md](structure/capture.md).
 
+## Sound
+
+```json
+"beat": { "bpm": 120 },
+"audio": { "music": { "synth": { "preset": "launch" } }, "cues": [{ "at": "2b", "sfx": "preset:impact" }] }
+```
+
+vid2 synthesizes a music bed and sound effects with ffmpeg alone, places whooshes on transitions and clicks on captured clicks, ducks music
+under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step server are optional (`vid2 audio generate`). See
+[structure/audio.md](structure/audio.md).
+
 ## Commands and delivery
 
 | Command | Availability | Purpose |
@@ -78,7 +89,7 @@ to zoom where things happen, draw a smooth synthetic cursor, or cue a sound on `
 | `compile`, `render` | wp3 | Compile a timeline to an ffmpeg plan and render it |
 | `preview` | Planned wp7 | Inspect a composed frame |
 | `capture` | wp4 | Record web (Chromium), Electron, native screen and terminal footage with an action log |
-| `audio` | Planned wp5 | Beat grid, sound synthesis, and mixing |
+| `audio` | wp5 | Beat detection, synth beds, SFX, provider audio; mixing and mastering happen in `render` |
 | `assets` | Planned wp6 | Resolve local and optional generated media |
 | `qa`, `init`, `skill` | Planned wp7 | Review output and install an agent workflow |
 

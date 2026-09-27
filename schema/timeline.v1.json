@@ -1659,10 +1659,56 @@
                 "volume": {
                   "default": 1,
                   "type": "number"
+                },
+                "fadeOut": {
+                  "default": "1.5s",
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                    }
+                  ]
                 }
               },
               "required": [
                 "synth"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "prompt": {
+                  "type": "string"
+                },
+                "plan": {},
+                "volume": {
+                  "default": 1,
+                  "type": "number"
+                },
+                "fadeOut": {
+                  "default": "1s",
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "provider"
               ],
               "additionalProperties": false
             }
@@ -1747,13 +1793,22 @@
                 ]
               },
               "sfx": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               },
               "volume": {
                 "default": 1,
                 "type": "number",
                 "minimum": 0,
                 "maximum": 4
+              },
+              "anchor": {
+                "type": "string",
+                "enum": [
+                  "start",
+                  "peak",
+                  "end"
+                ]
               }
             },
             "required": [
@@ -1767,94 +1822,210 @@
           "default": [],
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "source": {
-                "type": "string"
-              },
-              "at": {
-                "anyOf": [
-                  {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "at": {
                     "anyOf": [
                       {
-                        "type": "number",
-                        "minimum": 0
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                          }
+                        ]
                       },
                       {
-                        "type": "string",
-                        "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                        "type": "object",
+                        "properties": {
+                          "event": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "source": {
+                            "type": "string"
+                          },
+                          "offset": {
+                            "type": "string",
+                            "pattern": "^-?\\d+(\\.\\d+)?(s|ms|f|b)$"
+                          }
+                        },
+                        "required": [
+                          "event"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "marker": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "offset": {
+                            "type": "string",
+                            "pattern": "^-?\\d+(\\.\\d+)?(s|ms|f|b)$"
+                          }
+                        },
+                        "required": [
+                          "marker"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "bar": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          },
+                          "beat": {
+                            "default": 1,
+                            "type": "number",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "bar"
+                        ],
+                        "additionalProperties": false
                       }
                     ]
                   },
-                  {
+                  "volume": {
+                    "default": 1,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "source",
+                  "at"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "tts": {
                     "type": "object",
                     "properties": {
-                      "event": {
-                        "type": "string",
-                        "minLength": 1
-                      },
-                      "source": {
+                      "provider": {
+                        "default": "elevenlabs",
                         "type": "string"
                       },
-                      "offset": {
-                        "type": "string",
-                        "pattern": "^-?\\d+(\\.\\d+)?(s|ms|f|b)$"
-                      }
-                    },
-                    "required": [
-                      "event"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "marker": {
+                      "text": {
                         "type": "string",
                         "minLength": 1
                       },
-                      "offset": {
-                        "type": "string",
-                        "pattern": "^-?\\d+(\\.\\d+)?(s|ms|f|b)$"
+                      "voice": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
                       }
                     },
                     "required": [
-                      "marker"
+                      "text"
                     ],
                     "additionalProperties": false
                   },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "bar": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 9007199254740991
+                  "at": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d+(\\.\\d+)?(s|ms|f|b)$"
+                          }
+                        ]
                       },
-                      "beat": {
-                        "default": 1,
-                        "type": "number",
-                        "minimum": 1
+                      {
+                        "type": "object",
+                        "properties": {
+                          "event": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "source": {
+                            "type": "string"
+                          },
+                          "offset": {
+                            "type": "string",
+                            "pattern": "^-?\\d+(\\.\\d+)?(s|ms|f|b)$"
+                          }
+                        },
+                        "required": [
+                          "event"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "marker": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "offset": {
+                            "type": "string",
+                            "pattern": "^-?\\d+(\\.\\d+)?(s|ms|f|b)$"
+                          }
+                        },
+                        "required": [
+                          "marker"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "bar": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          },
+                          "beat": {
+                            "default": 1,
+                            "type": "number",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "bar"
+                        ],
+                        "additionalProperties": false
                       }
-                    },
-                    "required": [
-                      "bar"
-                    ],
-                    "additionalProperties": false
+                    ]
+                  },
+                  "volume": {
+                    "default": 1,
+                    "type": "number"
                   }
-                ]
-              },
-              "volume": {
-                "default": 1,
-                "type": "number"
+                },
+                "required": [
+                  "tts",
+                  "at"
+                ],
+                "additionalProperties": false
               }
-            },
-            "required": [
-              "source",
-              "at"
-            ],
-            "additionalProperties": false
+            ]
           }
+        },
+        "autoCues": {
+          "type": "boolean"
         },
         "duckMusicUnderVoice": {
           "default": true,

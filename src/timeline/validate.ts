@@ -33,7 +33,9 @@ function checkReferences(t: Timeline): ValidationIssue[] {
   }
   for (const [i, layer] of t.overlays.entries()) add(sourceIssue(t, layer.source, `overlays.${i}.source`, ["image", "video"]));
   if (t.audio?.music && "source" in t.audio.music) add(sourceIssue(t, t.audio.music.source, "audio.music.source", ["audio", "video"]));
-  for (const [i, voice] of (t.audio?.voice ?? []).entries()) add(sourceIssue(t, voice.source, `audio.voice.${i}.source`, ["audio", "video"]));
+  for (const [i, voice] of (t.audio?.voice ?? []).entries()) {
+    if ("source" in voice) add(sourceIssue(t, voice.source, `audio.voice.${i}.source`, ["audio", "video"]));
+  }
   return issues;
 }
 

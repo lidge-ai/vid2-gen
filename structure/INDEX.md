@@ -10,5 +10,6 @@ Current implementation contracts live here. Read the owning document before chan
 6. [Render](render.md) — profiles, cache, runner, verification.
 7. [Text](text.md) — libass and raster text backends.
 8. [Capture](capture.md) — sessions, surfaces, clock rule, auto camera and cursor.
+9. [Audio](audio.md) — AudioPlan, synth beds, SFX anchors, providers, mastering.
 
 The [active roadmap](../devlog/_plan/260927_vid2_roadmap/000_plan.md) records future work; these documents describe the current implementation.

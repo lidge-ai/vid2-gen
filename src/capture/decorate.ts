@@ -4,7 +4,7 @@
  */
 import { Vid2Error } from "../shared/index.ts";
 import type { Fps } from "../shared/index.ts";
-import type { CursorTrackSample, ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
+import type { CaptureEvent, CursorTrackSample, ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import { planCamera } from "./camera.ts";
 import type { CameraKeyOut } from "./camera.ts";
 import { planCursor } from "./cursor.ts";
@@ -84,12 +84,26 @@ function decorate(layer: Media, session: LoadedSession, t: ResolvedTimeline): Me
   return { ...out, cursorTrack: cursorTrack(layer, withPoints, keys ?? [], t) };
 }
 
+/** Actions inside a capture layer's visible span, on the absolute timeline clock (auto cues, 040). */
+function layerEvents(layer: Media, session: LoadedSession, t: ResolvedTimeline): CaptureEvent[] {
+  return session.actions.flatMap((a) => {
+    const frame = layerFrame(a, session, layer, t.fps);
+    if (frame === null) return [];
+    const endFrame = a.endMs === undefined ? undefined
+      : layerFrame({ ...a, frame: Math.round((a.endMs / 1000) * session.fps.num / session.fps.den) }, session, layer, t.fps);
+    return [{ frame: layer.absoluteStartFrame + frame, kind: a.kind, sourceId: layer.source, ...(a.label ? { label: a.label } : {}),
+      ...(a.chars === undefined ? {} : { chars: a.chars }), ...(endFrame == null ? {} : { endFrame: layer.absoluteStartFrame + endFrame }) }];
+  });
+}
+
 export function decorateCaptureLayers(t: ResolvedTimeline, sessions: Record<string, LoadedSession>): ResolvedTimeline {
+  const captureEvents: CaptureEvent[] = [];
   const scenes = t.scenes.map((scene) => ({ ...scene, layers: scene.layers.map((layer) => {
     if (layer.type !== "media" || t.sources[layer.source]?.type !== "capture") return layer;
     const session = sessions[layer.source];
     if (!session) throw new Vid2Error("E_INTERNAL", `capture session not loaded: ${layer.source}`);
+    captureEvents.push(...layerEvents(layer, session, t));
     return decorate(layer, session, t);
   }) }));
-  return { ...t, scenes };
+  return { ...t, scenes, captureEvents: captureEvents.sort((a, b) => a.frame - b.frame) };
 }

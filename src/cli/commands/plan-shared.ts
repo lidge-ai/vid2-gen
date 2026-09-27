@@ -29,7 +29,7 @@ export async function planFromTimeline(file: string | undefined, cwd: string, pr
   const hash = timelineHash(resolved);
   const workDir = join(cacheDir("work"), `${hash.slice(0, 16)}-${profile}`);
   const plan = compileTimeline(resolved, { profile, output: applyProfile(timelineOutput(resolved), profile), workDir, ffmpeg,
-    ffprobe: tools.ffprobe, timelineHash: hash });
+    ffprobe: tools.ffprobe, timelineHash: hash, timelinePath: file ?? path });
   return { plan, path };
 }
 
