@@ -43,7 +43,7 @@ try {
     const home = mkdtempSync(join(tmpdir(), "vid2-test-"));
     const env = { ...process.env, VID2_HOME: home };
     delete env.NODE_TEST_CONTEXT;
-    const child = spawnSync(process.execPath, ["--test", "--test-concurrency=4", ...files], {
+    const child = spawnSync(process.execPath, ["--test", "--test-concurrency=4", "--test-timeout=180000", ...files], {
       cwd: root,
       env,
       encoding: "utf8",
