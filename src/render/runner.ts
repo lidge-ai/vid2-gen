@@ -166,7 +166,8 @@ async function finalEncode(plan: RenderPlan, joined: string, opts: RenderOptions
 async function renderAudio(plan: RenderPlan, audio: AudioPlan, video: string, opts: RenderOptions, warnings: string[]): Promise<AudioResult> {
   opts.logger?.({ stage: "post", message: "mixing audio" });
   const pre = await premaster(audio, { ffmpeg: plan.tool.ffmpeg, ...(opts.signal ? { signal: opts.signal } : {}) });
-  const mastered = await twoPassLoudnorm(pre, audio.master, audio.target, plan.tool.ffmpeg);
+  // AAC/Opus overshoot true peak by a few tenths of a dB; master 0.5 dB lower so the delivered file stays under the target.
+  const mastered = await twoPassLoudnorm(pre, audio.master, { ...audio.target, TP: audio.target.TP - 0.5 }, plan.tool.ffmpeg);
   const seconds = (plan.totalFrames * plan.output.fps.den) / plan.output.fps.num;
   const muxed = await muxAudio({ video, audio: audio.master, out: opts.out, codec: audio.codec, seconds, ffmpeg: plan.tool.ffmpeg,
     ffprobe: plan.tool.ffprobe, targetTP: audio.target.TP });

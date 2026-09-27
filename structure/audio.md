@@ -42,6 +42,6 @@ the request. A render with a missing asset stops with `E_INPUT` and that command
 
 ## Mastering
 
-Explicit `amix normalize=0` weights, sidechain ducking of music under voice, a glue compressor and a pre-limiter, then two-pass `loudnorm` to
+Explicit `amix normalize=0` weights (the master's true-peak ceiling is 0.5 dB under the target because AAC/Opus overshoot), sidechain ducking of music under voice, a glue compressor and a pre-limiter, then two-pass `loudnorm` to
 the target and a re-measure after the codec (warning when the delivered true peak exceeds the target by 0.5 dB). The render manifest and the
 `render` JSON report master and delivered loudness and the audio/video duration difference.
