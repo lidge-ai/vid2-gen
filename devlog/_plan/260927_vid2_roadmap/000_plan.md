@@ -141,3 +141,8 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   miscounts overlay n → enable windows use t; -filter_complex_script is gone in 8+/9 builds → legacy transport only below 7.1. Direction for wp4:
   main defines src/capture/{session,resolver}.ts and the source-frame → timeline-frame rule first (architect W4-01), then web, native,
   electron/terminal and camera/cursor lanes.
+- **wp4 D (2026-09-28):** capture shipped (98e74f8e..a551b749): web (CDP screencast + quantizer), native (avfoundation tested; ddagrab/x11
+  experimental), electron and terminal (experimental), capture CLI, auto camera and synthetic cursor. Strict receipt: 166 tests (161 pass, 5 gated
+  skips), native live capture 60 frames 3024x1964, hosted CI 36337221673 green with the Ubuntu web e2e required. Findings folded: merged action
+  groups must frame their union (dogfood exposed a crop that cut both targets); capture footage shorter than its layer holds the last frame;
+  audit tightened E_ACCESS to permission-specific errors. Direction for wp5: concrete AudioPlan in ir.ts, mux in the runner, synth/SFX/mix lanes.

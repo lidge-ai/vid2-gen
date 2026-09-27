@@ -51,6 +51,7 @@ jobs:
         run: brew install ffmpeg
       - if: runner.os == 'Windows'
         run: choco install ffmpeg -y --no-progress
+      - run: ffmpeg -hide_banner -version
       - run: npm ci
       - if: runner.os == 'Linux'
         run: npx playwright-core install --with-deps chromium

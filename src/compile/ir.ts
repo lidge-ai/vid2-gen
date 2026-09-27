@@ -124,8 +124,28 @@ export interface EffectOp { type: string; filters: string[] }
 /** Timeline-level overlays/effects after the join; graph input "0:v" = joined video, output label "vpost". */
 export interface PostPlan { overlays: OverlayOp[]; effects: EffectOp[]; inputs: InputSpec[]; graph: string | null }
 
-/** Opaque until 040 (audio); 020 always sets RenderPlan.audio to null. */
-export interface AudioPlan { kind: string }
+/** An ffmpeg command the runner materializes to a cached 48 kHz WAV (synth music bed or an SFX preset). */
+export interface AudioRender { id: string; kind: "synth" | "sfx"; args: string[]; out: string; hash: string }
+/** One stem placed on the absolute timeline in samples (48 kHz). */
+export interface AudioStem {
+  id: string; role: "music" | "sfx" | "voice" | "media"; path: string; atSample: number;
+  /** Skip this many samples at the start of the file (media in-point). */
+  skipSamples?: number;
+  /** Keep at most this many samples. */
+  trimSamples?: number;
+  gain: number; fadeOutSamples?: number;
+}
+export interface ProvenanceEntry { stemId: string; provider: string; kind: string; requestHash: string; requestId?: string; model?: string;
+  createdAt: string; path: string }
+/** Audio for a render (040). Compile is pure: every path is local; provider audio comes from the cache manifest. */
+export interface AudioPlan {
+  version: 1; sampleRate: 48000; durationSamples: number; renders: AudioRender[]; stems: AudioStem[];
+  /** Filter graph over the stems (inputs in stems order, output label "apre"), built by src/audio/mix.ts. */
+  graph: string;
+  /** Duck music under voice (sidechain) when voice stems exist. */
+  duck: boolean;
+  target: { I: number; TP: number; LRA: number }; codec: "aac" | "opus"; premaster: string; master: string; provenance: ProvenanceEntry[];
+}
 
 export interface RenderPlan {
   planVersion: 1;
