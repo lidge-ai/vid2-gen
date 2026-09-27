@@ -110,3 +110,8 @@ BRIEF, README, session.json, actions.jsonl) passes and the captured frames are r
 - Perspective window cards painted the whole frame black: a command-line `-f lavfi -i color=c=black@0` input negotiates a format without alpha.
   Fixed in src/compile/layers/{window,media}.ts by ending the lavfi string with `format=rgba`; regression test "a perspective window keeps the
   canvas visible outside its frame" (fails before, passes after).
+- Creative review round 1 (reviewer Euler, FAIL 4): placeholder evidence inside the film (render log warning, self-referential contact sheet),
+  inspect label outside the safe area, Publish click at 7.4 s, and a caption calling the demo app "the real product". Fixes: the render log comes
+  from a render whose hero resolves to media/hero.jpg; scene 7 shows pass-1 seam stills (2x2) + waveform + spectrogram built by
+  make-qa-media.mjs (these never depend on scene 7 itself); the label moved inside the safe area; app steps wait 1.5 s so the click lands at
+  7.97 s; caption "Record a real, running UI." Final QA: pass, 0 issues.

@@ -6,8 +6,8 @@
   "height": 1080,
   "scale": 1.5,
   "t0": {
-    "epochMs": 1790538031120,
-    "monoNs": "1851839455125875"
+    "epochMs": 1790542002674,
+    "monoNs": "1855810938698750"
   },
   "footage": "footage.mp4",
   "frames": "frames.jsonl",
@@ -20,6 +20,6 @@
     "playwright": "chromium 153.0.8010.12"
   },
   "platform": "darwin",
-  "createdAt": "2026-09-27T19:40:40.451Z",
+  "createdAt": "2026-09-27T20:46:51.979Z",
   "warnings": []
 }

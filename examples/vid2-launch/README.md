@@ -16,7 +16,7 @@ How it was made (all commands are real and repeatable):
 | code capture | `vid2 capture web --serve code-page --steps code-page.steps.json --size 1280x720 --scale 1.5 --out code` |
 | app capture | `vid2 capture web --serve ../../templates/feature-demo/site --steps app.steps.json --size 1280x720 --scale 1.5 --out app` |
 | stills | `vid2 assets gen ima2 image "<prompt>" --size 1536x1024` (prompts in devlog 070), converted to JPEG |
-| render log shown on the code page | `vid2 init launch-teaser demo && vid2 render demo/timeline.json --profile proxy --placeholders --json` (paths removed) |
-| QA stills in scene 7 | pass 1 `vid2 render --placeholders` → `vid2 qa` → contact sheet and the `compile` seam stills copied to `media/` |
+| render log shown on the code page | `vid2 render demo/timeline.json --profile proxy --json` of `vid2 init launch-teaser demo` with its hero source set to `media/hero.jpg` (paths removed) |
+| QA evidence in scene 7 | pass 1 `vid2 render --profile proxy --placeholders -o .work/pass1.mp4` → `vid2 qa .work/pass1.mp4 --timeline timeline.stills.json --out .work/pass1.qa` → `node make-qa-media.mjs .work/pass1.qa` (seam grid, waveform, spectrogram) |
 
 `timeline.stills.json` uses stills because the Grok video lane was not signed in; a Grok variant can replace the hero shot with an image-to-video clip.

@@ -31,17 +31,17 @@
       "type": "image",
       "path": "media/still-b.jpg"
     },
-    "qaContact": {
+    "qaSeams": {
       "type": "image",
-      "path": "media/qa-contact.png"
+      "path": "media/qa-seams.png"
     },
-    "qaSeamA": {
+    "qaWave": {
       "type": "image",
-      "path": "media/qa-seam-a.png"
+      "path": "media/qa-waveform.png"
     },
-    "qaSeamB": {
+    "qaSpec": {
       "type": "image",
-      "path": "media/qa-seam-b.png"
+      "path": "media/qa-spectrogram.png"
     }
   },
   "scenes": [
@@ -161,7 +161,7 @@
         },
         {
           "type": "text",
-          "text": "Capture the real product.",
+          "text": "Record a real, running UI.",
           "x": 160,
           "y": 970,
           "align": "left",
@@ -375,24 +375,24 @@
       "layers": [
         {
           "type": "media",
-          "source": "qaContact",
+          "source": "qaSeams",
           "fit": "contain",
           "window": {
             "x": 160,
-            "y": 120,
+            "y": 110,
             "width": 1060,
-            "height": 640,
+            "height": 596,
             "radius": 16
           },
           "motion": "drift"
         },
         {
           "type": "media",
-          "source": "qaSeamA",
+          "source": "qaWave",
           "fit": "cover",
           "window": {
             "x": 1300,
-            "y": 120,
+            "y": 110,
             "width": 460,
             "height": 259,
             "radius": 14
@@ -401,11 +401,11 @@
         },
         {
           "type": "media",
-          "source": "qaSeamB",
+          "source": "qaSpec",
           "fit": "cover",
           "window": {
             "x": 1300,
-            "y": 420,
+            "y": 447,
             "width": 460,
             "height": 259,
             "radius": 14
@@ -414,13 +414,13 @@
         },
         {
           "type": "text",
-          "text": "vid2 qa  →  contact sheet, seams, loudness",
-          "x": 1300,
-          "y": 740,
+          "text": "vid2 qa: seams · waveform · spectrogram · -14 LUFS",
+          "x": 160,
+          "y": 780,
           "align": "left",
           "font": "mono",
           "weight": "regular",
-          "size": 26,
+          "size": 28,
           "color": "#8A93A6",
           "animation": "fade",
           "start": "1s"

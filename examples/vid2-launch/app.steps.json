@@ -3,7 +3,7 @@
     "goto": "/index.html"
   },
   {
-    "wait": 900
+    "wait": 1500
   },
   {
     "hover": "#publish"

@@ -57,7 +57,7 @@ async function run() {
   const log = await (await fetch("render-log.json")).json();
   const d = log.data;
   const lines = [
-    '<span class="muted">$ </span><span class="cmd">vid2 init launch-teaser demo &amp;&amp; vid2 render demo/timeline.json --profile proxy --placeholders --json</span>',
+    '<span class="muted">$ </span><span class="cmd">vid2 render demo/timeline.json --profile proxy --json</span>',
     ...log.warnings.map((w) => '<span class="muted">warn  ' + esc(w) + '</span>'),
     ...d.segments.map((s) => 'segment  ' + esc(s.id) + '  <span class="muted">' + (s.cached ? "cached" : "rendered") + '</span>'),
     'audio    <span class="n">' + d.audio.integrated + '</span> LUFS  <span class="muted">true peak</span> <span class="n">' + d.audio.truePeak + '</span> dBTP',

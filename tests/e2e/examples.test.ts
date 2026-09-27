@@ -65,15 +65,14 @@ void test("two-pass handoff: pass-1 QA stills replace the placeholders and pass 
   if (!requireFfmpeg(t)) return;
   const dir = join(tempDir("vid2-example-2pass-"), "vid2-launch");
   cpSync(example, dir, { recursive: true, filter: (src) => !src.includes(".work") && !/[\\/](raw|seq)([\\/]|$)/.test(src) });
-  for (const f of ["qa-contact.png", "qa-seam-a.png", "qa-seam-b.png"]) rmSync(join(dir, "media", f));
+  for (const f of ["qa-seams.png", "qa-waveform.png", "qa-spectrogram.png"]) rmSync(join(dir, "media", f));
   const pass1 = await vid2(dir, ["render", "timeline.stills.json", "--profile", "proxy", "--placeholders", "-o", "pass1.mp4"]);
   assert.equal(pass1.ok, true, JSON.stringify(pass1));
   assert.equal((pass1.warnings ?? []).filter((w) => w.startsWith("W_PLACEHOLDER")).length, 3);
   const qa = await vid2(dir, ["qa", "pass1.mp4", "--timeline", "timeline.stills.json", "--out", "pass1.qa"]);
   assert.equal(qa.ok, true, JSON.stringify(qa).slice(0, 400));
-  cpSync(join(dir, "pass1.qa/contact.png"), join(dir, "media/qa-contact.png"));
-  cpSync(join(dir, "pass1.qa/keyframes/compile-seam-before.png"), join(dir, "media/qa-seam-a.png"));
-  cpSync(join(dir, "pass1.qa/keyframes/compile-seam-after.png"), join(dir, "media/qa-seam-b.png"));
+  const made = await run(process.execPath, [join(dir, "make-qa-media.mjs"), join(dir, "pass1.qa"), join(dir, "media")]);
+  assert.equal(made.code, 0, made.stderr);
   const pass2 = await vid2(dir, ["render", "timeline.stills.json", "--profile", "proxy", "-o", "pass2.mp4"]);
   assert.equal(pass2.ok, true, JSON.stringify(pass2));
   assert.equal((pass2.warnings ?? []).some((w) => w.startsWith("W_PLACEHOLDER")), false);
