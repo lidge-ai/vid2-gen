@@ -1,0 +1,43 @@
+name: Release
+
+# Publishes vid2-gen to npm from a version tag. Only runs when the repository variable NPM_PUBLISH_MODE is "token" or "oidc";
+# with any other value the publish job is skipped. This workflow never creates GitHub releases.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish (for example v0.1.1)
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: vars.NPM_PUBLISH_MODE == 'token' || vars.NPM_PUBLISH_MODE == 'oidc'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Token mode needs NPM_TOKEN
+        if: vars.NPM_PUBLISH_MODE == 'token'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: test -n "$NPM_TOKEN" || { echo "NPM_PUBLISH_MODE=token but the NPM_TOKEN secret is empty"; exit 1; }
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm ci
+      - run: npm test
+        env:
+          VID2_REQUIRE_FFMPEG: '1'
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ vars.NPM_PUBLISH_MODE == 'token' && secrets.NPM_TOKEN || '' }}

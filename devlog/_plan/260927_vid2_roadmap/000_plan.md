@@ -24,7 +24,8 @@ otherwise need CapCut. Research lives in 001-006; each implementation phase has 
 | Escalation | npm login/2FA, GitHub org policy refusal, a design decision that changes the public schema after release, anything destructive outside the new repo. Delegation: after two distinct agents fail the same packet, main reclaims it |
 
 HOTL bounds: user granted unlimited tokens/time, unlimited sol subagents and Aside research;
-write scope is the vid2-gen worktree plus scratch under /tmp and the Aside artifact directory;
+write scope is the vid2-gen worktree plus scratch under /tmp, the Aside artifact directory, and `~/.vid2/evidence/` (closeout backup of
+ignored dogfood evidence, 080 wp9 folds);
 external writes allowed: create/push lidge-ai/vid2-gen, its CI, npm publish of vid2-gen, GitHub release.
 
 ## Mechanics

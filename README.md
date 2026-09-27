@@ -8,7 +8,7 @@ a finished, loudness-mastered, QA-checked video with ffmpeg. No editor, no timel
 *The launch video above was made with vid2 from [examples/vid2-launch](examples/vid2-launch) — real captures, ima2-gen stills, synthesized
 music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 
-[![npm](https://img.shields.io/npm/v/vid2-gen?label=npm)](https://www.npmjs.com/package/vid2-gen) [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Node.js](https://img.shields.io/node/v/vid2-gen)](package.json) [![CI](https://github.com/lidge-ai/vid2-gen/actions/workflows/ci.yml/badge.svg)](https://github.com/lidge-ai/vid2-gen/actions/workflows/ci.yml)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Node.js 22.18+](https://img.shields.io/badge/node-%E2%89%A522.18-339933)](package.json) [![CI](https://github.com/lidge-ai/vid2-gen/actions/workflows/ci.yml/badge.svg)](https://github.com/lidge-ai/vid2-gen/actions/workflows/ci.yml)
 
 | You get | How |
 |---|---|
@@ -24,11 +24,11 @@ music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 Requires **Node.js 22.18 or newer** and **ffmpeg/ffprobe 6.1 or newer** on your PATH. ffmpeg 7.1+ is recommended. Install ffmpeg with `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg` on Windows, or your Linux distribution's package manager.
 
 ```bash
-npm install -g vid2-gen
+npm install -g https://github.com/lidge-ai/vid2-gen/releases/download/v0.1.0/vid2-gen-0.1.0.tgz
 vid2 doctor
 ```
 
-The npm command applies once the package is published. For a source checkout today:
+npm publication of `vid2-gen` is pending; the command above installs the exact release tarball. From a source checkout:
 
 ```bash
 npm ci
