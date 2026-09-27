@@ -135,3 +135,9 @@ c-5 wp4; c-6 wp5; c-7 wp6; c-8 wp7; c-9 wp8; c-10 wp9.
   libass and the drawtext canary as present. Conclusion: the CLI/JSON/exit contract, timeline schema v1 and probe are the stable base; the
   repo is pushed early so hosted 3-OS CI (c-2) runs from wp3 on. Direction for wp3: main writes compile/ir.ts, graph.ts, escape.ts first,
   then layer/effect/text/render lanes run in parallel.
+- **wp3 D (2026-09-28):** render core shipped (bad3000b..2f9eb867 + examples/hello.json). Local: 118 tests (117 pass, 1 gated skip), packed
+  install renders from outside the checkout, examples/hello.json renders 1280x720, 153 frames, yuv420p, no black run; hosted CI 36331869118 green
+  on 3 OS x Node 22/24. Findings folded: Homebrew ffmpeg 9 has no libass/freetype → raster text backend (ADR-1, opentype.js); ffmpeg 6.1
+  miscounts overlay n → enable windows use t; -filter_complex_script is gone in 8+/9 builds → legacy transport only below 7.1. Direction for wp4:
+  main defines src/capture/{session,resolver}.ts and the source-frame → timeline-frame rule first (architect W4-01), then web, native,
+  electron/terminal and camera/cursor lanes.

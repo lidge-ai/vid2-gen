@@ -1,0 +1,106 @@
+{
+  "$schema": "../schema/timeline.v1.json",
+  "version": 1,
+  "output": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30
+  },
+  "scenes": [
+    {
+      "id": "intro",
+      "duration": "2s",
+      "background": "#0B0D12",
+      "layers": [
+        {
+          "type": "shape",
+          "shape": "rect",
+          "x": 390,
+          "y": 280,
+          "width": 500,
+          "height": 160,
+          "color": "#3355FF",
+          "radius": 32
+        },
+        {
+          "type": "text",
+          "text": "vid2",
+          "size": 120,
+          "weight": "black",
+          "animation": "slam"
+        }
+      ],
+      "transition": {
+        "type": "fade",
+        "duration": "0.5s"
+      }
+    },
+    {
+      "id": "pitch",
+      "duration": "2.2s",
+      "background": "#F5F5F2",
+      "layers": [
+        {
+          "type": "text",
+          "text": "Describe the video. Render it.",
+          "size": 64,
+          "color": "#111111",
+          "animation": "rise"
+        },
+        {
+          "type": "text",
+          "text": "timeline.json → ffmpeg",
+          "font": "mono",
+          "weight": "regular",
+          "size": 32,
+          "color": "#555555",
+          "y": 460,
+          "animation": "fade",
+          "start": "0.4s"
+        }
+      ],
+      "effects": [
+        {
+          "type": "vignette",
+          "strength": 0.35
+        }
+      ],
+      "transition": {
+        "type": "slideleft",
+        "duration": "0.4s"
+      }
+    },
+    {
+      "id": "outro",
+      "duration": "1.8s",
+      "background": "#1A0B2E",
+      "layers": [
+        {
+          "type": "text",
+          "text": "ffmpeg-first",
+          "font": "serif",
+          "weight": "italic",
+          "size": 96,
+          "animation": "pop"
+        }
+      ],
+      "effects": [
+        {
+          "type": "motionblur",
+          "frames": 3
+        },
+        {
+          "type": "grain",
+          "strength": 4
+        }
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "type": "flash",
+      "at": "2s",
+      "strength": 0.35
+    }
+  ]
+}
