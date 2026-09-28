@@ -30,3 +30,5 @@ Failure shape:
 | 7 | Interrupted or timed out | `E_INTERRUPTED`, `E_TIMEOUT` |
 
 The contract is specified in `devlog/_fin/260927_vid2_roadmap/010_foundations.md` and implemented in `src/cli/output.ts`, `src/cli/main.ts`, and `src/shared/errors.ts`.
+
+`analyze <video> [--timeline t.json] [--bpm N] [--out dir]` returns an AnalyzeReport v1 with shots, cuts, summary, measured audio, artifact paths and warnings. `review <video> [--timeline t.json] [--bpm N] [--out dir] [--base-url URL] [--model ID] [--listen] [--listen-excerpt S]` returns ReviewReport v1: status, model, evidence path, seven rubric scores (0–4 or `cannotDetermine`), sourced findings, listener result, limitations and usage. `REVIEWED` and `SKIPPED` exit 0 even if QA evidence contains failures or findings are critical. Image model errors use exits 4 or 7. Listener failure does not change the exit code. See [QA and review](qa.md) for endpoint, environment and trust rules.

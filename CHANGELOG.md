@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+**Analysis and review.** `vid2 analyze` writes shot, color, motion, beat/onset and audio DSP evidence with keyframes and contact sheets. `vid2 review` combines that analysis with QA evidence, optional OpenAI-compatible frame critique and opt-in audio listening. Missing model configuration produces a local `SKIPPED` report; listener failures are recorded as `UNHEARD` without changing the review exit code.
+
 **Behavior changes.** Scene boundaries are quantized once from the exact running time instead of rounding each scene, so beat- and bar-cut films stay on the grid (a 40 s film at 132 BPM previously drifted 4 frames); a non-cut transition can resolve one frame longer or shorter depending on position. Auto cameras now honor the authored `hold` (default `0.8s`; it was ignored and 0.5 s / 0.7 s were used) and simplify to at most 24 keys.
 
 **Fixes.** Media `out` is honored for video and capture sources (the read stops at `out` and the last allowed frame holds). A segment that reads one file several times reads lossless FFV1 cuts instead of seeking the source repeatedly (ffmpeg could stall). Camera expressions over 100,000 characters fail with a pathful `E_INPUT` instead of an ffmpeg out-of-memory error.
+A stall watchdog kills an ffmpeg that stops making progress for `VID2_FFMPEG_STALL_MS` (default 180 s) and retries the segment once; ffmpeg occasionally deadlocked on segments with many looped inputs and the render waited forever. QA keyframes, contrast samples and analyze keyframes seek to the frame instead of decoding from the start (four at a time), so QA on a 40 s 1080p film no longer takes several minutes.
 
 **Time.** New `bar` unit (`"1bar"` = `meter` beats) everywhere a time literal is accepted.
 

@@ -66,6 +66,19 @@ export function onsetTimes(samples: Float32Array, threshold = 1.5, radiusS = 0.0
 
 export const ONSET_SAMPLE_RATE = SAMPLE_RATE;
 
+/** Decode FFmpeg's selected audio stream to mono 22.05 kHz floating-point PCM. */
+export async function decodeMono22k(path: string, ffmpeg: string): Promise<Float32Array> {
+  const decoded = await run(ffmpeg, ["-v", "error", "-i", path, "-ac", "1", "-ar", String(SAMPLE_RATE),
+    "-f", "f32le", "pipe:1"], { timeoutMs: 60_000 });
+  if (decoded.code !== 0) throw new Vid2Error("E_INPUT", `Cannot decode audio: ${path}`, {
+    details: { stderrTail: decoded.stderr.slice(-1000) } });
+  const bytes = decoded.stdout;
+  if (bytes.length % 4) throw new Vid2Error("E_INPUT", "Decoded audio has an incomplete sample");
+  const samples = new Float32Array(bytes.length / 4);
+  for (let i = 0; i < samples.length; i++) samples[i] = bytes.readFloatLE(i * 4);
+  return samples;
+}
+
 function sampleAt(values: Float64Array, position: number): number {
   const left = Math.floor(position); const fraction = position - left;
   return (values[left] ?? 0) * (1 - fraction) + (values[left + 1] ?? 0) * fraction;
@@ -145,13 +158,8 @@ function downbeatPhase(low: Float64Array, offset: number, bpm: number): { phase:
 /** Fixed-BPM beat grid inferred from spectral flux; arrays are review data. */
 export async function detectBeats(path: string, opts: { ffmpeg?: string } = {}): Promise<BeatsFile> {
   const ffmpeg = opts.ffmpeg ?? process.env["VID2_FFMPEG"] ?? locateTools().ffmpeg;
-  const decoded = await run(ffmpeg, ["-v", "error", "-i", path, "-ac", "1", "-ar", String(SAMPLE_RATE), "-f", "f32le", "pipe:1"], { timeoutMs: 60_000 });
-  if (decoded.code !== 0) throw new Vid2Error("E_INPUT", `Cannot decode audio for beat detection: ${path}`, {
-    details: { stderrTail: decoded.stderr.slice(-1000) } });
-  const bytes = decoded.stdout;
-  if (bytes.length < SAMPLE_RATE * 4 || bytes.length % 4) throw new Vid2Error("E_INPUT", "Beat detection needs at least one second of decoded audio");
-  const samples = new Float32Array(bytes.length / 4);
-  for (let i = 0; i < samples.length; i++) samples[i] = bytes.readFloatLE(i * 4);
+  const samples = await decodeMono22k(path, ffmpeg);
+  if (samples.length < SAMPLE_RATE) throw new Vid2Error("E_INPUT", "Beat detection needs at least one second of decoded audio");
   const { flux, low, duration } = analyze(samples);
   const estimate = tempo(flux);
   const refined = refine(flux, estimate.bpm, phase(flux, estimate.bpm));
