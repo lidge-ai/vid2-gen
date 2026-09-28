@@ -104,8 +104,23 @@ muted, accent, track, shadow).
 - **chips**: pills (icon, text, note) entering at their `at` with a slide, fade and blur; an optional connector is a `path` node (SVG path
   in node pixels, drawn by `progress`) from `connector.from` to the chip, with a travelling dot. Event: `token` per chip.
 
-The `path` node kind (`types.ts` `PathNode`) draws an arbitrary stroked path inside explicit bounds; `TextNode.counter` and
-`TextNode.scramble` are the two text effects evaluated by the renderer rather than keyed.
+The `path` node kind (`types.ts` `PathNode`) draws an arbitrary stroked path inside explicit bounds. The renderer evaluates text in
+counter → keyed → timecode → scramble order. `keyed` interpolates or holds numeric keys in stage frames and formats fixed decimals,
+signed integer padding, prefix and suffix. `timecode` uses an absolute output-frame base and HUD-start origin; elapsed mode prints
+non-drop `HH:MM:SS:FF` at `round(fps)` and frames mode prints the absolute output frame.
+
+## Timeline HUD
+
+`src/stage/presets/hud.ts` builds a full-frame HUD clip at output fps, profile-scaled once. Four L-brackets sit at the authored
+margin (arm = 1.5 × size, stroke = max(2, size / 14)); label and right-aligned counter sit inside the top brackets. Timecode is at
+bottom-left, above a ticker when present. The ticker is a full-width bottom strip whose item text switches at its resolved frame.
+The font is resolved through `resolveFont(font, "regular", ctx)`; `mono` selects bundled Geist Mono. The HUD emits no stage events or
+automatic sound cues.
+
+`src/compile/layers/hud.ts` splits the HUD span into contiguous stage renders of at most `hudChunkSeconds` (default 20). Each chunk
+has a distinct hash and is registered in the plan stage map. Counter keys and ticker item frames shift by the chunk's absolute start,
+while timecode keeps its absolute base and HUD origin. Post joins chunk inputs with `concat` and overlays the HUD across its half-open
+timeline span after look, overlays and root effects. Because this happens after scene joins, cuts and fades do not blend duplicate HUDs.
 
 ## QA
 

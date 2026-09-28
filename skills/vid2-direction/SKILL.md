@@ -13,4 +13,6 @@ Before motion, make one still for every scene and arrange a contact sheet. Check
 
 Use [camera and shot grammar](references/camera.md), [motion/easing/transitions](references/motion.md), [typography](references/typography.md), [anti-pattern replacements](references/anti-patterns.md), [storyboard review](references/storyboard.md), and the [brief table](references/brief-template.md). Numbers there are starting points, not brand rules.
 
+For a music-led cut, use [edit rhythm](references/edit-rhythm.md) and [sound cues](references/sound-cues.md). Set a [color script](references/color-script.md) before grading, compare the [measured reference films](references/reference-films.md), then review with the [seven-score rubric](references/review-rubric.md). These are editing decisions and evidence rules, not automatic quality thresholds.
+
 For a launch film that should feel designed (word-by-word builds, magic move, rebuilt UI, sound that follows motion), read [kinetic grammar](references/kinetic-grammar.md) and start from `vid2 init kinetic-launch`.

@@ -68,7 +68,7 @@ function itemFor(node: StageNode, world: World, sprites: SpriteCache): DrawItem 
 
 /** Draw items for a frame in paint order (z, then declaration order). Invisible nodes are omitted. */
 export function frameItems(spec: StageSpec, index: TrackIndex, frame: number, sprites: SpriteCache): DrawItem[] {
-  const evaluated = new Map(spec.nodes.map((n) => [n.key, scrambled(nodeAt(n, index, frame, spec.fps), frame)]));
+  const evaluated = new Map(spec.nodes.map((n) => [n.key, evaluateTextNode(nodeAt(n, index, frame, spec.fps), frame)]));
   const worlds = new Map<string, World>();
   const ordered = [...evaluated.values()].map((n, i) => ({ n, i })).sort((a, b) => a.n.z - b.n.z || a.i - b.i);
   const items: DrawItem[] = [];
@@ -86,14 +86,42 @@ export function tintOf(color: string | null): [number, number, number, number] |
   return [r / 255, g / 255, b / 255, a / 255];
 }
 
-/** Text node showing its scramble character for this frame (before resolving to its own text). */
-function scrambled(node: StageNode, frame: number): StageNode {
+/** Evaluate dynamic text in counter → keyed → timecode → scramble order. */
+export function evaluateTextNode(node: StageNode, frame: number): StageNode {
   if (node.kind !== "text") return node;
-  if (node.counter) return { ...node, text: counterText(node.counter, frame) };
-  if (!node.scramble || frame >= node.scramble.until) return node;
+  let text = node.text;
+  if (node.counter) text = counterText(node.counter, frame);
+  if (node.keyed) text = keyedText(node.keyed, frame);
+  if (node.timecode) text = timecodeText(node.timecode, frame);
+  if (!node.scramble || frame >= node.scramble.until) return text === node.text ? node : { ...node, text };
   const { chars, from, step } = node.scramble;
   const i = Math.max(0, Math.floor((frame - from) / Math.max(1, step))) % [...chars].length;
   return { ...node, text: [...chars][i]! };
+}
+
+function keyedText(c: NonNullable<Extract<StageNode, { kind: "text" }>["keyed"]>, frame: number): string {
+  const keys = c.keys;
+  let i = 0;
+  while (i + 1 < keys.length && keys[i + 1]!.frame <= frame) i++;
+  const current = keys[i]!;
+  const next = keys[i + 1];
+  const fraction = next && c.mode === "linear" ? Math.max(0, Math.min(1, (frame - current.frame) / (next.frame - current.frame))) : 0;
+  const value = current.value + (next ? (next.value - current.value) * fraction : 0);
+  const fixed = value.toFixed(c.decimals);
+  const sign = fixed.startsWith("-") ? "-" : "";
+  const unsigned = sign ? fixed.slice(1) : fixed;
+  const [integer, decimal] = unsigned.split(".");
+  return c.prefix + sign + integer!.padStart(c.pad, "0") + (decimal === undefined ? "" : `.${decimal}`) + c.suffix;
+}
+
+function timecodeText(c: NonNullable<Extract<StageNode, { kind: "text" }>["timecode"]>, frame: number): string {
+  const absolute = c.base + frame;
+  if (c.mode === "frames") return c.prefix + String(absolute);
+  const rate = Math.round(c.fps.num / c.fps.den);
+  const elapsed = Math.max(0, absolute - c.origin);
+  const seconds = Math.floor(elapsed / rate);
+  const two = (n: number) => String(n).padStart(2, "0");
+  return c.prefix + `${two(Math.floor(seconds / 3600))}:${two(Math.floor(seconds / 60) % 60)}:${two(seconds % 60)}:${two(elapsed % rate)}`;
 }
 
 function counterText(c: NonNullable<Extract<StageNode, { kind: "text" }>["counter"]>, frame: number): string {

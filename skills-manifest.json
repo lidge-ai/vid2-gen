@@ -8,9 +8,9 @@
   },
   "vid2-audio": {
     "files": {
-      "SKILL.md": "c7c4b2a2aba89ae8019368aa29100cc5a0be12e2f3263e93e4f2ece72e5e1460"
+      "SKILL.md": "ba52504d6ff89c037a6aeb1b6ce1e492819a89fc86e8b607b298741fc7e24448"
     },
-    "sha256": "7f150e7ef8fbd06d23e41e6c77721235792569279b333cb34e881c0f25505d19"
+    "sha256": "566303289cca64a8a0625db938e243e2a35547591dd318e4df222c1870433f46"
   },
   "vid2-capture": {
     "files": {
@@ -26,27 +26,32 @@
   },
   "vid2-direction": {
     "files": {
-      "SKILL.md": "76d688cac6ffa712cdbfe7d1af2595320bcc30ebb67c79b1bd7597e2ae3f3ebb",
+      "SKILL.md": "10fc8505ce7d754c8141742ac5ad5e1332367f896ef3b16e1aebdaed181587de",
       "references/anti-patterns.md": "ad076caab179fb31f4235d6ceea608ff14db8e78bcb13bb369b0a219dfb7b14f",
       "references/brief-template.md": "204234226c4d4746068f9908c28396a147b82615fdf9afe35608d041f474c435",
       "references/camera.md": "cd583f9550403da5bd21a0bb925bb9e980829b8af501b8c4ba39d520977a4848",
+      "references/color-script.md": "64b96109f903f70c9aba3283c33d304a956d4ea5c2672bbcbcd1533bf0aec7ea",
+      "references/edit-rhythm.md": "79a0c2dd1788399d2ba57a3ef1e088bc295cb63914e8b9af2dcfdf4a9db201bc",
       "references/kinetic-grammar.md": "c213e0ae6752bed298253eb28b0489c6021588c732efbf5b134e4ba0dfeb0322",
       "references/motion.md": "fb1f5a0ab46312f58b485b91734847144c20f10c3256c0c0239a81f9016ee2ce",
+      "references/reference-films.md": "0b3747b06e6ea805b7999e7935a5927ad507eff87e362aafec9f2d173229d118",
+      "references/review-rubric.md": "1a2e7d26862325205e1966ac1f0274c27156b642d49f9aa524ec6147adf48506",
+      "references/sound-cues.md": "b1bbf8367e0595fde64d9840c2b5df1fe22984a033eb8540b30741bce0b45979",
       "references/storyboard.md": "d316f34f7261a7594a3d815d61593268cbae269e47f554459290aa77bd92c429",
       "references/typography.md": "83c4817821ff5651cce0f8c14569105411eb1e73ac00c8f0070b5b140ea97867"
     },
-    "sha256": "5092fd016d0bd10bd4d6b52255d862f01803eb1dd72acdddb98c8c73123d2f1f"
+    "sha256": "6819ddcb4f8dbe349b889f1eaebabd11e7830db3511c75b997821ea31b574f57"
   },
   "vid2-timeline": {
     "files": {
       "SKILL.md": "c12abb9f2123d06fde6261dfa627a1fabbc0ca5f4a9bd8eba8822707e6cdf747",
-      "assets/timeline.v1.json": "d78949d94714a420c74bdac3b2441471a0ba193a21ed696e543804e79372296e",
+      "assets/timeline.v1.json": "80488922263d1515ae1f69d1ae29cca9323a2532385debaeeb27ee3dabb3173e",
       "references/errors.md": "17c8b9f69788a830f50c4c556c4b80fdfbfefdf270956457adfdb3cbd6e61a99",
-      "references/recipes.md": "66b1042acbdadc680f4a3fc0194690e5250a51dd9d2dfd40c581e9ad168cae15",
-      "references/schema.md": "aad05dafa0b23f21f777f8a4e4354105e6c23f7bf1ea58ab6e404e26b47e2160",
+      "references/recipes.md": "7b355de98ceb0a9e039497b9bccaa6b2b1d5d6410494a4725095df003be0f0b9",
+      "references/schema.md": "deadf1bd981b9967402a87b0f6dad69ce512e306af2128b9beb4d00702af98dc",
       "references/stage.md": "8ec0a2ac354f26f7aa10720e18b6ed1f02303da8747b62d1f35dc2b6b0895c60",
-      "references/time.md": "c1ea396448843d0c5935bea1822dcd5de823a61e7838691566c53038236b3b54"
+      "references/time.md": "976fbc096eb357b07140ea0eae38d6c9a7413e44ab1209a4c80ee2e3d0fceac3"
     },
-    "sha256": "ae81f60039669c538a287f5353e60e0c53a5ca61a5475f84c57d31c95f0b0a13"
+    "sha256": "7a6199fed07bfc9f39590fc9a648159894d952be59e8802705e9bfb117305f38"
   }
 }

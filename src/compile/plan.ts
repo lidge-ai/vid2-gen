@@ -11,7 +11,10 @@ import { planJoin } from "./joins.ts";
 import { buildAudioPlan } from "./audio-plan.ts";
 import { mixGraph } from "../audio/mix.ts";
 import { buildOverlayLayer as buildOverlayFor } from "./layers/overlay.ts";
+import { hudRenders, placeHud } from "./layers/hud.ts";
 import { requireTextCapability } from "./layers/text.ts";
+import { applyLook, lookRequiredFilters } from "./looks.ts";
+import { RISO_DEFAULT } from "../timeline/film.ts";
 import { compileSegment, composite, inputRegistry, STAGE_FAMILY } from "./segment.ts";
 import type { SegmentBase } from "./segment.ts";
 
@@ -55,8 +58,9 @@ function checkCapabilities(t: ResolvedTimeline, info: FfmpegInfo, backend: TextB
   const effects = [...t.scenes.flatMap((s) => s.effects), ...t.effects];
   const transitions = t.scenes.some((s) => s.transitionOut && s.transitionOut.frames > 0);
   const hasWindow = layers.some((l) => l.type === "media" && l.window);
-  const filters = [...requiredFilters(effects), "overlay", ...(transitions ? ["xfade"] : []), ...(hasWindow ? ["alphamerge"] : [])];
-  const stage = layers.some((l) => STAGE_FAMILY.has(l.type));
+  const filters = [...requiredFilters(effects), ...(t.look ? lookRequiredFilters(t.look) : []), "overlay",
+    ...(transitions ? ["xfade"] : []), ...(hasWindow ? ["alphamerge"] : []), ...(t.hud ? ["concat"] : [])];
+  const stage = Boolean(t.hud) || layers.some((l) => STAGE_FAMILY.has(l.type));
   requireFeatures(info, { filters, ...(stage ? { encoders: ["ffv1"], decoders: ["ffv1"] } : {}) }, "render plan");
 }
 
@@ -69,23 +73,34 @@ function overlayOps(overlays: ResolvedLayer[], t: ResolvedTimeline): OverlayOp[]
   });
 }
 
-function postPlan(t: ResolvedTimeline, base: SegmentBase, totalFrames: number): PostPlan {
+function postPlan(t: ResolvedTimeline, base: SegmentBase, totalFrames: number, hudChunkSeconds: number): PostPlan {
   const overlays = overlayOps(t.overlays, t);
   const effectCtx = { fps: base.fps, rate: 1, frames: totalFrames, width: base.width, height: base.height, clock: "absolute-t" as const };
   const effects: EffectOp[] = t.effects.map((e) => ({ type: e.type, filters: effectFilters(e, effectCtx) }));
   if (t.effects.some((e) => e.type === "motionblur")) throw new Vid2Error("E_INPUT", "motionblur is a scene effect; move it into a scene");
-  if (!overlays.length && !effects.length) return { overlays, effects, inputs: [], graph: null };
+  const look = t.look && t.look.strength > 0 ? { preset: t.look.preset, strength: t.look.strength, seed: t.look.seed,
+    palette: t.look.preset === "riso" ? [...(t.look.palette ?? RISO_DEFAULT)] : [], filters: lookRequiredFilters(t.look) } : undefined;
+  const renders = t.hud ? hudRenders(t.hud, t, base, hudChunkSeconds) : [];
+  const hud = t.hud ? { renders: renders.map((render) => render.id), startFrame: t.hud.startFrame, endFrame: t.hud.endFrame } : undefined;
+  if (!overlays.length && !effects.length && !look && !hud) return { overlays, effects, inputs: [], graph: null };
   const ctx: BuildContext = { ...base, graph: new GraphBuilder(), inputs: inputRegistry(1), rate: 1, frames: totalFrames,
     renderFrames: totalFrames, sceneId: "post" };
   let canvas = ctx.graph.add(["0:v"], ["format=rgba", "setsar=1"]);
+  if (t.look && look) canvas = applyLook(ctx, canvas, t.look);
   for (const layer of t.overlays) {
     if (layer.type !== "overlay") continue;
     const shifted = { ...layer, startFrame: layer.absoluteStartFrame, endFrame: layer.absoluteEndFrame,
       startSeconds: layer.absoluteStartSeconds, endSeconds: layer.absoluteEndSeconds };
     canvas = composite(ctx, canvas, buildOverlayFor(shifted, ctx), shifted);
   }
-  ctx.graph.add([canvas], [...effects.flatMap((e) => e.filters), "format=yuv420p", "setsar=1"], "vpost");
-  return { overlays, effects, inputs: ctx.inputs.list(), graph: ctx.graph.toString() };
+  if (t.hud) {
+    if (effects.length) canvas = ctx.graph.add([canvas], effects.flatMap((e) => e.filters));
+    canvas = placeHud(ctx, canvas, renders, t.hud);
+    ctx.graph.add([canvas], ["format=yuv420p", "setsar=1"], "vpost");
+  } else {
+    ctx.graph.add([canvas], [...effects.flatMap((e) => e.filters), "format=yuv420p", "setsar=1"], "vpost");
+  }
+  return { overlays, effects, ...(look ? { look } : {}), ...(hud ? { hud } : {}), inputs: ctx.inputs.list(), graph: ctx.graph.toString() };
 }
 
 
@@ -109,7 +124,7 @@ export function compileTimeline(t: ResolvedTimeline, opts: CompileOptions): Rend
     videoCodec: o.videoCodec, quality: o.quality };
   const info = opts.ffmpeg;
   return { planVersion: 1, timelineHash: opts.timelineHash, profile: opts.profile, output, totalFrames: t.totalFrames, segments, join,
-    post: postPlan(t, base, t.totalFrames),
+    post: postPlan(t, base, t.totalFrames, opts.hudChunkSeconds ?? 20),
     audio: buildAudioPlan(t, { workDir: opts.workDir, container: o.container, timelinePath: opts.timelinePath ?? "<timeline.json>", mix: mixGraph,
       stageEvents }),
     workDir: opts.workDir,

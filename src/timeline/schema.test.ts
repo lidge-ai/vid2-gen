@@ -61,3 +61,22 @@ test("audio schema: TTS voice, anchored cue, provider music; strict union reject
   assert.equal(ok({ autoCues: true, typo: 1 }), false);
 });
 
+test("root look and HUD parse with defaults; HUD is not a scene layer", () => {
+  const base = { version: 1, scenes: [{ id: "one", duration: "3s" }] };
+  const parsed = TimelineSchema.parse({ ...base, look: { preset: "riso" }, overlays: [{ type: "hud", label: "REC",
+    counter: { keys: [{ at: "0s", value: 30 }] }, ticker: { items: [{ at: "0s", text: "LIVE" }] } }] });
+  assert.equal(parsed.look?.strength, 1);
+  assert.equal(parsed.look?.seed, 0);
+  const hud = parsed.overlays[0];
+  assert.equal(hud?.type, "hud");
+  if (hud?.type === "hud") {
+    assert.equal(hud.font, "mono");
+    assert.equal(hud.counter?.mode, "linear");
+    assert.equal(hud.ticker?.height, 44);
+  }
+  assert.equal(TimelineSchema.safeParse({ ...base, look: { preset: "film", typo: true } }).success, false);
+  assert.equal(TimelineSchema.safeParse({ ...base, look: { preset: "riso", palette: ["#000000"] } }).success, false);
+  assert.equal(TimelineSchema.safeParse({ ...base, look: { preset: "paper", strength: 1.1 } }).success, false);
+  assert.equal(TimelineSchema.safeParse({ ...base, overlays: [{ type: "hud", typo: true }] }).success, false);
+  assert.equal(TimelineSchema.safeParse({ ...base, scenes: [{ ...base.scenes[0], layers: [{ type: "hud" }] }] }).success, false);
+});

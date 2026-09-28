@@ -5,6 +5,7 @@ import { Vid2Error } from "../shared/errors.ts";
 import { framesToSeconds, parseFps, parseSignedLiteral, parseTimeLiteral, toFrames, toSeconds } from "../shared/time.ts";
 import type { BeatGrid, Fps } from "../shared/time.ts";
 import type { Timeline } from "./schema.ts";
+import type { Hud, ResolvedHud } from "./film.ts";
 import type { Effect, Layer, ResolveOptions, ResolvedAudio, ResolvedEffect, ResolvedLayer, ResolvedScene, ResolvedSpan, ResolvedTime, ResolvedTimeline, ResolvedTransition } from "./types.ts";
 
 type Time = NonNullable<Timeline["audio"]>["cues"][number]["at"];
@@ -133,6 +134,17 @@ function resolvedLayer(layer: Layer, frames: number, sceneStart: number, ctx: Co
     ...(outFrame === undefined ? {} : { outSeconds: timeSeconds(layer.out!, ctx) }) };
 }
 
+/** Root HUD times live on the output clock, including the grid offset for beat positions. */
+function resolvedHud(hud: Hud, totalFrames: number, ctx: Context): ResolvedHud {
+  const startFrame = Math.min(totalFrames, frame(hud.start, ctx, "position"));
+  const endFrame = Math.min(totalFrames, hud.end === undefined ? totalFrames : frame(hud.end, ctx, "position"));
+  return { ...hud, startFrame, endFrame, absoluteStartFrame: startFrame, absoluteEndFrame: endFrame,
+    startSeconds: framesToSeconds(startFrame, ctx.fps), endSeconds: framesToSeconds(endFrame, ctx.fps),
+    absoluteStartSeconds: framesToSeconds(startFrame, ctx.fps), absoluteEndSeconds: framesToSeconds(endFrame, ctx.fps),
+    counterKeys: hud.counter?.keys.map(key => ({ frame: frame(key.at, ctx, "position"), value: key.value })) ?? [],
+    tickerItems: hud.ticker?.items.map(item => ({ frame: frame(item.at, ctx, "position"), text: item.text })) ?? [] };
+}
+
 function resolvedEffect(effect: Effect, sceneStart: number, ctx: Context, baseDir: string): ResolvedEffect {
   if (effect.type === "grade" && effect.lut) return { ...effect, lut: pathFrom(baseDir, effect.lut) };
   if (effect.type !== "flash" && effect.type !== "rgbsplit") return effect;
@@ -203,9 +215,13 @@ export function resolveTimeline(t: Timeline, opts: ResolveOptions): ResolvedTime
   placeCaptures(scenes, t.sources, ctx);
   const last = scenes.at(-1);
   const totalFrames = last ? last.startFrame + last.frames : 0;
+  const hud = t.overlays.find((layer): layer is Hud => layer.type === "hud");
   return { version: 1, fps, width: t.output.width, height: t.output.height, output: t.output,
     ...(beat === undefined ? {} : { beat }), sources, fonts, markers, scenes,
-    overlays: t.overlays.map(layer => resolvedLayer(layer, totalFrames, 0, ctx)),
+    overlays: t.overlays.filter((layer): layer is Extract<Timeline["overlays"][number], { type: "overlay" }> => layer.type === "overlay")
+      .map(layer => resolvedLayer(layer, totalFrames, 0, ctx)),
+    ...(t.look === undefined ? {} : { look: t.look }),
+    ...(hud === undefined ? {} : { hud: resolvedHud(hud, totalFrames, ctx) }),
     effects: t.effects.map(effect => resolvedEffect(effect, 0, ctx, opts.baseDir)),
     ...(t.audio === undefined ? {} : { audio: resolvedAudio(t.audio, ctx) }),
     qa: { waivers: t.qa.waive.map((w) => { const a = frame(w.from, ctx, "position"), b = frame(w.to, ctx, "position");

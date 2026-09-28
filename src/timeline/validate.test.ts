@@ -65,3 +65,28 @@ test("audio generate sources are rejected whether or not a layer uses them", () 
     assert.ok(validateTimeline(t, { baseDir: "/" }).some((i) => i.path === "sources.bed.kind" && /timeline\.audio/.test(i.message)));
   }
 });
+
+test("HUD alone needs no media source; second HUD and non-riso palette are issues", () => {
+  const base = { version: 1, scenes: [{ id: "one", duration: "3s" }] };
+  const first = { type: "hud", label: "REC", counter: { keys: [{ at: "0s", value: 30 }, { at: "89f", value: 99.9 }], decimals: 1 } };
+  assert.deepEqual(codes({ ...base, overlays: [first] }), []);
+  const issues = validateTimeline(TimelineSchema.parse({ ...base, look: { preset: "film", palette: ["#000000", "#FFFFFF"] },
+    overlays: [first, { type: "hud" }] }), { baseDir: "/" });
+  assert.ok(issues.some(i => i.path === "look.palette"));
+  assert.ok(issues.some(i => i.path === "overlays.1" && i.code === "HUD_DUPLICATE"));
+  assert.equal(codes({ ...base, look: { preset: "riso" } }).includes("look_palette"), false);
+  assert.ok(codes({ ...base, overlays: [{ type: "hud", font: "missing" }] }).includes("missing_font"));
+});
+
+test("HUD keys and ticker items must be unique, ordered and in half-open span", () => {
+  const base = { version: 1, scenes: [{ id: "one", duration: "3s" }] };
+  const issues = validateTimeline(TimelineSchema.parse({ ...base, overlays: [{ type: "hud", start: "30f", end: "60f",
+    counter: { keys: [{ at: "30f", value: 1 }, { at: "30f", value: 2 }, { at: "60f", value: 3 }] },
+    ticker: { items: [{ at: "59f", text: "last" }, { at: "31f", text: "earlier" }] } }] }), { baseDir: "/" });
+  assert.ok(issues.some(i => i.path === "overlays.0.counter.keys.1.at" && i.code === "HUD_TIME_ORDER"));
+  assert.ok(issues.some(i => i.path === "overlays.0.counter.keys.2.at" && i.code === "HUD_TIME_RANGE"));
+  assert.ok(issues.some(i => i.path === "overlays.0.ticker.items.1.at" && i.code === "HUD_TIME_ORDER"));
+  assert.ok(codes({ ...base, overlays: [{ type: "hud", end: "60f", ticker: { items: [{ at: "60f", text: "too late" }] } }] })
+    .includes("HUD_TIME_RANGE"));
+  assert.ok(codes({ ...base, overlays: [{ type: "hud", start: "90f" }] }).includes("HUD_SPAN"));
+});

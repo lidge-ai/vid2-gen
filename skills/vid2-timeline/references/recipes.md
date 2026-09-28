@@ -12,6 +12,19 @@ Record a `save` label. Use a capture source in a media layer with `camera:{"auto
 
 Declare a `generate` source for an image or Grok clip. Run `vid2 validate timeline.json --json` to see uncached generate-source warnings and `vid2 assets providers --json` to check readiness. When generation is authorized and the lane is ready, `vid2 assets resolve timeline.json --json` materializes missing assets and may call the provider. `vid2 render` consumes cached media; `--placeholders` substitutes labelled stripes for uncached sources during a structural render.
 
+## Look and continuous HUD
+
+Use a root look and HUD across scene boundaries. For a 3 s film at 30 fps, this counter reaches 99.9 at the last frame:
+
+```json
+{"version":1,"output":{"fps":30},"look":{"preset":"riso","palette":["#1B1B1B","#FF48B0","#0078BF","#F2EDE4"],"strength":0.65,"seed":4},
+ "scenes":[{"id":"open","duration":"1s","transition":{"type":"cut"}},{"id":"proof","duration":"2s"}],
+ "overlays":[{"type":"hud","label":"REC","accent":"#FF48B0","counter":{"keys":[{"at":"0f","value":30},{"at":"89f","value":99.9}],"decimals":1},
+   "timecode":{"mode":"elapsed"},"ticker":{"items":[{"at":"0f","text":"OPEN"},{"at":"30f","text":"PROOF"}]}}]}
+```
+
+Only one HUD is allowed. The HUD is placed after the look, ordinary overlays and root effects; its text escapes grain. [Schema fields](schema.md) explain defaults and validation. [Color script](../../vid2-direction/references/color-script.md) explains choosing a palette.
+
 ## QA waiver
 
 `"qa":{"waive":[{"check":"black","from":"0s","to":"0.4s","reason":"intentional fade from black"}]}`. Keep ranges shorter than the actual intentional effect. Inspect the video and QA measurement first.

@@ -6,7 +6,7 @@
 ```text
 ResolvedTimeline ──► per scene: SegmentPlan (inputs + filtergraph + ASS runs)   src/compile/segment.ts
                  ──► JoinPlan (xfade / concat with exact frame math)             src/compile/joins.ts
-                 ──► PostPlan (timeline overlays + effects, absolute t only)     src/compile/plan.ts
+                 ──► PostPlan (look + overlays + effects + HUD, absolute t)       src/compile/plan.ts
 ```
 
 ## Segments
@@ -46,3 +46,18 @@ escaped drive colon), `quoteExpr` for expressions, `num` for numbers. Graphs are
 
 `compileTimeline` requires libass when any text exists, `xfade` when a transition exists, `alphamerge` for windows, and every filter an
 effect declares in `requires.filters`. A missing filter is an `E_CAPABILITY` error (exit 3); nothing falls back silently.
+
+## Post-join looks and HUD
+
+The post pass applies the root look first, then authored root overlays, root effects, and the HUD last. Existing overlay/effect
+ordering is preserved, while HUD text and brackets stay free of the look and root effects. A zero-strength look contributes no
+filter chain or `PostPlan.look`; its graph matches the same timeline without a look.
+
+`film` grades with `eq` and `colorbalance`, adds thresholded blurred highlight halation, seeded grain, and frame-keyed weave.
+`riso` builds its 256×1 palette from in-graph colour swatches, applies Bayer `paletteuse`, then adds seeded paper noise and channel
+misregistration. `paper` uses warm channel mixing, seeded fibre noise and a vignette. Strength scales the parameters; riso uses
+the default four-colour palette when none is authored. Look filters are required only when strength is positive.
+
+The HUD is rendered as contiguous absolute-time FFV1 stage chunks (20 s by default), joined and overlaid only after scene joining.
+`PostPlan.hud.renders` names those stage clips in order. Compilation requires the FFV1 encoder and decoder when a HUD is present.
+The compile summary reports the look preset and strength, and the HUD chunk count when applicable.

@@ -25,7 +25,9 @@ export const compile: CommandSpec = {
     const summary = { profile: plan.profile, output: plan.output, totalFrames: plan.totalFrames, workDir: plan.workDir,
       segments: plan.segments.map((s) => ({ id: s.id, frames: s.frames, renderFrames: s.renderFrames, inputs: s.inputs.length,
         textRuns: s.assFiles.length, internalRate: s.internalRate })),
-      join: plan.join.steps, post: { overlays: plan.post.overlays.length, effects: plan.post.effects.map((e) => e.type) } };
+      join: plan.join.steps, post: { overlays: plan.post.overlays.length, effects: plan.post.effects.map((e) => e.type),
+        ...(plan.post.look ? { look: { preset: plan.post.look.preset, strength: plan.post.look.strength } } : {}),
+        ...(plan.post.hud ? { hudChunks: plan.post.hud.renders.length } : {}) } };
     return { command: "compile", data: artifacts.length ? summary : { ...summary, plan }, artifacts, warnings };
   },
 };

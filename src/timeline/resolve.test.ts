@@ -126,3 +126,20 @@ test("qa.waive parses, rejects unknown keys and resolves to frames", () => {
   assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: 1 }], qa: { waive: [], typo: 1 } }).success, false);
   assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: 1 }], qa: { waive: [{ check: "vibes", from: 0, to: 1, reason: "xyz" }] } }).success, false);
 });
+
+test("root HUD resolves absolute key/item frames and leaves media overlays separate", () => {
+  const t = TimelineSchema.parse({ version: 1, beat: { bpm: 120, offset: "8f" },
+    sources: { ink: { type: "image", path: "ink.png" } }, look: { preset: "paper", strength: 0 },
+    scenes: [{ id: "one", duration: "3s" }], overlays: [
+      { type: "overlay", source: "ink" },
+      { type: "hud", start: "1b", end: "4b", counter: { keys: [{ at: "1b", value: 30 }, { at: "3b", value: 99.9 }] },
+        ticker: { items: [{ at: "2b", text: "NEXT" }] } },
+    ] });
+  const r = resolveTimeline(t, { baseDir: "/" });
+  assert.equal(r.look?.strength, 0);
+  assert.deepEqual(r.overlays.map(o => o.type), ["overlay"]);
+  assert.deepEqual([r.hud?.startFrame, r.hud?.endFrame], [23, 68]);
+  assert.deepEqual(r.hud?.counterKeys, [{ frame: 23, value: 30 }, { frame: 53, value: 99.9 }]);
+  assert.deepEqual(r.hud?.tickerItems, [{ frame: 38, text: "NEXT" }]);
+  assert.equal(r.hud?.absoluteStartFrame, 23);
+});
