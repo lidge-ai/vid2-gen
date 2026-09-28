@@ -1,6 +1,5 @@
 /** Child-process execution without a shell (argv only), with timeout and stderr line streaming. */
 import { spawn } from "node:child_process";
-import { basename } from "node:path";
 import { Vid2Error } from "./errors.ts";
 
 export interface RunOptions {
@@ -28,7 +27,7 @@ export type Runner = (cmd: string, args: string[], opts?: RunOptions) => Promise
  * ffmpeg 8/9 occasionally deadlocked on graphs with several looped inputs; the test runner sets 60 s so a hang retries.
  */
 export function ffmpegDefaultTimeout(cmd: string, env: NodeJS.ProcessEnv = process.env): number | undefined {
-  const name = basename(cmd).toLowerCase().replace(/\.exe$/, "");
+  const name = (cmd.split(/[\\/]/).pop() ?? cmd).toLowerCase().replace(/\.exe$/, "");
   if (name !== "ffmpeg") return undefined;
   const value = Number(env["VID2_FFMPEG_TIMEOUT_MS"]);
   return Number.isFinite(value) && value > 0 ? value : undefined;
