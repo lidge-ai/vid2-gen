@@ -43,3 +43,9 @@ the tarball is packed from a clean checkout of the tag and, after upload, instal
 `vid2 version --json` must report `data.version` 0.2.0 (audit wp6 round 1: `--version` is not an option); (5) README also updates the install URL (0.1.0 → 0.2.0 tarball), the "four templates" claims and
 the stale "Commands and delivery" availability column (it still names planned phases). `.claude-plugin/plugin.json` version moves to
 0.2.0 with the package.
+
+C round 1 (CI on 0b2774af, run 36361480588): macOS ×2, pack and checks green; Windows ×2 failed before tests (Chocolatey feed 504 while
+installing ffmpeg) and Ubuntu ×2 failed with `tests/e2e/templates.test.ts` exceeding the 180 s per-file budget once `kinetic-launch`
+joined the loop (local 31 s; CI runners are ~4× slower). Fixed forward: the shared check moved to `tests/e2e/template-check.ts` and
+`kinetic-launch` runs from its own file `template-kinetic.test.ts` (own budget, same assertions); the Windows ffmpeg install retries
+three times with back-off.

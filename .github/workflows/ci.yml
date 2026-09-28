@@ -51,7 +51,14 @@ jobs:
       - if: runner.os == 'macOS'
         run: brew install ffmpeg
       - if: runner.os == 'Windows'
-        run: choco install ffmpeg -y --no-progress
+        # The Chocolatey feed occasionally answers 504; retry before failing the leg.
+        run: |
+          for ($i = 1; $i -le 3; $i++) {
+            choco install ffmpeg -y --no-progress
+            if (Get-Command ffmpeg -ErrorAction SilentlyContinue) { break }
+            if (Test-Path "C:\ProgramData\chocolatey\bin\ffmpeg.exe") { break }
+            Start-Sleep -Seconds (20 * $i)
+          }
       - run: ffmpeg -hide_banner -version
       - run: npm ci
       - if: runner.os == 'Linux'
