@@ -138,8 +138,15 @@ export interface JoinPlan { segments: { id: string; frames: number; renderFrames
 
 export interface OverlayOp { source: string; kind: "image" | "video"; blend: "screen" | "add" | "normal"; opacity: number; motion: "none" | "sweep"; startFrame: number; endFrame: number }
 export interface EffectOp { type: string; filters: string[] }
-/** Timeline-level overlays/effects after the join; graph input "0:v" = joined video, output label "vpost". */
-export interface PostPlan { overlays: OverlayOp[]; effects: EffectOp[]; inputs: InputSpec[]; graph: string | null }
+/** Root look after the join (030). Absent when there is no look or strength is 0. */
+export interface LookOp { preset: "film" | "riso" | "paper"; strength: number; seed: number; palette: string[]; filters: string[] }
+/** Full-timeline HUD stage clips composited last in post; renders = StageRender ids of the chunks in time order. */
+export interface HudOp { renders: string[]; startFrame: number; endFrame: number }
+/**
+ * Timeline-level post after the join; graph input "0:v" = joined video, output label "vpost".
+ * Order: look → overlays → root effects → HUD (031: keeps existing output identical, HUD escapes grain).
+ */
+export interface PostPlan { overlays: OverlayOp[]; effects: EffectOp[]; inputs: InputSpec[]; graph: string | null; look?: LookOp; hud?: HudOp }
 
 /** An ffmpeg command the runner materializes to a cached 48 kHz WAV (synth music bed or an SFX preset). */
 export interface AudioRender { id: string; kind: "synth" | "sfx"; args: string[]; out: string; hash: string }

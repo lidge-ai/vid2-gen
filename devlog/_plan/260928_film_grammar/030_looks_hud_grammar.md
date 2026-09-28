@@ -43,5 +43,38 @@ Decisions D4.1–D4.4 (006).
 
 - R2-3: HUD spans are half-open [start, end). The B4 test uses `decimals: 1`, keys at `"0s"` → 30 and at the last frame time (`"89f"` on a 90-frame timeline) → 99.9, and asserts "30.0" at frame 0 and "99.9" at frame 89; a key at or after the span end is a validation issue.
 - R2-6: the ΔE sample is read from an rgb24 PNG of the post graph before the yuv420p encode; the 50 % mix is the sRGB channel average.
-- R2-7: "hud" joins the stage family for capability checks (plan.ts STAGE_FAMILY / segment.ts), so a missing ffv1 encoder fails at compile with E_CAPABILITY; added to the B4 test matrix.
+- R2-7 (superseded by W-12: plan.ts checkCapabilities requires ffv1 when t.hud exists), so a missing ffv1 encoder fails at compile with E_CAPABILITY; added to the B4 test matrix.
 - R2-10: chunked HUD rendering ships with an internal `hudChunkSeconds` setting (default 20) regardless of the benchmark, so the forced test exercises real code.
+
+## Amendments from wp4 reflection (031, supersede conflicting text above)
+
+- W-1 no local tests (user, 260928): workers run typecheck and eslint only; every test runs first in PR CI. Merge W1 → W2 → W3 in one PR and budget one CI fix round. Test files stay per-worker so a failure names its owner.
+- W-2 shared contracts written by main before dispatch, never edited by workers: src/timeline/film.ts (Look, RISO_DEFAULT, HudOverlay, LookSpec, Hud, ResolvedHud), src/compile/ir.ts (LookOp, HudOp, optional PostPlan.look/hud), src/stage/types.ts TextNode.keyed/timecode, and stub signatures in src/compile/looks.ts (lookRequiredFilters, applyLook) and src/compile/layers/hud.ts (hudRenders, placeHud). src/probe/requirements.ts needs no change.
+- W-3 post order is look → overlays → root effects → HUD (supersedes G-10). Existing timelines render identically. strength 0 → post.look undefined, chain skipped. The postPlan early return tests overlays, effects, post.look and hud.
+- W-4 HUD layout: four L-brackets inset by margin, arm size×1.5, stroke max(2, size/14), in color. label top-left inside the brackets; counter top-right right-aligned in accent ?? color; timecode bottom-left, above the ticker strip when a ticker exists. Ticker: full-width strip of height at the bottom, text left at margin, hard switch per item, no scroll. Font via resolveFont(font, "regular") (mono = GeistMono). The HUD emits no stage events.
+- W-5 formatting: counter value.toFixed(decimals), integer part zero-padded to pad digits with the sign before the padding; hold keeps the previous key, linear interpolates; first value before the first key, last after the last key. timecode elapsed = HH:MM:SS:FF non-drop from the HUD start with FF base round(fps); frames = absolute output frame integer. TextNode evaluation order: counter, keyed, timecode, scramble.
+- W-6 riso palette defaults to RISO_DEFAULT; a palette on film or paper is a validation issue (look.palette). Key/item frames are absolute, sorted, unique, inside [startFrame, endFrame).
+- W-7 CI budgets (all tests under 60 s; ubuntu ffmpeg is apt 6.1): look determinism on testsrc2 320×180 1 s via framemd5 of rgb24 twice in one run, never committed goldens; ΔE check on one frame with 2,000 samples in pure JS; strength 0 checked at plan level (graph string equals no-look graph). HUD tests at 320×180, 30 fps, 3 s; counter/timecode asserted through the stage evaluator, no OCR; chunking proved by chunkSeconds 1 vs unchunked equal framemd5. The 60 s 1080p HUD benchmark is not a CI test. tests/e2e/looks-hud.test.ts is its own file (≤ 40 s on Windows).
+- Worker split:
+
+| Worker | Owns |
+|---|---|
+| W1 timeline + docs | src/timeline/{schema,types,resolve,validate}.ts, new validate-hud.ts, schema.test.ts, validate.test.ts, schema/timeline.v1.json (npm run schema:json), skills/vid2-direction/SKILL.md and references/{edit-rhythm,color-script,review-rubric,sound-cues,reference-films}.md, skills/vid2-timeline/references/{time,recipes,schema}.md, skills/vid2-audio/SKILL.md, structure/{timeline,skills}.md, README.md |
+| W2 looks + post plan | src/compile/looks.ts (+ test), plan.ts (+ plan.test.ts), src/cli/commands/compile.ts post summary, tests/e2e/looks-hud.test.ts, structure/compiler.md, CHANGELOG Unreleased |
+| W3 HUD stage | src/stage/scene.ts (keyed, timecode), src/stage/presets/hud.ts (+ test), src/compile/layers/hud.ts (+ test), structure/stage.md |
+
+After merge main owns examples/looks-hud and the skills manifest build.
+
+
+## Amendments from wp4 audit round 1 (W-8..W-11)
+
+- W-8 resolved shape (main wrote it in src/timeline/types.ts): `ResolvedTimeline.look?: LookSpec` present whenever authored, including strength 0; `ResolvedTimeline.hud?: ResolvedHud`; `overlays` keeps only type "overlay". W1's resolver moves the authored HUD out of overlays.
+- W-9 one HUD per timeline: a second `{type:"hud"}` is validation issue HUD_DUPLICATE at `overlays.<i>` (W1, tested).
+- W-10 chunk time: TextNode.timecode gains `origin`; base = absolute output frame of the chunk's stage frame 0, origin = HUD start. elapsed shows base + frame − origin; frames shows base + frame. hudRenders shifts counter keys and ticker items to absolute − chunkStart; keys before frame 0 act as "before the first key" only when no earlier key exists (the evaluator uses all keys, so a chunk mid-way shows the correct interpolated value).
+- W-11 wiring: HudOp.renders are StageRender ids in time order; hudRenders registers the chunks in base.stages itself (as placeStage); plan.ts stores the ids and calls placeHud last in post. CompileOptions.hudChunkSeconds (default 20) is passed by W2 to hudRenders; tests/e2e/looks-hud.test.ts forces 1. resolveFont takes (fontId, weight, ctx). The ΔE test reads rawvideo rgb24 from ffmpeg stdout.
+
+
+## Amendment from wp4 audit round 2 (W-12)
+
+- W-12 capability: checkCapabilities in plan.ts (W2) requires the ffv1 encoder and decoder when `t.hud` is present, since the HUD no longer sits in overlays. W2 does not touch STAGE_FAMILY in segment.ts. The HUD-only timeline without ffv1 → E_CAPABILITY test stays.
+

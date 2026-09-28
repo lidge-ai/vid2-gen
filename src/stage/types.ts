@@ -49,6 +49,16 @@ export interface TextNode extends NodeBase {
   scramble?: { chars: string; from: number; until: number; step: number } | undefined;
   /** Between stage frames start and end the text shows a number counting from → to (ease out), with fixed decimals. */
   counter?: { from: number; to: number; start: number; end: number; decimals: number; prefix: string; suffix: string } | undefined;
+  /**
+   * Multi-key number (HUD counter, 031). Keys are in this clip's stage frames (absolute frame − chunk start), so they may be
+   * negative or past the clip end; before the first key the first value shows. Evaluated after counter, before timecode and scramble.
+   */
+  keyed?: { keys: { frame: number; value: number }[]; mode: "hold" | "linear"; decimals: number; pad: number; prefix: string; suffix: string } | undefined;
+  /**
+   * Timecode text. base = absolute output frame of this clip's stage frame 0; origin = absolute HUD start frame.
+   * elapsed: HH:MM:SS:FF of (base + frame − origin), non-drop, FF base round(fps). frames: the integer base + frame.
+   */
+  timecode?: { mode: "elapsed" | "frames"; base: number; origin: number; fps: { num: number; den: number }; prefix: string } | undefined;
 }
 
 export interface ImageNode extends NodeBase { kind: "image"; image: string; width: number; height: number; radius: number; fit: "cover" | "contain" }
