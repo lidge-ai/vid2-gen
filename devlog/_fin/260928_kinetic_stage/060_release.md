@@ -49,3 +49,11 @@ installing ffmpeg) and Ubuntu ×2 failed with `tests/e2e/templates.test.ts` exce
 joined the loop (local 31 s; CI runners are ~4× slower). Fixed forward: the shared check moved to `tests/e2e/template-check.ts` and
 `kinetic-launch` runs from its own file `template-kinetic.test.ts` (own budget, same assertions); the Windows ffmpeg install retries
 three times with back-off.
+
+C round 2 (CI on 8600c077, run 36362044441): **all green** — checks, pack, and test on macOS/Windows/Linux × Node 22/24.
+Release: annotated tag `v0.2.0` (object 97479558) peels to 8600c077 (`git ls-remote`: `refs/tags/v0.2.0^{}` = 8600c077b599…); GitHub release
+https://github.com/lidge-ai/vid2-gen/releases/tag/v0.2.0 with `vid2-gen-0.2.0.tgz` (897 677 B, packed from a clean clone of the tag),
+`ima2-launch.mp4` (7.6 MB) and `ima2-launch-poster.jpg`. Installed from the release URL into a temp prefix: `vid2 version --json` →
+`0.2.0`; `vid2 capabilities` lists the ten layers, 58 icons and the custom transitions. `release.yml` ran on the tag and **skipped**
+publishing (`NPM_PUBLISH_MODE=none`) — npm publication remains the one NEEDS_HUMAN step (set the variable/secret, or `npm publish` the
+release tarball from an account with rights to `vid2-gen`).

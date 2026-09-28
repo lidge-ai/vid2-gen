@@ -147,3 +147,14 @@ Did not improve / open: the capture window is still a dense desktop UI at 1260 p
 brand scene's letters use a word-level blur rather than per-glyph; music is the synth bed, not a produced track. What would prove the
 direction wrong: if viewers cannot read the rebuilt UI moments at phone size, component defaults need larger type.
 Next: wp6 release v0.2.0 (060).
+
+### wp6 (release) — D, 2026-09-28
+
+Conclusion: vid2 0.2.0 is released: `main` = 8600c077 with CI green on all legs, tag `v0.2.0`, GitHub release with the tarball, the
+ima2-launch film and its poster; the release tarball installs and reports 0.2.0. CI caught two issues fixed forward (templates test
+budget on slow runners; Windows Chocolatey 504 retry). npm publication is gated off by `NPM_PUBLISH_MODE=none` exactly as for 0.1.0 and is
+recorded as the single NEEDS_HUMAN item. The unit moves to `devlog/_fin/260928_kinetic_stage/`.
+
+## Unit outcome
+
+DONE except npm (NEEDS_HUMAN, unchanged from 0.1.0): c-1…c-5 met with evidence in each work-phase record; c-6 met by the release above.
