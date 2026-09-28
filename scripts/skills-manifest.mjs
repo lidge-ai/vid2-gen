@@ -1,13 +1,19 @@
 import { createHash } from 'node:crypto';
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const skillsRoot = join(root, 'skills');
 const schemaTarget = join(skillsRoot, 'vid2-timeline/assets/timeline.v1.json');
+// Write only on change: the manifest test runs this script while other test files read the skills tree, and an
+// unconditional rewrite made Windows fail those reads with EBUSY.
+function writeIfChanged(path, content) {
+  if (existsSync(path) && readFileSync(path).equals(Buffer.from(content))) return;
+  writeFileSync(path, content);
+}
 mkdirSync(dirname(schemaTarget), { recursive: true });
-copyFileSync(join(root, 'schema/timeline.v1.json'), schemaTarget);
+writeIfChanged(schemaTarget, readFileSync(join(root, 'schema/timeline.v1.json')));
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 function filesBelow(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -23,4 +29,4 @@ for (const entry of readdirSync(skillsRoot, { withFileTypes: true }).filter((x) 
   }
   manifest[entry.name] = { files, sha256: digest(JSON.stringify(files)) };
 }
-writeFileSync(join(root, 'skills-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+writeIfChanged(join(root, 'skills-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
