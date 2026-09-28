@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": {
+    "grok_clip": {
+      "type": "generate",
+      "provider": "ima2",
+      "kind": "video",
+      "prompt": "A quiet paper boat drifting across a rain-streaked blue window, locked camera, soft daylight, no text",
+      "options": {
+        "model": "grok/grok-imagine-video-1.5",
+        "durationS": 5,
+        "resolution": "720p",
+        "aspectRatio": "16:9"
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "boat_hold",
+      "duration": "7s",
+      "layers": [{ "type": "media", "source": "grok_clip", "fit": "cover" }]
+    }
+  ]
+}

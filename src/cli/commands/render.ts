@@ -42,7 +42,7 @@ export const render: CommandSpec = {
       return { command: "render", data: { output: result.output, seconds: result.seconds, frames: plan.totalFrames, profile: plan.profile,
         width: plan.output.width, height: plan.output.height, segments: result.segments, manifest: result.manifest,
         ...(result.audio ? { audio: result.audio } : {}) },
-        artifacts: [result.output, result.manifest], warnings: [...planWarnings, ...result.warnings] };
+        artifacts: [result.output, result.manifest], warnings: [...new Set([...planWarnings, ...(plan.warnings ?? []), ...result.warnings])] };
     } finally {
       process.removeListener("SIGINT", onSigint);
     }

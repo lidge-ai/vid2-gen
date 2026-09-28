@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+**Generated clips.** ima2 video requests validate options and ordered image references before a provider call. Reference cache keys track image bytes and order while requests without references retain their prior keys. A generated clip read beyond its duration holds the last frame and reports `W_GENERATED_CLIP_HOLD` in render output and the saved render manifest. A Grok example has an offline file-provider twin. Windows absolute `--ref` path parsing remains untested with ima2; live Grok verification is macOS only.
+
 **Film looks and HUD.** Root `film`, `riso`, and `paper` looks now compile after the scene join with seeded textures and strength-scaled
 parameters. A zero-strength look leaves the post graph unchanged. A timeline HUD renders above overlays and root effects in
 absolute-time chunks, with its chunk count and look settings visible in the compile summary.

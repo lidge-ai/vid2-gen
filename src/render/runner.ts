@@ -248,7 +248,8 @@ export async function renderPlan(plan: RenderPlan, opts: RenderOptions): Promise
   const result: RenderResult = { output: opts.out, seconds: (Date.now() - started) / 1000, segments, warnings,
     manifest: `${opts.out}.render.json`, ...(audio ? { audio } : {}), ...(stages.length ? { stages } : {}) };
   await writeFile(result.manifest, JSON.stringify({ planHash: hashJson(plan), timelineHash: plan.timelineHash,
-    tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments, warnings,
+    tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments,
+    warnings: [...new Set([...(plan.warnings ?? []), ...warnings])],
     ...(audio ? { audio: { ...audio, provenance: plan.audio?.provenance ?? [] } } : {}) }, null, 2) + "\n");
   return result;
 }

@@ -5,10 +5,19 @@ import { join } from "node:path";
 import { runChecked } from "../shared/exec.ts";
 import { tempDir, requireFfmpeg } from "../../tests/helpers.ts";
 import type { RenderPlan } from "../compile/ir.ts";
-import { materializePretrim } from "./pretrim.ts";
+import { expectedCutSeconds, materializePretrim } from "./pretrim.ts";
 
 const ffmpeg = process.env["VID2_FFMPEG"] ?? "ffmpeg";
 const ffprobe = process.env["VID2_FFPROBE"] ?? "ffprobe";
+
+test("a read past the source end expects only the remaining seconds", () => {
+  const source = { format: { duration: "5.000000" } };
+  assert.equal(expectedCutSeconds(source, 0, 7), 5);
+  assert.equal(expectedCutSeconds(source, 4, 2), 1);
+  assert.equal(expectedCutSeconds(source, 1, 2), 2);
+  assert.equal(expectedCutSeconds({ streams: [{ duration: "3" }] }, 0, 4), 3);
+  assert.equal(expectedCutSeconds({}, 0, 4), 4);
+});
 
 function toolPlan(): RenderPlan {
   return { tool: { ffmpeg, ffprobe, version: "test", major: 9, minor: 0 } } as RenderPlan;

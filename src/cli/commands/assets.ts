@@ -20,6 +20,22 @@ function kindOf(value: string | undefined): AssetKind {
   throw new Vid2Error("E_INPUT", "asset kind must be image or video");
 }
 
+/** Hash an input image after the guard ran (041 V-11); a missing file is E_INPUT naming the flag. */
+async function hashInput(path: string, authored: string, flag: string): Promise<string> {
+  try { return await hashFile(path); }
+  catch (cause) { throw new Vid2Error("E_INPUT", `input image is missing: ${authored}`, { cause, details: { path: flag } }); }
+}
+
+/** Repeatable --ref paths resolved against cwd, in order. */
+function referenceArgs(values: Values, kind: AssetKind, cwd: string): { authored: string[]; paths: string[] } | undefined {
+  const refs = values["ref"];
+  if (refs === undefined) return undefined;
+  if (!Array.isArray(refs) || refs.some((value: unknown) => typeof value !== "string") || kind !== "video")
+    throw new Vid2Error("E_INPUT", "--ref requires video kind and a path", { details: { path: "--ref" } });
+  const authored = refs as string[];
+  return { authored, paths: authored.map(path => resolvePath(cwd, path)) };
+}
+
 async function resolveTimelineAssets(file: string | undefined, cwd: string): Promise<CommandResult> {
   const { timeline, path } = await loadTimeline(file, cwd);
   const assets: SourceAssetStatus[] = [];
@@ -65,16 +81,23 @@ async function generateOne(args: string[], values: Values, cwd: string): Promise
   if (aspectRatio !== undefined) raw["aspectRatio"] = aspectRatio;
   const seedArg = stringValue(values, "seed-image");
   if (seedArg && kind !== "video") throw new Vid2Error("E_INPUT", "--seed-image requires video kind");
+  const refs = referenceArgs(values, kind, cwd);
+  const referenceImages = refs?.paths;
   const seedPath = seedArg ? resolvePath(cwd, seedArg) : undefined;
   if (seedPath) raw["seedImage"] = seedPath;
+  if (referenceImages) raw["referenceImages"] = referenceImages;
   const options = provider.normalize(kind, raw);
   if (seedPath) (options as VideoOptions).seedImage = seedPath;
-  const seedImageSha = seedPath ? await hashFile(seedPath) : undefined;
+  if (referenceImages) (options as VideoOptions).referenceImages = referenceImages;
+  const seedImageSha = seedPath && seedArg ? await hashInput(seedPath, seedArg, "--seed-image") : undefined;
+  const referenceImagesSha = refs ? await Promise.all(refs.paths.map((path, index) =>
+    hashInput(path, refs.authored[index] ?? path, `--ref.${index}`))) : undefined;
   const hash = requestHash({ provider: id, kind, prompt, options: options as unknown as Record<string, unknown>,
-    ...(seedImageSha ? { seedImageSha } : {}) });
+    ...(seedImageSha ? { seedImageSha } : {}), ...(referenceImagesSha ? { referenceImagesSha } : {}) });
   const cached = lookupAsset(hash);
   const result = cached ? { asset: cached, status: "cached" as const } :
-    await materializeRequest(provider, { kind, prompt, options, ...(seedImageSha ? { seedImageSha } : {}) }, hash);
+    await materializeRequest(provider, { kind, prompt, options, ...(seedImageSha ? { seedImageSha } : {}),
+      ...(referenceImagesSha ? { referenceImagesSha } : {}) }, hash);
   const requested = stringValue(values, "out");
   const output = requested ? resolvePath(cwd, requested) : result.asset.path;
   if (output !== result.asset.path) { await mkdir(dirname(output), { recursive: true }); await copyFile(result.asset.path, output); }
@@ -99,6 +122,7 @@ export const assets: CommandSpec = {
     resolution: { type: "string", description: "480p, 720p or 1080p" },
     "aspect-ratio": { type: "string", description: "video aspect ratio" },
     "seed-image": { type: "string", description: "video seed image path" },
+    ref: { type: "string", multiple: true, description: "video reference image path (repeatable)" },
     out: { type: "string", short: "o", description: "output file path" },
   },
   async run({ args, values, cwd }) {

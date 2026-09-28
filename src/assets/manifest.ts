@@ -25,6 +25,7 @@ export function normalizeAssetOptions(kind: AssetKind, options: Record<string, u
     aspectRatio: typeof options["aspectRatio"] === "string" ? options["aspectRatio"] : "16:9",
     model: typeof options["model"] === "string" ? options["model"] : DEFAULT_VIDEO_MODEL,
     ...(typeof options["seedImage"] === "string" ? { seedImage: options["seedImage"] } : {}),
+    ...(Array.isArray(options["referenceImages"]) ? { referenceImages: options["referenceImages"] as string[] } : {}),
   };
 }
 
@@ -32,8 +33,10 @@ export function requestHash(req: AssetRequestKey): string {
   const normalized = normalizeAssetOptions(req.kind, req.options);
   const options: Record<string, unknown> = { ...normalized };
   delete options["seedImage"];
+  delete options["referenceImages"];
   return hashJson({ provider: req.provider, kind: req.kind, prompt: req.prompt, options,
-    ...(req.seedImageSha ? { seedImageSha: req.seedImageSha } : {}) });
+    ...(req.seedImageSha ? { seedImageSha: req.seedImageSha } : {}),
+    ...(req.referenceImagesSha ? { referenceImagesSha: req.referenceImagesSha } : {}) });
 }
 
 export function assetPath(hash: string, kind: AssetKind, extension?: string): string {

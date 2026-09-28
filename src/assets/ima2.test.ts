@@ -8,6 +8,7 @@ import type { Runner } from "../shared/index.ts";
 import { requireFfmpeg, tempDir } from "../../tests/helpers.ts";
 import { DEFAULT_IMAGE_MODEL, DEFAULT_VIDEO_MODEL } from "./provider.ts";
 import { createIma2Provider } from "./ima2.ts";
+import { checkIma2VideoOptions } from "./video-options.ts";
 
 const fake = fileURLToPath(new URL("../../tests/fixtures/bin/fake-ima2.mjs", import.meta.url));
 function fixture(mode = "ready", onRun?: (args: string[], timeoutMs: number | undefined) => void) {
@@ -157,4 +158,69 @@ test("explicit server URL is forwarded to every discovery command", async () => 
   assert.equal((await provider.capabilities()).available, true);
   const calls = readFileSync(count, "utf8").trim().split("\n").map(line => JSON.parse(line) as string[]);
   for (const args of calls) assert.ok(args.includes("--server") && args.includes(env.IMA2_SERVER));
+});
+
+const generateCalls = (calls: string[][]): string[][] =>
+  calls.filter(args => args[0] === "video" && args[1] !== "--help" && args[1] !== "analyze");
+const helpCalls = (calls: string[][]): string[][] => calls.filter(args => args[0] === "video" && args[1] === "--help");
+
+test("video guard enforces the ima2 3.23.1 limits with timeline and flag paths", () => {
+  const root = tempDir("vid2-ima2-guard-");
+  const refs = (n: number) => Array.from({ length: n }, (_, i) => join(root, `ref${i}.png`));
+  const rejects = (raw: Record<string, unknown>, prefix: string, path: string) => assert.throws(() => checkIma2VideoOptions(raw, prefix),
+    (error: unknown) => error instanceof Vid2Error && error.code === "E_INPUT" && error.details?.["path"] === path, path);
+  rejects({ durationS: 20 }, "sources.clip.options", "sources.clip.options.durationS");
+  rejects({ durationS: 0 }, "--flag", "--duration");
+  rejects({ referenceImages: refs(8) }, "--flag", "--ref");
+  rejects({ referenceImages: refs(4), model: "oauth/other-video" }, "--flag", "--ref");
+  rejects({ referenceImages: refs(1), resolution: "1080p" }, "--flag", "--resolution");
+  rejects({ referenceImages: refs(1), seedImage: refs(1)[0] }, "--flag", "--ref");
+  rejects({ referenceImages: ["relative.png"] }, "--flag", "--ref");
+  rejects({ referenceImages: [] }, "--flag", "--ref");
+  rejects({ seedImage: "relative.png" }, "--flag", "--seed-image");
+  rejects({ aspectRatio: "21:9" }, "--flag", "--aspect-ratio");
+  rejects({ extra: 1 }, "sources.clip.options", "sources.clip.options.extra");
+  assert.equal(checkIma2VideoOptions({ referenceImages: refs(7), resolution: "720p" }, "--flag").referenceImages?.length, 7);
+  assert.equal(checkIma2VideoOptions({ seedImage: refs(1)[0], resolution: "1080p" }, "--flag").resolution, "1080p");
+  assert.deepEqual(checkIma2VideoOptions({}, "--flag"), { durationS: 5, resolution: "720p", aspectRatio: "16:9", model: DEFAULT_VIDEO_MODEL });
+});
+
+test("reference images become ordered --ref flags; --as-reference only for exactly one", async t => {
+  if (!requireFfmpeg(t)) return;
+  const { dir, provider, calls } = fixture();
+  const [a, b] = [join(dir, "a.png"), join(dir, "b.png")];
+  writeFileSync(a, "A"); writeFileSync(b, "B");
+  await provider.generate({ kind: "video", prompt: "Two refs", options: provider.normalize("video", { referenceImages: [a, b] }),
+    referenceImagesSha: ["sha-a", "sha-b"] }, join(dir, "two.mp4"));
+  const asset = await provider.generate({ kind: "video", prompt: "One ref", options: provider.normalize("video", { referenceImages: [b] }) },
+    join(dir, "one.mp4"));
+  const [two, one] = generateCalls(calls());
+  assert.deepEqual(two?.filter((_, i, all) => all[i - 1] === "--ref"), [a, b]);
+  assert.ok(two && !two.includes("--as-reference"));
+  assert.deepEqual(one?.filter((_, i, all) => all[i - 1] === "--ref"), [b]);
+  assert.ok(one?.includes("--as-reference"));
+  assert.equal(helpCalls(calls()).length, 1, "the capability probe is memoized per provider");
+  assert.ok(!helpCalls(calls())[0]?.includes("--json"));
+  assert.equal(asset.kind, "video");
+});
+
+test("an ima2 CLI without --as-reference fails reference requests before any generate call", async () => {
+  const { dir, provider, calls } = fixture("no-as-reference");
+  const ref = join(dir, "ref.png");
+  writeFileSync(ref, "ref");
+  for (const count of [1, 2]) {
+    const options = provider.normalize("video", { referenceImages: Array.from({ length: count }, () => ref) });
+    await assert.rejects(provider.generate({ kind: "video", prompt: "Needs refs", options }, join(dir, "out.mp4")),
+      (error: unknown) => matchError(error, "E_CAPABILITY", false));
+  }
+  assert.equal(generateCalls(calls()).length, 0);
+  assert.equal(helpCalls(calls()).length, 1);
+});
+
+test("video requests without references never probe the CLI help", async t => {
+  if (!requireFfmpeg(t)) return;
+  const { dir, provider, calls } = fixture("no-as-reference");
+  await provider.generate({ kind: "video", prompt: "Plain", options: provider.normalize("video", {}) }, join(dir, "plain.mp4"));
+  assert.equal(helpCalls(calls()).length, 0);
+  assert.equal(generateCalls(calls()).length, 1);
 });

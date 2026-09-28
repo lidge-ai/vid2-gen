@@ -20,9 +20,9 @@
   },
   "vid2-cli": {
     "files": {
-      "SKILL.md": "be87e74a62583e9d4967e28764e7e2c9c9d185cb419347836b25661d9026b33b"
+      "SKILL.md": "fd82de98989688a144d81f8ef185b5e8ccd8d641c55dea51461cb01faac9e55e"
     },
-    "sha256": "28b69773b694d7ef79296bcb8f5f6b44e8795382b7bdcc8a29f3e1f6c7289ef3"
+    "sha256": "9ef80abb21f13166e3972292e6b6d4e1ccba898519a1ca4aad765c757603ec66"
   },
   "vid2-direction": {
     "files": {
@@ -48,10 +48,10 @@
       "assets/timeline.v1.json": "80488922263d1515ae1f69d1ae29cca9323a2532385debaeeb27ee3dabb3173e",
       "references/errors.md": "17c8b9f69788a830f50c4c556c4b80fdfbfefdf270956457adfdb3cbd6e61a99",
       "references/recipes.md": "7b355de98ceb0a9e039497b9bccaa6b2b1d5d6410494a4725095df003be0f0b9",
-      "references/schema.md": "deadf1bd981b9967402a87b0f6dad69ce512e306af2128b9beb4d00702af98dc",
+      "references/schema.md": "500e179e24f65a36bc9c3e4f9290c24f892cf67984f094e5beedd1bcbd6c2d27",
       "references/stage.md": "8ec0a2ac354f26f7aa10720e18b6ed1f02303da8747b62d1f35dc2b6b0895c60",
       "references/time.md": "976fbc096eb357b07140ea0eae38d6c9a7413e44ab1209a4c80ee2e3d0fceac3"
     },
-    "sha256": "7a6199fed07bfc9f39590fc9a648159894d952be59e8802705e9bfb117305f38"
+    "sha256": "42d122715dddab3a6487739a3cdf976804b634293af7acc3d31b7c5cc8ca3e8f"
   }
 }

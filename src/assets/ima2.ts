@@ -5,6 +5,7 @@ import type { Runner, RunResult } from "../shared/index.ts";
 import { findExecutable, probeMedia } from "../probe/index.ts";
 import { DEFAULT_IMAGE_MODEL, DEFAULT_VIDEO_MODEL } from "./provider.ts";
 import type { AssetProvider, GenerateRequest, ImageOptions, KindStatus, MaterializedAsset, ProviderCapabilities, VideoOptions } from "./provider.ts";
+import { checkIma2VideoOptions } from "./video-options.ts";
 
 export interface Ima2Context { runner?: Runner; env?: NodeJS.ProcessEnv; bin?: string[] }
 interface Ima2Json { ok?: boolean; code?: string; message?: string; error?: string; status?: number; requestId?: string;
@@ -62,20 +63,6 @@ function imageOptions(raw: Record<string, unknown>): ImageOptions {
   return value as ImageOptions;
 }
 
-function videoOptions(raw: Record<string, unknown>): TimedVideoOptions {
-  const value = { durationS: raw["durationS"] ?? 5, resolution: raw["resolution"] ?? "720p",
-    aspectRatio: raw["aspectRatio"] ?? "16:9", model: raw["model"] ?? DEFAULT_VIDEO_MODEL,
-    ...(raw["seedImage"] === undefined ? {} : { seedImage: raw["seedImage"] }),
-    ...(raw["timeoutS"] === undefined ? {} : { timeoutS: raw["timeoutS"] }) };
-  if (typeof value.durationS !== "number" || !Number.isFinite(value.durationS) || value.durationS < 1 || value.durationS > 15 ||
-    typeof value.resolution !== "string" || !["480p", "720p", "1080p"].includes(value.resolution) || typeof value.aspectRatio !== "string" ||
-    typeof value.model !== "string" || "seedImage" in value && typeof value.seedImage !== "string" ||
-    "timeoutS" in value && (typeof value.timeoutS !== "number" || !Number.isFinite(value.timeoutS) || value.timeoutS <= 0)) {
-    throw new Vid2Error("E_INPUT", "invalid ima2 video options");
-  }
-  return value as TimedVideoOptions;
-}
-
 function kindStatus(models: ModelRow[], lanes: Ima2Json["lanes"], selectedLane: string, model: string): KindStatus {
   const matches = models.filter(row => row.lane === selectedLane);
   const lane = lanes?.[selectedLane];
@@ -83,6 +70,15 @@ function kindStatus(models: ModelRow[], lanes: Ima2Json["lanes"], selectedLane: 
   return { available: ready, status: lane?.status ?? "unknown", lane: selectedLane, model,
     ...(ready ? {} : { reason: lane?.reason ?? matches.find(row => row.lockReason)?.lockReason ??
       (matches.length ? "Selected ima2 model lane is not ready" : "Selected ima2 model lane has no models") }) };
+}
+
+/** `ima2 video --help` is plain text on stdout (exit 0), so it bypasses call(), which adds --json and needs JSON (041 V-7, V-12). */
+async function probeAsReference(runner: Runner, executable: string | null, prefix: string[], env: NodeJS.ProcessEnv): Promise<boolean> {
+  if (!executable) throw new Vid2Error("E_CAPABILITY", "ima2 CLI not found", { fix: "npm i -g ima2-gen" });
+  let result: RunResult;
+  try { result = await runner(executable, [...prefix.slice(1), "video", "--help"], { env, timeoutMs: 30_000 }); }
+  catch (cause) { throw new Vid2Error("E_PROVIDER", "cannot start ima2 CLI", { cause, retryable: true }); }
+  return result.code === 0 && /--as-reference\b/.test(result.stdout.toString("utf8"));
 }
 
 export function createIma2Provider(ctx: Ima2Context = {}): AssetProvider {
@@ -94,6 +90,12 @@ export function createIma2Provider(ctx: Ima2Context = {}): AssetProvider {
   const executable = prefix[0] ? findExecutable(prefix[0], env["PATH"] ?? process.env["PATH"] ?? "") : null;
   const server = env["IMA2_SERVER"];
   let latestDefaultModel: string | undefined;
+  let referenceSupport: Promise<boolean> | undefined;
+  function supportsReferences(): Promise<boolean> {
+    referenceSupport ??= probeAsReference(runner, executable, prefix, env)
+      .catch((cause: unknown) => { referenceSupport = undefined; throw cause; });
+    return referenceSupport;
+  }
   async function call(args: string[], timeoutMs = 30_000, signal?: AbortSignal, allowMissingOk = false): Promise<Ima2Json> {
     if (signal?.aborted) throw new Vid2Error("E_INTERRUPTED", "ima2 request was cancelled");
     if (!executable || !prefix[0]) throw new Vid2Error("E_CAPABILITY", "ima2 CLI not found", { fix: "npm i -g ima2-gen" });
@@ -109,7 +111,7 @@ export function createIma2Provider(ctx: Ima2Context = {}): AssetProvider {
     return payload;
   }
   return { id: "ima2",
-    normalize(kind, options) { return kind === "image" ? imageOptions(options) : videoOptions(options); },
+    normalize(kind, options) { return kind === "image" ? imageOptions(options) : checkIma2VideoOptions(options, "--flag"); },
     async capabilities(): Promise<ProviderCapabilities> {
       const missing: ProviderCapabilities = { provider: "ima2", available: false,
         reason: "ima2 CLI not found (npm i -g ima2-gen)", kinds: {} };
@@ -138,14 +140,19 @@ export function createIma2Provider(ctx: Ima2Context = {}): AssetProvider {
     },
     async generate(req: GenerateRequest, outPath: string, signal?: AbortSignal): Promise<MaterializedAsset> {
       const options = req.kind === "image" ? imageOptions(req.options as unknown as Record<string, unknown>)
-        : videoOptions(req.options as unknown as Record<string, unknown>);
+        : checkIma2VideoOptions(req.options as unknown as Record<string, unknown>, "--flag");
+      if (req.kind === "video" && (options as VideoOptions).referenceImages && !await supportsReferences())
+        throw new Vid2Error("E_CAPABILITY", "installed ima2 CLI does not support video reference images (--as-reference)", {
+          details: { provider: "ima2", kind: "video" }, fix: "Update ima2-gen: npm i -g ima2-gen@latest" });
       const args = req.kind === "image" ? ["gen", req.prompt, "--size", (options as ImageOptions).size,
         "--quality", (options as ImageOptions).quality,
         ...((options as ImageOptions).background === "opaque" ? [] : ["--bg", (options as ImageOptions).background]),
         ...((options as ImageOptions).model === DEFAULT_IMAGE_MODEL ? [] : ["--model", (options as ImageOptions).model])]
         : ["video", req.prompt, "--duration", String((options as VideoOptions).durationS), "--resolution", (options as VideoOptions).resolution,
           "--aspect-ratio", (options as VideoOptions).aspectRatio, "--model", (options as VideoOptions).model,
-          ...((options as VideoOptions).seedImage ? ["--ref", (options as VideoOptions).seedImage!] : [])];
+          ...((options as VideoOptions).seedImage ? ["--ref", (options as VideoOptions).seedImage!] : []),
+          ...((options as VideoOptions).referenceImages ?? []).flatMap(path => ["--ref", path]),
+          ...((options as VideoOptions).referenceImages?.length === 1 ? ["--as-reference"] : [])];
       const timeout = (req.kind === "video" ? (options as TimedVideoOptions).timeoutS ?? 600 : 180) * 1000;
       const payload = await call([...args, "-o", outPath], timeout, signal);
       const reported = req.kind === "image" ? payload.images?.[0]?.path : payload.path ??
@@ -165,7 +172,8 @@ export function createIma2Provider(ctx: Ima2Context = {}): AssetProvider {
       return { path: reported, kind: req.kind, width: media.width, height: media.height,
         ...(media.duration === undefined ? {} : { durationS: media.duration }), sha256: await hashFile(reported),
         provenance: { provider: "ima2", params: { prompt: req.prompt, options,
-          ...(req.seedImageSha ? { seedImageSha: req.seedImageSha } : {}) }, createdAt: new Date().toISOString(),
+          ...(req.seedImageSha ? { seedImageSha: req.seedImageSha } : {}),
+          ...(req.referenceImagesSha ? { referenceImagesSha: req.referenceImagesSha } : {}) }, createdAt: new Date().toISOString(),
           ...(payload.requestId ? { requestId: payload.requestId } : {}), ...(model ? { model } : {}),
           ...(revised ? { revisedPrompt: revised } : {}) } };
     },
