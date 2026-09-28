@@ -54,3 +54,4 @@ Main and tag at the same SHA with green CI; release lists the three assets; unit
 - X-9 merge through PR release/0.3.0; tag the merge commit on main after its push CI is green.
 - X-10 re-check NPM_PUBLISH_MODE (none) right before the tag push.
 
+- X-11 .claude-plugin/plugin.json is a version field too (0.3.0). The clean pack worktree runs npm ci before npm pack (prepack builds).
