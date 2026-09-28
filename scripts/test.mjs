@@ -41,7 +41,8 @@ try {
     process.exitCode = 1;
   } else {
     const home = mkdtempSync(join(tmpdir(), "vid2-test-"));
-    const env = { ...process.env, VID2_HOME: home };
+    // A deadlocked ffmpeg is killed after 60 s and retried once instead of stalling a test until its timeout.
+    const env = { ...process.env, VID2_HOME: home, VID2_FFMPEG_TIMEOUT_MS: process.env.VID2_FFMPEG_TIMEOUT_MS ?? "60000" };
     delete env.NODE_TEST_CONTEXT;
     // Stream results as they finish so a hung test is visible in CI logs. --test-force-exit ends a file whose
     // timed-out test left a child (an intermittently deadlocked ffmpeg) running, so the run fails with the
