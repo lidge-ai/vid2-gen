@@ -5,10 +5,43 @@ import { runChecked } from "../shared/index.ts";
 import type { ResolvedTimeline } from "../timeline/index.ts";
 import type { QaFacts } from "./report.ts";
 
-async function still(video: string, out: string, frame: number, ffmpeg: string): Promise<void> {
-  const filter = `select=${quoteExpr(`eq(n,${num(frame)})`)}`;
-  await runChecked(ffmpeg, ["-hide_banner", "-loglevel", "error", "-y", "-i", video,
-    "-vf", filter, "-frames:v", "1", "-update", "1", out]);
+/** Frames per second from an ffprobe rate such as "30/1" or "30000/1001"; undefined when unknown. */
+export function rateValue(rate: string | undefined): number | undefined {
+  const [num_, den] = (rate ?? "").split("/").map(Number);
+  const value = den === undefined ? num_ : num_! / den;
+  return value !== undefined && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/**
+ * Input args that land on frame n without decoding from the start. select=eq(n,N) decoded every earlier frame, so
+ * QA on a 40 s 1080p film took minutes. Accurate input seek to half a frame early returns frame n first.
+ */
+export function frameSeekArgs(frame: number, fps: number | undefined): string[] {
+  if (fps === undefined || frame <= 0) return [];
+  return ["-ss", num((frame - 0.5) / fps)];
+}
+
+/** The input and filter args that yield exactly one frame n (then any extra filters). */
+export function frameArgs(video: string, frame: number, fps: number | undefined, extra?: string): string[] {
+  const seek = frameSeekArgs(frame, fps);
+  const select = seek.length || frame <= 0 ? [] : [`select=${quoteExpr(`eq(n,${num(frame)})`)}`];
+  const filters = [...select, ...(extra ? [extra] : [])];
+  return [...seek, "-i", video, ...(filters.length ? ["-vf", filters.join(",")] : []), "-frames:v", "1"];
+}
+
+export async function extractStill(video: string, out: string, frame: number, ffmpeg: string, fps?: number): Promise<void> {
+  await runChecked(ffmpeg, ["-hide_banner", "-loglevel", "error", "-y", ...frameArgs(video, frame, fps), "-update", "1", out]);
+}
+
+/** Runs fn over items with at most limit in flight; results keep item order. */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < items.length) { const index = next++; results[index] = await fn(items[index]!, index); }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+  return results;
 }
 
 function keyframeSlots(timeline: ResolvedTimeline, frames: number): { name: string; frame: number }[] {
@@ -43,11 +76,13 @@ export async function createArtifacts(video: string, out: string, facts: QaFacts
   if (timeline) {
     const directory = join(out, "keyframes");
     await mkdir(directory, { recursive: true });
-    for (const slot of keyframeSlots(timeline, facts.frames)) {
+    const slots = keyframeSlots(timeline, facts.frames);
+    const paths = await mapLimit(slots, 4, async (slot) => {
       const path = join(directory, `${slot.name}.png`);
-      await still(video, path, slot.frame, ffmpeg);
-      artifacts[slot.name] = path;
-    }
+      await extractStill(video, path, slot.frame, ffmpeg, rateValue(facts.fps));
+      return path;
+    });
+    slots.forEach((slot, index) => { artifacts[slot.name] = paths[index]!; });
   }
   if (facts.audio) {
     for (const [name, filter, size] of [["waveform", "showwavespic", "1200x300"],

@@ -141,6 +141,7 @@ under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step ser
 | `audio` | Beat detection, synth beds, SFX, provider audio; mixing and mastering happen in `render` |
 | `assets` | Generate images and Grok clips through ima2-gen (optional), cached by request |
 | `preview`, `qa`, `probe` | Frames through the real composition; evidence report (contact sheet, seams, loudness, black/freeze, contrast) |
+| `analyze`, `review` | Shot, color, motion and DSP analysis; optional frame review and audio listening |
 | `init`, `skill`, `capabilities` | Templates, packaged agent skills, one-call capability summary (layers, icons, transitions) |
 
 The intended flow is **capture → author one timeline → resolve assets → compile → render → QA**. Rendering uses ffmpeg locally; generated assets remain optional. The [structure guide](structure/INDEX.md) explains module boundaries and the public CLI contract.
@@ -157,6 +158,18 @@ vid2 qa proxy.mp4 --timeline my-video/timeline.json
 
 The packaged skills teach the loop (validate → preview stills → proxy → qa → final), the timeline contract, directing defaults with concrete
 replacements for common clichés, capture, audio and ima2 recipes.
+
+To revise a finished cut from evidence:
+
+```bash
+vid2 render timeline.json -o film.mp4
+vid2 analyze film.mp4 --timeline timeline.json --json
+VID2_REVIEW_AUDIO_BASE_URL=http://127.0.0.1:10100 VID2_REVIEW_AUDIO_MODEL=audio-model \
+  vid2 review film.mp4 --timeline timeline.json --base-url http://127.0.0.1:10100 --model image-model --listen --json
+# Fix the timeline from review.json and analyze/report.json, then render again.
+```
+
+Model calls are opt-in. Image review needs `--base-url`/`--model` or `VID2_REVIEW_BASE_URL`/`VID2_REVIEW_MODEL`; `VID2_REVIEW_API_KEY` is optional. Listening needs `--listen` plus `VID2_REVIEW_AUDIO_BASE_URL` and `VID2_REVIEW_AUDIO_MODEL`; `VID2_REVIEW_AUDIO_API_KEY` is optional. Hosts are bare origins, with `/v1` accepted. Without an image model, review writes evidence and returns `SKIPPED` with exit 0. DSP owns loudness, low end and sync; listener feedback is useful for timbre, groove, arrangement and mood, but weak on sub-bass. See [the QA contract](structure/qa.md).
 
 Use `vid2 help --json` to discover the current command set, `vid2 schema --json` to obtain the timeline contract, and `vid2 validate <file> --json` before later render steps. JSON mode prints one result object to stdout; diagnostics go to stderr. Exit codes distinguish input errors, missing capabilities, access/provider failures, rendering, QA, and interruption.
 

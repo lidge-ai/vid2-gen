@@ -1,9 +1,10 @@
-import { num, quoteExpr } from "../compile/escape.ts";
+import { num } from "../compile/escape.ts";
 import { measureLoudness } from "../audio/loudness.ts";
 import { runChecked } from "../shared/index.ts";
 import type { ResolvedTimeline } from "../timeline/index.ts";
 import { stageTextBoxes } from "../compile/layers/stage-text.ts";
 import type { QaCheck, QaFacts, QaIssue } from "./report.ts";
+import { frameArgs, rateValue } from "./artifacts.ts";
 
 export interface CheckOptions { video: string; ffmpeg: string; facts: QaFacts; timeline?: ResolvedTimeline;
   expectAudio?: boolean; strictMotion?: boolean }
@@ -77,10 +78,10 @@ function luminance(rgb: number[]): number {
   return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
 }
 
-async function sampleBackground(video: string, ffmpeg: string, frame: number, x: number, y: number): Promise<number> {
-  const filter = `select=${quoteExpr(`eq(n,${num(frame)})`)},crop=2:2:${num(x)}:${num(y)},format=rgb24`;
-  const result = await runChecked(ffmpeg, ["-v", "error", "-i", video, "-vf", filter,
-    "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1"]);
+async function sampleBackground(video: string, ffmpeg: string, frame: number, x: number, y: number, fps?: string): Promise<number> {
+  const result = await runChecked(ffmpeg, ["-v", "error",
+    ...frameArgs(video, frame, rateValue(fps), `crop=2:2:${num(x)}:${num(y)},format=rgb24`),
+    "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1"]);
   return luminance([...result.stdout.subarray(0, 3)]);
 }
 
@@ -95,7 +96,8 @@ async function stageContrast(opts: CheckOptions): Promise<QaIssue[]> {
     const rgb = [0, 2, 4].map((offset) => Number.parseInt(color[1]!.slice(offset, offset + 2), 16));
     const x = Math.max(0, Math.min(opts.facts.width - 2, Math.floor(box.x * scale - 4)));
     const y = Math.max(0, Math.min(opts.facts.height - 2, Math.floor(box.y * scale - 4)));
-    const background = await sampleBackground(opts.video, opts.ffmpeg, Math.max(0, Math.min(opts.facts.frames - 1, box.absoluteFrame)), x, y);
+    const background = await sampleBackground(opts.video, opts.ffmpeg, Math.max(0, Math.min(opts.facts.frames - 1, box.absoluteFrame)), x, y,
+      opts.facts.fps);
     const foreground = luminance(rgb);
     const ratio = (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
     const threshold = box.size < 40 ? 4.5 : 3;
@@ -124,7 +126,7 @@ async function textIssues(opts: CheckOptions): Promise<QaIssue[]> {
     const x = Math.max(0, Math.min(opts.facts.width - 2, Math.floor(box.x - 4)));
     const y = Math.max(0, Math.min(opts.facts.height - 2, Math.floor(box.y - 4)));
     const background = await sampleBackground(opts.video, opts.ffmpeg,
-      Math.max(0, Math.min(opts.facts.frames - 1, layer.absoluteStartFrame)), x, y);
+      Math.max(0, Math.min(opts.facts.frames - 1, layer.absoluteStartFrame)), x, y, opts.facts.fps);
     const foreground = luminance(rgb);
     const ratio = (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
     if (ratio < 3) issues.push(issue("contrast", "CONTRAST", `Text in ${scene.id} has estimated contrast ${num(ratio)}:1`,
@@ -173,4 +175,3 @@ export async function runChecks(opts: CheckOptions): Promise<{ issues: QaIssue[]
   else skipped.push("text_safe", "contrast");
   return { issues: issues.map((item, i) => ({ ...item, id: `${item.check}-${i + 1}` })), skipped };
 }
-

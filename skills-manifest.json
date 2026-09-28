@@ -20,9 +20,9 @@
   },
   "vid2-cli": {
     "files": {
-      "SKILL.md": "45235345f582b4d617a3e3c75d0a2a59cc38478087b832ba9aa28dd2b30b3376"
+      "SKILL.md": "be87e74a62583e9d4967e28764e7e2c9c9d185cb419347836b25661d9026b33b"
     },
-    "sha256": "29f4bd109c933ee35a38b6900c92bd7c3ef87aaafe4606b7a4438e68a9d2788c"
+    "sha256": "28b69773b694d7ef79296bcb8f5f6b44e8795382b7bdcc8a29f3e1f6c7289ef3"
   },
   "vid2-direction": {
     "files": {

@@ -1,6 +1,6 @@
 /** Audio public API (040). */
 export type * from "./providers/port.ts";
-export { detectBeats } from "./beats.ts";
+export { detectBeats, decodeMono22k, onsetTimes } from "./beats.ts";
 export type { BeatsFile } from "./beats.ts";
 export { beatTime, snapToBeat } from "./grid.ts";
 export { synthArgs, SYNTH_PRESETS } from "./synth/engine.ts";
