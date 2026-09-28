@@ -80,3 +80,12 @@ void test("two-pass handoff: pass-1 QA stills replace the placeholders and pass 
   assert.equal((pass2.warnings ?? []).some((w) => w.startsWith("W_PLACEHOLDER")), false);
   assert.equal(pass2.data["frames"], 900);
 });
+
+void test("ima2-launch timeline matches the schema and keeps its capture and renders out of git", async () => {
+  const { TimelineSchema } = await import("../../src/timeline/schema.ts");
+  const t = TimelineSchema.parse(JSON.parse(readFileSync(join(root, "examples/ima2-launch/timeline.json"), "utf8")));
+  assert.equal(t.scenes.length, 14);
+  const ignore = readFileSync(join(root, ".gitignore"), "utf8");
+  assert.match(ignore, /examples\/ima2-launch\/\*\.vid2cap\//);
+  assert.ok(statSync(join(root, "examples/ima2-launch/media/ima2-icon.png")).size < 200 * 1024);
+});
