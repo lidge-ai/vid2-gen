@@ -4,6 +4,7 @@ import type { Timeline } from "./schema.ts";
 import { resolveTimeline } from "./resolve.ts";
 import { stageLayerIssues } from "./validate-stage.ts";
 import { kineticLayerIssues, kineticTimingIssues } from "./validate-kinetic.ts";
+import { hudAuthoredIssues, hudResolvedIssues } from "./validate-hud.ts";
 import type { ResolveOptions, ResolvedTimeline, ValidationIssue } from "./types.ts";
 
 function issue(path: string, code: string, message: string): ValidationIssue { return { path, code, message }; }
@@ -40,7 +41,9 @@ function checkReferences(t: Timeline): ValidationIssue[] {
       issues.push(...kineticLayerIssues(layer, path, t));
     }
   }
-  for (const [i, layer] of t.overlays.entries()) add(sourceIssue(t, layer.source, `overlays.${i}.source`, ["image", "video"]));
+  for (const [i, layer] of t.overlays.entries()) {
+    if (layer.type === "overlay") add(sourceIssue(t, layer.source, `overlays.${i}.source`, ["image", "video"]));
+  }
   if (t.audio?.music && "source" in t.audio.music) add(sourceIssue(t, t.audio.music.source, "audio.music.source", ["audio", "video"]));
   for (const [i, voice] of (t.audio?.voice ?? []).entries()) {
     if ("source" in voice) add(sourceIssue(t, voice.source, `audio.voice.${i}.source`, ["audio", "video"]));
@@ -93,8 +96,11 @@ function checkResolved(r: ResolvedTimeline): ValidationIssue[] {
 
 /** Returns all independently checkable issues; callers may resolve again for the summary. */
 export function validateTimeline(t: Timeline, opts: ResolveOptions = { baseDir: process.cwd() }): ValidationIssue[] {
-  const issues = checkReferences(t);
-  try { issues.push(...checkResolved(resolveTimeline(t, opts))); }
+  const issues = [...checkReferences(t), ...hudAuthoredIssues(t)];
+  try {
+    const resolved = resolveTimeline(t, opts);
+    issues.push(...checkResolved(resolved), ...hudResolvedIssues(t, resolved));
+  }
   catch (error) {
     if (!(error instanceof Vid2Error)) throw error;
     issues.push(issue("timeline", error.code, error.message));

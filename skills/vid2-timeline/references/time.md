@@ -20,3 +20,5 @@ A `"2bar"` *position* means two bars after the grid offset, which is the start o
 Cut on the grid by choosing shot lengths from a ladder of ½, 1, 2, 3, 4 and 8 beats (`"0.5b"`, `"1b"`, `"2b"`, `"3b"`, `"1bar"`, `"2bar"`); strobe runs are 4–12 shots of `"0.5b"`.
 
 A detected beat map may have a confidence score, but the author must choose a stable grid. Check the downbeat against the waveform before converting shot lengths into beats. Never assume an arbitrary track starts on beat zero.
+
+Root HUD `start`, `end`, counter key `at`, and ticker item `at` are absolute output positions. Beat and bar positions add the grid offset once. A HUD span is half-open `[start,end)`: a 3 s, 30 fps film contains frames 0–89; `89f` is a valid last key and `90f` is outside. Keys and items must resolve to strictly increasing, unique frames within the span. One HUD can continue across cuts and fades. See [edit rhythm](../../vid2-direction/references/edit-rhythm.md).

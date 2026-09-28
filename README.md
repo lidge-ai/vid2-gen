@@ -76,6 +76,8 @@ Each scene renders as its own cached segment, transitions are joined with exact 
 
 ## Kinetic launch films
 
+A root `"look":{"preset":"film"}` gives the sequence a common finish; `riso` accepts a 2–6 color palette, and `paper` is another preset. A root HUD can carry a label, keyed counter, timecode and ticker across cuts and fades. Key and ticker times are absolute output positions, and only one HUD is allowed. The HUD is composited after the look, ordinary overlays and root effects so it stays legible. See the [look/HUD recipe](skills/vid2-timeline/references/recipes.md), [schema fields](skills/vid2-timeline/references/schema.md), and [direction references](skills/vid2-direction/SKILL.md).
+
 0.2 adds a motion-graphics engine that draws each frame in JavaScript and hands ffmpeg a lossless alpha clip, so words, glyphs, icons
 and UI pieces can move on their own. [examples/ima2-launch](examples/ima2-launch) is a 50-second launch film for ima2-gen built only with
 it ([watch it](https://github.com/lidge-ai/vid2-gen/releases/tag/v0.2.0)); `vid2 init kinetic-launch` gives you a 30-second skeleton.

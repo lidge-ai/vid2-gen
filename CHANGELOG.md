@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Film looks and HUD.** Root `film`, `riso`, and `paper` looks now compile after the scene join with seeded textures and strength-scaled
+parameters. A zero-strength look leaves the post graph unchanged. A timeline HUD renders above overlays and root effects in
+absolute-time chunks, with its chunk count and look settings visible in the compile summary.
+
 **Analysis and review.** `vid2 analyze` writes shot, color, motion, beat/onset and audio DSP evidence with keyframes and contact sheets. `vid2 review` combines that analysis with QA evidence, optional OpenAI-compatible frame critique and opt-in audio listening. Missing model configuration produces a local `SKIPPED` report; listener failures are recorded as `UNHEARD` without changing the review exit code.
 
 **Behavior changes.** Scene boundaries are quantized once from the exact running time instead of rounding each scene, so beat- and bar-cut films stay on the grid (a 40 s film at 132 BPM previously drifted 4 frames); a non-cut transition can resolve one frame longer or shorter depending on position. Auto cameras now honor the authored `hold` (default `0.8s`; it was ignored and 0.5 s / 0.7 s were used) and simplify to at most 24 keys.
