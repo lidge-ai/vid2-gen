@@ -8,3 +8,4 @@ out/
 .tmp/
 examples/ima2-launch/*.vid2cap/
 examples/ima2-launch/.work/
+examples/ima2-launch/media/music.wav

@@ -44,9 +44,11 @@ export function mixGraph(stems: AudioStem[], opts: { durationSamples: number; du
       "[musicbus][voicekey]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[ducked]");
     inputs = ["[ducked]", "[voiceout]", ...others];
   } else inputs = stems.map((_, i) => `[stem${i}]`);
+  // Gentle 2:1 glue that only catches peaks, so a pre-mastered music file keeps its build/drop dynamics; the limiter runs
+  // 4x oversampled so sharp cue transients cannot leave inter-sample peaks that push loudnorm out of linear mode.
   chains.push(mixBus(inputs, "mixed"),
-    "[mixed]acompressor=threshold=0.1:ratio=3:attack=10:release=150:makeup=2," +
-    "alimiter=limit=0.7:level=false:latency=true[apre]");
+    "[mixed]acompressor=threshold=0.25:ratio=2:attack=10:release=150:makeup=1.4," +
+    `aresample=${RATE * 4},alimiter=limit=0.7:level=false:latency=true,aresample=${RATE}[apre]`);
   return chains.join(";");
 }
 

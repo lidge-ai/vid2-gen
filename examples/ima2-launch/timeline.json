@@ -8,7 +8,7 @@
   "background": "#0B0B0F"
  },
  "beat": {
-  "bpm": 120
+  "bpm": 128
  },
  "sources": {
   "ima2": {
@@ -88,6 +88,10 @@
   "ui": {
    "type": "capture",
    "session": "ui.vid2cap"
+  },
+  "music": {
+   "type": "audio",
+   "path": "media/music.wav"
   }
  },
  "scenes": [
@@ -2248,38 +2252,9 @@
  ],
  "audio": {
   "music": {
-   "synth": {
-    "preset": "launch",
-    "key": "Am",
-    "sections": [
-     {
-      "at": 0,
-      "energy": "intro"
-     },
-     {
-      "at": "8.5s",
-      "energy": "build"
-     },
-     {
-      "at": "10.8s",
-      "energy": "drop"
-     },
-     {
-      "at": "14s",
-      "energy": "break"
-     },
-     {
-      "at": "29s",
-      "energy": "build"
-     },
-     {
-      "at": "46s",
-      "energy": "outro"
-     }
-    ]
-   },
-   "volume": 1,
-   "fadeOut": "1.8s"
+   "source": "music",
+   "volume": 0.7,
+   "fadeOut": "1.5s"
   },
   "autoCues": true
  }
