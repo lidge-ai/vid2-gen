@@ -2,7 +2,7 @@
 import { readdirSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 function options(args) {
@@ -43,16 +43,15 @@ try {
     const home = mkdtempSync(join(tmpdir(), "vid2-test-"));
     const env = { ...process.env, VID2_HOME: home };
     delete env.NODE_TEST_CONTEXT;
-    const child = spawnSync(process.execPath, ["--test", "--test-concurrency=4", "--test-timeout=180000", ...files], {
-      cwd: root,
-      env,
-      encoding: "utf8",
-      maxBuffer: 32 * 1024 * 1024,
+    // Stream results as they finish so a hung test is visible in CI logs. --test-force-exit ends a file whose
+    // timed-out test left a child (an intermittently deadlocked ffmpeg) running, so the run fails with the
+    // test's name instead of waiting for the job timeout.
+    const child = spawn(process.execPath, ["--test", "--test-concurrency=4", "--test-timeout=180000",
+      "--test-force-exit", ...files], { cwd: root, env, stdio: "inherit" });
+    process.exitCode = await new Promise((done, fail) => {
+      child.on("error", fail);
+      child.on("close", (code) => done(code ?? 1));
     });
-    if (child.error) throw child.error;
-    if (child.stdout) process.stdout.write(child.stdout);
-    if (child.stderr) process.stderr.write(child.stderr);
-    process.exitCode = child.status ?? 1;
   }
 } catch (error) {
   console.error(`vid2 test: ${error.message}`);
