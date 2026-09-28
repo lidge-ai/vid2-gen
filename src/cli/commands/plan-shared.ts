@@ -1,5 +1,5 @@
 /** Shared compile pipeline for the compile and render commands: load → validate → resolve → profile → plan. */
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 import { compileTimeline, timelineHash, timelineOutput } from "../../compile/index.ts";
 import type { ProfileName, RenderPlan } from "../../compile/index.ts";
@@ -49,7 +49,8 @@ export async function planFromTimeline(file: string | undefined, cwd: string, pr
 export async function loadPlanOrTimeline(file: string | undefined, cwd: string, profile: ProfileName, opts: PlanOptions = {}): Promise<PlanLoad> {
   if (!file) throw new Vid2Error("E_INPUT", "render needs a timeline or plan path");
   if (file.endsWith(".plan.json")) {
-    const path = join(cwd, file);
+    // resolve, not join: an absolute plan path from another cwd was joined onto cwd.
+    const path = resolve(cwd, file);
     const raw = JSON.parse(await readFile(path, "utf8")) as RenderPlan;
     // 0.1 plans predate stage clips (010).
     const plan: RenderPlan = { ...raw, warnings: raw.warnings ?? [], stageRenders: raw.stageRenders ?? [],

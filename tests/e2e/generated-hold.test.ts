@@ -47,13 +47,6 @@ void test("file-generated clip warnings survive compile, cache hits and plan rep
     const loaded = await loadPlanOrTimeline(planPath, dir, "proxy");
     assert.deepEqual(loaded.plan.warnings, [warning]);
     assert.deepEqual(loaded.warnings, []);
-
-    // The current pretrim verifier requires a cut as long as the requested read. Limit the cut to the
-    // source's real length; the compiled tpad graph still holds its final frame through the 7 s layer.
-    for (const segment of saved.segments) for (const input of segment.inputs) {
-      if (input.pretrim) input.pretrim.durationSeconds = Math.min(input.pretrim.durationSeconds, 5);
-    }
-    await writeFile(planPath, JSON.stringify(saved));
     const out = join(dir, "result.mp4");
     const rendered = await cli(["render", planPath, "--profile", "proxy", "--out", out, "--jobs", "1"], home);
     assert.deepEqual(rendered.warnings, [warning]);
