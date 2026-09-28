@@ -135,3 +135,15 @@ eye on one smoke timeline; stroke-only cursors read lighter than the filled poin
 wrong: if the dogfood film needs layouts the four presets cannot express, raw `stage` becomes the main authoring path and needs a
 friendlier schema.
 Next: wp5 dogfood film, kinetic-launch template and direction guidance (050).
+
+### wp5 (dogfood film, template, guidance) — D, 2026-09-28
+
+Conclusion: vid2 made a 50 s ima2-gen launch film in the reference's grammar from real ima2 generations and a real capture of the
+ima2 web UI, passing QA with zero issues and the sound/cadence checks (details in 050 "C results"). Dogfooding found and fixed four
+engine issues (QA measured transitional highlight colours; bar text contrast on light accents; typing ticks too quiet under the bed;
+onset peak picking too coarse for dense mixes) and one tuning issue (UI type sizes too small at 1080p on first cut). Shipped:
+`examples/ima2-launch` (timeline, capture steps, brief, README, check-sync), `templates/kinetic-launch`, `vid2-direction` kinetic grammar.
+Did not improve / open: the capture window is still a dense desktop UI at 1260 px wide — readable only through the auto camera; the
+brand scene's letters use a word-level blur rather than per-glyph; music is the synth bed, not a produced track. What would prove the
+direction wrong: if viewers cannot read the rebuilt UI moments at phone size, component defaults need larger type.
+Next: wp6 release v0.2.0 (060).
