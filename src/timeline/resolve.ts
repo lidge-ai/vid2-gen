@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, resolve as resolvePath } from "node:path";
 import { Vid2Error } from "../shared/errors.ts";
-import { framesToSeconds, parseFps, parseSignedLiteral, parseTimeLiteral, toFrames } from "../shared/time.ts";
+import { framesToSeconds, parseFps, parseSignedLiteral, parseTimeLiteral, toFrames, toSeconds } from "../shared/time.ts";
 import type { BeatGrid, Fps } from "../shared/time.ts";
 import type { Timeline } from "./schema.ts";
 import type { Effect, Layer, ResolveOptions, ResolvedAudio, ResolvedEffect, ResolvedLayer, ResolvedScene, ResolvedSpan, ResolvedTime, ResolvedTimeline, ResolvedTransition } from "./types.ts";
@@ -16,6 +16,15 @@ function pathFrom(baseDir: string, path: string): string {
 
 function frame(value: number | string, ctx: Context, kind: "position" | "duration"): number {
   return toFrames(parseTimeLiteral(value), ctx, kind);
+}
+
+/** Scene boundaries round half down, so an exact tie (a 0.5 s fade at 15 fps) keeps the pre-0.3 transition length. */
+function boundary(seconds: number, fps: Fps): number {
+  return Math.ceil((seconds * fps.num) / fps.den - 0.5 - 1e-9) + 0;
+}
+
+function seconds(value: number | string, ctx: Context): number {
+  return toSeconds(parseTimeLiteral(value), ctx);
 }
 
 function offset(base: number, value: string | undefined, ctx: Context): number {
@@ -44,6 +53,15 @@ function timeFrame(value: Time, ctx: Context): number {
   const result = ctx.events.resolve(ref);
   if (!Number.isInteger(result.frame) || result.frame < 0) throw new Vid2Error("E_INPUT", `invalid event frame: ${value.event}`);
   return offset(result.frame, value.offset, ctx);
+}
+
+function timeSeconds(value: Time, ctx: Context): number {
+  if (typeof value === "number" || typeof value === "string") {
+    const lit = parseTimeLiteral(value);
+    const offset = (lit.unit === "b" || lit.unit === "bar") ? framesToSeconds(ctx.beat?.offsetFrames ?? 0, ctx.fps) : 0;
+    return toSeconds(lit, ctx) + offset;
+  }
+  return framesToSeconds(timeFrame(value, ctx), ctx.fps);
 }
 
 function atTime(value: Time, ctx: Context): ResolvedTime {
@@ -79,7 +97,7 @@ function span(start: number | string, end: number | string | undefined, sceneFra
 
 /** A capture layer's in/out live on the footage clock: EventRefs must name that layer's own source (030 clock rule). */
 function footageSeconds(value: Time, sourceId: string, ctx: Context): number {
-  if (typeof value === "number" || typeof value === "string") return framesToSeconds(frame(value, ctx, "position"), ctx.fps);
+  if (typeof value === "number" || typeof value === "string") return timeSeconds(value, ctx);
   if (!("event" in value)) throw new Vid2Error("E_INPUT", "a capture layer's in/out must be a time literal or an event reference");
   if (!ctx.events) throw new Vid2Error("E_INPUT", "event references need a capture session (030)");
   const ref = value.source === undefined ? { event: value.event, source: sourceId } : { event: value.event, source: value.source };
@@ -111,7 +129,8 @@ function resolvedLayer(layer: Layer, frames: number, sceneStart: number, ctx: Co
   const inFrame = layer.in === undefined ? 0 : timeFrame(layer.in, ctx);
   const outFrame = layer.out === undefined ? undefined : timeFrame(layer.out, ctx);
   return { ...layer, ...timing, inFrame, ...(outFrame === undefined ? {} : { outFrame }),
-    inSeconds: framesToSeconds(inFrame, ctx.fps), ...(outFrame === undefined ? {} : { outSeconds: framesToSeconds(outFrame, ctx.fps) }) };
+    inSeconds: layer.in === undefined ? 0 : timeSeconds(layer.in, ctx),
+    ...(outFrame === undefined ? {} : { outSeconds: timeSeconds(layer.out!, ctx) }) };
 }
 
 function resolvedEffect(effect: Effect, sceneStart: number, ctx: Context, baseDir: string): ResolvedEffect {
@@ -123,10 +142,11 @@ function resolvedEffect(effect: Effect, sceneStart: number, ctx: Context, baseDi
     absoluteAtSeconds: framesToSeconds(absoluteAtFrame, ctx.fps) };
 }
 
-function transition(scene: Timeline["scenes"][number], ctx: Context): ResolvedTransition | null {
+function transition(scene: Timeline["scenes"][number], ctx: Context, exactEnd: number): ResolvedTransition | null {
   if (!scene.transition) return null;
   const t = scene.transition;
-  return { type: t.type, frames: t.type === "cut" ? 0 : frame(t.duration, ctx, "duration"), ...(t.rect ? { rect: t.rect } : {}),
+  const frames = t.type === "cut" ? 0 : boundary(exactEnd, ctx.fps) - boundary(exactEnd - seconds(t.duration, ctx), ctx.fps);
+  return { type: t.type, frames, ...(t.rect ? { rect: t.rect } : {}),
     ...(t.center ? { center: t.center } : {}) };
 }
 
@@ -164,18 +184,21 @@ export function resolveTimeline(t: Timeline, opts: ResolveOptions): ResolvedTime
     return [id, { frame: n, seconds: framesToSeconds(n, fps) }];
   }));
   const scenes: ResolvedScene[] = [];
+  let exactStart = 0;
   for (const [index, scene] of t.scenes.entries()) {
-    const frames = frame(scene.duration, ctx, "duration");
+    const exactEnd = exactStart + seconds(scene.duration, ctx);
+    const startFrame = boundary(exactStart, fps);
+    const frames = boundary(exactEnd, fps) - startFrame;
     const prior = scenes.at(-1);
     const transitionIn = prior?.transitionOut ?? null;
-    const startFrame = prior ? prior.startFrame + prior.frames - (transitionIn?.frames ?? 0) : 0;
-    const transitionOut = transition(scene, ctx);
+    const transitionOut = transition(scene, ctx, exactEnd);
     scenes.push({ id: scene.id, index, startFrame, startSeconds: framesToSeconds(startFrame, fps), frames,
       seconds: framesToSeconds(frames, fps), transitionIn, transitionOut,
       ...(scene.background === undefined ? {} : { background: scene.background }),
       layers: scene.layers.map(layer => resolvedLayer(layer, frames, startFrame, ctx, t.sources)),
       effects: scene.effects.map(effect => resolvedEffect(effect, startFrame, ctx, opts.baseDir)),
       ...(scene.notes === undefined ? {} : { notes: scene.notes }) });
+    exactStart = exactEnd - (scene.transition && scene.transition.type !== "cut" ? seconds(scene.transition.duration, ctx) : 0);
   }
   placeCaptures(scenes, t.sources, ctx);
   const last = scenes.at(-1);

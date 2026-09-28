@@ -17,8 +17,9 @@ import { videoArgs } from "./profiles.ts";
 import { verifyVideo } from "./verify.ts";
 import { materializeStages } from "./stages.ts";
 import type { StageResult } from "./stages.ts";
+import { materializePretrim } from "./pretrim.ts";
 
-export interface RenderEvent { stage: "segment" | "join" | "post" | "stage"; id?: string; progress?: RenderProgress; message?: string }
+export interface RenderEvent { stage: "segment" | "join" | "post" | "stage" | "pretrim"; id?: string; progress?: RenderProgress; message?: string }
 export interface RenderOptions { jobs?: number; signal?: AbortSignal; noCache?: boolean; segments?: string[];
   hw?: boolean; out: string; logger?: (event: RenderEvent) => void }
 export interface SegmentResult { id: string; cached: boolean; ms: number }
@@ -74,7 +75,8 @@ function outputArgs(plan: RenderPlan, intermediate: boolean, hardware: string[])
     ...(intermediate || plan.output.container === "webm" ? [] : ["-movflags", "+faststart"])];
 }
 
-async function renderSegment(plan: RenderPlan, segment: SegmentPlan, opts: RenderOptions): Promise<SegmentResult> {
+async function renderSegment(plan: RenderPlan, segment: SegmentPlan, opts: RenderOptions,
+  hashes: Map<string, Promise<string>>): Promise<SegmentResult> {
   const output = join(plan.workDir, `segment-${segment.index}.mp4`);
   const key = await segmentCacheKey(segment, plan);
   const cached = segmentCachePath(key);
@@ -90,8 +92,16 @@ async function renderSegment(plan: RenderPlan, segment: SegmentPlan, opts: Rende
     await mkdir(ass.fontsDir, { recursive: true });
     await writeFile(ass.path, ass.content);
   }
+  const inputArgs: string[] = [];
+  for (const input of segment.inputs) {
+    if (!input.pretrim) { inputArgs.push(...input.args); continue; }
+    const cut = await materializePretrim(input.pretrim, plan, segment.id,
+      { hashes, ...(opts.noCache ? { noCache: true } : {}), ...(opts.signal ? { signal: opts.signal } : {}) });
+    opts.logger?.({ stage: "pretrim", id: segment.id, message: cut.cached ? "cached" : "cut" });
+    inputArgs.push("-i", cut.path);
+  }
   const graph = await graphArgs(plan, `segment-${segment.index}`, segment.graph);
-  const args = [...segment.inputs.flatMap((input) => input.args), ...graph, "-map", `[${segment.outLabel}]`,
+  const args = [...inputArgs, ...graph, "-map", `[${segment.outLabel}]`,
     "-an", "-frames:v", String(segment.renderFrames), ...outputArgs(plan, true, []), output];
   const ms = await runFfmpeg(plan, args, opts, "segment", segment.id);
   await verifyVideo(output, plan.tool.ffprobe, { width: segment.width, height: segment.height,
@@ -110,11 +120,13 @@ export async function renderSegments(plan: RenderPlan, ids: string[], opts: Rend
   });
   const unique = [...new Map(selected.map((segment) => [segment.id, segment])).values()];
   await materializeStages(plan, [...new Set(unique.flatMap((segment) => segment.stageDeps ?? []))], stageOptions(opts));
-  await Promise.all(unique.map((segment) => renderSegment(plan, segment, opts)));
+  const hashes = new Map<string, Promise<string>>();
+  await Promise.all(unique.map((segment) => renderSegment(plan, segment, opts, hashes)));
   return unique.map((segment) => ({ id: segment.id, path: join(plan.workDir, `segment-${segment.index}.mp4`) }));
 }
 
 async function segmentPool(plan: RenderPlan, opts: RenderOptions): Promise<SegmentResult[]> {
+  const hashes = new Map<string, Promise<string>>();
   const count = Math.max(1, Math.min(plan.segments.length, Math.floor(opts.jobs ?? Math.max(1, cpus().length / 2))));
   const results: (SegmentResult | undefined)[] = Array.from({ length: plan.segments.length }, () => undefined);
   let next = 0;
@@ -122,7 +134,7 @@ async function segmentPool(plan: RenderPlan, opts: RenderOptions): Promise<Segme
   await Promise.all(Array.from({ length: count }, async () => {
     while (next < plan.segments.length && !failure) {
       const index = next++;
-      try { results[index] = await renderSegment(plan, plan.segments[index]!, opts); }
+      try { results[index] = await renderSegment(plan, plan.segments[index]!, opts, hashes); }
       catch (error) { failure = error; }
     }
   }));

@@ -70,7 +70,7 @@ function sourcePath(t: ResolvedTimeline, id: string): string {
 }
 
 function seconds(v: number | string, t: ResolvedTimeline): number {
-  return toFrames(parseTimeLiteral(v), { fps: t.fps }, "duration") * t.fps.den / t.fps.num;
+  return toFrames(parseTimeLiteral(v), { fps: t.fps, ...(t.beat ? { beat: t.beat } : {}) }, "duration") * t.fps.den / t.fps.num;
 }
 
 function music(b: Builder, a: Audio): boolean {

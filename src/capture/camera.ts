@@ -1,4 +1,5 @@
 import type { Fps } from "../shared/time.ts";
+import { Vid2Error } from "../shared/errors.ts";
 import { stepSpring } from "./spring.ts";
 import type { SpringState } from "./spring.ts";
 
@@ -23,6 +24,9 @@ export interface CameraOptions {
   leadIn?: number;
   hold?: number;
   leadOut?: number;
+  path?: string;
+  sceneId?: string;
+  sourceId?: string;
 }
 export interface CameraKeyOut { at: number; zoom: number; x: number; y: number; ease: "linear" }
 
@@ -32,6 +36,7 @@ type Target = { zoom: number; x: number; y: number };
 type FrameTarget = Target & { rect?: Rect };
 const BASE: Target = { zoom: 1, x: 0.5, y: 0.5 };
 const SPRING = { stiffness: 200, damping: 40, mass: 2.25 };
+const MAX_KEYS = 24;
 
 function clamp(value: number, low: number, high: number): number { return Math.max(low, Math.min(high, value)); }
 function frameCount(seconds: number, fps: Fps): number { return Math.round(seconds * fps.num / fps.den); }
@@ -116,7 +121,33 @@ function append(keys: CameraKeyOut[], key: CameraKeyOut): void {
   else keys[keys.length - 1] = key;
 }
 
-/** Returns linear camera keys at ≤2-frame sampling; at is seconds from the layer start. */
+function deviation(key: CameraKeyOut, a: CameraKeyOut, b: CameraKeyOut, aspect: number): number {
+  const fraction = (key.at - a.at) / (b.at - a.at);
+  const error = (field: "x" | "y" | "zoom", tolerance: number) =>
+    Math.abs(key[field] - (a[field] + (b[field] - a[field]) * fraction)) / tolerance;
+  return Math.max(error("x", 0.015), error("y", 0.015 * aspect), error("zoom", 0.02));
+}
+
+/** Keep the endpoints and the largest normalized deviation in each failing interval. */
+function simplify(keys: CameraKeyOut[], width: number, height: number): CameraKeyOut[] {
+  if (keys.length <= 2) return keys;
+  const keep = new Set([0, keys.length - 1]);
+  const pending: [number, number][] = [[0, keys.length - 1]];
+  while (pending.length) {
+    const [start, end] = pending.pop()!;
+    let largest = 1, index = -1;
+    for (let i = start + 1; i < end; i++) {
+      const error = deviation(keys[i]!, keys[start]!, keys[end]!, width / height);
+      if (error > largest) { largest = error; index = i; }
+    }
+    if (index < 0) continue;
+    keep.add(index);
+    pending.push([start, index], [index, end]);
+  }
+  return keys.filter((_, index) => keep.has(index));
+}
+
+/** Samples the spring path at ≤2-frame intervals, then keeps keys within the view error budget. */
 export function planCamera(actions: CameraAction[], opts: CameraOptions): CameraKeyOut[] {
   if (opts.frames <= 0 || opts.width <= 0 || opts.height <= 0 || opts.fps.num <= 0 || opts.fps.den <= 0) return [];
   const groups = groupsFor(actions, opts);
@@ -141,5 +172,10 @@ export function planCamera(actions: CameraAction[], opts: CameraOptions): Camera
     const cy = target.rect ? safeFocus(y.value, z, target.rect.y, target.rect.height, opts.height) : clamp(y.value, half, 1 - half);
     append(keys, { at: frame * dt, zoom: z, x: cx, y: cy, ease: "linear" });
   }
-  return keys;
+  const simplified = simplify(keys, opts.width, opts.height);
+  if (simplified.length > MAX_KEYS) throw new Vid2Error("E_INPUT", `camera needs ${simplified.length} keys (limit ${MAX_KEYS})`, {
+    details: { path: opts.path ?? "scenes.0.layers.0.camera", sceneId: opts.sceneId, sourceId: opts.sourceId },
+    fix: "split the layer, raise camera hold, or author manual camera keys",
+  });
+  return simplified;
 }

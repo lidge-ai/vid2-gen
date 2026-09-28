@@ -4,6 +4,7 @@
  */
 import { Vid2Error } from "../shared/index.ts";
 import type { Fps } from "../shared/index.ts";
+import { parseTimeLiteral, toSeconds } from "../shared/time.ts";
 import type { CaptureEvent, CursorTrackSample, ResolvedLayer, ResolvedTimeline } from "../timeline/index.ts";
 import { planCamera } from "./camera.ts";
 import type { CameraKeyOut } from "./camera.ts";
@@ -40,12 +41,14 @@ export function cameraAt(keys: CameraKeyOut[], seconds: number): { zoom: number;
   return { zoom: a.zoom + (b.zoom - a.zoom) * t, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
-function cameraKeys(layer: Media, actions: { frame: number; bbox?: Box; point?: { x: number; y: number } }[], t: ResolvedTimeline): CameraKeyOut[] | null {
+function cameraKeys(layer: Media, actions: { frame: number; bbox?: Box; point?: { x: number; y: number } }[],
+  t: ResolvedTimeline, path: string, sceneId: string): CameraKeyOut[] | null {
   const cam = layer.camera;
   if (!cam || Array.isArray(cam)) return null;
   const frames = layer.endFrame - layer.startFrame;
+  const hold = toSeconds(parseTimeLiteral(cam.hold), { fps: t.fps, ...(t.beat ? { beat: t.beat } : {}) });
   return planCamera(actions, { fps: t.fps, startFrame: layer.absoluteStartFrame, frames, width: t.width, height: t.height, zoom: cam.zoom,
-    ...(typeof cam.hold === "number" ? { hold: cam.hold } : {}) });
+    hold, merge: hold, path, sceneId, sourceId: layer.source });
 }
 
 function cursorTrack(layer: Media, actions: { frame: number; point: { x: number; y: number }; kind: CaptureAction["kind"] }[],
@@ -65,7 +68,7 @@ function cursorTrack(layer: Media, actions: { frame: number; point: { x: number;
   });
 }
 
-function decorate(layer: Media, session: LoadedSession, t: ResolvedTimeline): Media {
+function decorate(layer: Media, session: LoadedSession, t: ResolvedTimeline, path: string, sceneId: string): Media {
   const fit = coverFit(session, t.width, t.height, layer.fit);
   const placed = session.actions.flatMap((a) => {
     const frame = layerFrame(a, session, layer, t.fps);
@@ -74,7 +77,7 @@ function decorate(layer: Media, session: LoadedSession, t: ResolvedTimeline): Me
     const point = a.point ? { x: a.point.x * fit.s + fit.ox, y: a.point.y * fit.s + fit.oy } : undefined;
     return [{ frame, kind: a.kind, ...(bbox ? { bbox } : {}), ...(point ? { point } : {}) }];
   });
-  const keys = cameraKeys(layer, placed, t);
+  const keys = cameraKeys(layer, placed, t, path, sceneId);
   const camera = keys === null ? layer.camera
     : keys.length ? keys.map((k) => ({ at: k.at, zoom: k.zoom, x: k.x, y: k.y, ease: k.ease })) : [{ at: 0, zoom: 1, x: 0.5, y: 0.5, ease: "linear" as const }];
   const out: Media = { ...layer, ...(camera === undefined ? {} : { camera }) };
@@ -98,12 +101,12 @@ function layerEvents(layer: Media, session: LoadedSession, t: ResolvedTimeline):
 
 export function decorateCaptureLayers(t: ResolvedTimeline, sessions: Record<string, LoadedSession>): ResolvedTimeline {
   const captureEvents: CaptureEvent[] = [];
-  const scenes = t.scenes.map((scene) => ({ ...scene, layers: scene.layers.map((layer) => {
+  const scenes = t.scenes.map((scene, sceneIndex) => ({ ...scene, layers: scene.layers.map((layer, layerIndex) => {
     if (layer.type !== "media" || t.sources[layer.source]?.type !== "capture") return layer;
     const session = sessions[layer.source];
     if (!session) throw new Vid2Error("E_INTERNAL", `capture session not loaded: ${layer.source}`);
     captureEvents.push(...layerEvents(layer, session, t));
-    return decorate(layer, session, t);
+    return decorate(layer, session, t, `scenes.${sceneIndex}.layers.${layerIndex}.camera`, scene.id);
   }) }));
   return { ...t, scenes, captureEvents: captureEvents.sort((a, b) => a.frame - b.frame) };
 }

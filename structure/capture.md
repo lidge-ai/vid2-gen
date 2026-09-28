@@ -56,6 +56,6 @@ timeline: `timeline frame = layer start + round((footage seconds − in) / speed
 every other event reference (cues, markers of other layers) on the timeline clock. `source` may be omitted when there is one capture.
 
 `camera: {auto: "events"}` plans zoom and focus from the actions (merged groups frame the union of their targets, spring-smoothed, never
-leaving the frame) and feeds the same sub-pixel perspective camera as manual keys. `cursor` draws a synthetic arrow or dot that follows the
+leaving the frame) and feeds the same sub-pixel perspective camera as manual keys. The authored `hold` (default `"0.8s"`, any time unit) is both the hold after each group and the merge window between actions. The dense spring path is simplified with Ramer–Douglas–Peucker (tolerance 1.5 % of width, the same in height, 0.02 zoom); more than 24 remaining keys fail with `E_INPUT` at `scenes.i.layers.j.camera`, as does any camera (auto or manual) whose perspective expression exceeds 100,000 characters (ffmpeg ran out of memory near 168,000). These errors come from resolve/compile/render; `vid2 validate` does not decorate captures. `cursor` draws a synthetic arrow or dot that follows the
 actions with spring motion, shrinks on click and emits ripples, drawn after the camera so it stays sharp. Footage shorter than its layer holds the
 last frame.

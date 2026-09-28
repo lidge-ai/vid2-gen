@@ -48,6 +48,22 @@ function checkReferences(t: Timeline): ValidationIssue[] {
   return issues;
 }
 
+function mediaTimingIssues(layer: ResolvedTimeline["scenes"][number]["layers"][number],
+  sources: ResolvedTimeline["sources"], fps: ResolvedTimeline["fps"], path: string): ValidationIssue[] {
+  if (layer.type !== "media" || layer.outSeconds === undefined) return [];
+  const source = sources[layer.source];
+  if (source?.type === "image" || source?.type === "color") {
+    return [issue(`${path}.out`, "media_out_source", "out is only valid for moving media")];
+  }
+  if (source?.type !== "video" && source?.type !== "capture" && !(source?.type === "generate" && source.kind === "video")) return [];
+  const readSeconds = layer.outSeconds - (layer.inSeconds ?? 0);
+  if (readSeconds <= 0) return [issue(`${path}.out`, "media_out_order", "out must be later than in")];
+  if (readSeconds / layer.speed < fps.den / fps.num) {
+    return [issue(`${path}.out`, "media_read_short", "media in/out at this speed must cover at least one output frame")];
+  }
+  return [];
+}
+
 function checkResolved(r: ResolvedTimeline): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   issues.push(...kineticTimingIssues(r));
@@ -62,7 +78,11 @@ function checkResolved(r: ResolvedTimeline): ValidationIssue[] {
     if (scene.transitionOut && next && scene.transitionOut.frames >= Math.min(scene.frames, next.frames)) {
       issues.push(issue(`scenes.${i}.transition.duration`, "transition_length", "transition must be shorter than both scenes"));
     }
+    if (tr && tr.type !== "cut" && tr.frames === 0) {
+      issues.push(issue(`scenes.${i}.transition.duration`, "transition_zero_frames", "non-cut transition must resolve to at least one frame"));
+    }
     for (const [j, layer] of scene.layers.entries()) {
+      issues.push(...mediaTimingIssues(layer, r.sources, r.fps, `scenes.${i}.layers.${j}`));
       if (layer.type === "text" && layer.startFrame >= layer.endFrame) {
         issues.push(issue(`scenes.${i}.layers.${j}`, "text_span", "text start must precede end"));
       }

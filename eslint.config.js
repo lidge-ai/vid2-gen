@@ -3,7 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default [
-  { ignores: ["dist/**", "node_modules/**", "schema/**", "coverage/**"] },
+  { ignores: ["dist/**", "node_modules/**", "schema/**", "coverage/**", "examples/opencodex-*/**"] },
   { ...js.configs.recommended, files: ["**/*.{js,mjs}"] },
   { files: ["**/*.{js,mjs}"], languageOptions: { globals: globals.node } },
   ...tseslint.configs.recommendedTypeChecked.map((config) => ({

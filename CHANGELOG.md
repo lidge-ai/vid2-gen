@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+**Behavior changes.** Scene boundaries are quantized once from the exact running time instead of rounding each scene, so beat- and bar-cut films stay on the grid (a 40 s film at 132 BPM previously drifted 4 frames); a non-cut transition can resolve one frame longer or shorter depending on position. Auto cameras now honor the authored `hold` (default `0.8s`; it was ignored and 0.5 s / 0.7 s were used) and simplify to at most 24 keys.
+
+**Fixes.** Media `out` is honored for video and capture sources (the read stops at `out` and the last allowed frame holds). A segment that reads one file several times reads lossless FFV1 cuts instead of seeking the source repeatedly (ffmpeg could stall). Camera expressions over 100,000 characters fail with a pathful `E_INPUT` instead of an ffmpeg out-of-memory error.
+
+**Time.** New `bar` unit (`"1bar"` = `meter` beats) everywhere a time literal is accepted.
+
 ## 0.2.0 — 2026-09-28
 
 Launch films that look designed: a motion-graphics engine for words, icons and rebuilt UI, driven by the same timeline file.

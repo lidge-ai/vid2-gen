@@ -13,7 +13,7 @@ export interface MotionCanvas { width: number; height: number; oversample: 1 | 2
 function keyframes(layer: Media, ctx: BuildContext): Key[] {
   if (layer.camera && !Array.isArray(layer.camera)) throw new Vid2Error("E_INPUT", "camera auto=events needs a capture session");
   if (Array.isArray(layer.camera)) return layer.camera.map((key) => ({
-    frame: toFrames(parseTimeLiteral(key.at), { fps: ctx.fps }, "duration") * ctx.rate,
+    frame: toFrames(parseTimeLiteral(key.at), { fps: ctx.fps, ...(ctx.beat ? { beat: ctx.beat } : {}) }, "duration") * ctx.rate,
     zoom: key.zoom, x: key.x, y: key.y, ease: key.ease,
   })).sort((a, b) => a.frame - b.frame);
   const end = Math.max(1, (layer.endFrame - layer.startFrame) * ctx.rate - 1);
@@ -72,6 +72,10 @@ export function perspectiveFilters(layer: Media, ctx: BuildContext, width: numbe
   const y2 = cornerExpr("high", canvas.height, y, zoom);
   const perspective = `perspective=x0=${quoteExpr(x0)}:y0=${quoteExpr(y0)}:x1=${quoteExpr(x1)}:y1=${quoteExpr(y0)}:` +
     `x2=${quoteExpr(x0)}:y2=${quoteExpr(y2)}:x3=${quoteExpr(x1)}:y3=${quoteExpr(y2)}:interpolation=cubic:sense=source:eval=frame`;
+  if (perspective.length > 100_000) throw new Vid2Error("E_INPUT", `camera perspective expression is ${perspective.length} characters (limit 100000)`, {
+    details: { path: `${ctx.layerPath ?? `scenes.?(${ctx.sceneId}).layers.?`}.camera`, sceneId: ctx.sceneId, sourceId: layer.source },
+    fix: "use fewer camera keys or split the layer",
+  });
   const baseW = Math.round(width * canvas.oversample);
   const baseH = Math.round(height * canvas.oversample);
   const background = ctx.background.startsWith("#") ? ctx.background : "#000000";

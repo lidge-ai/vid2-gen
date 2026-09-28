@@ -34,25 +34,24 @@ export function pngInput(path: string, seconds: number, ctx: BuildContext): stri
   return ctx.inputs.add({ kind: "png", path, args: ["-framerate", layerRate(ctx), "-loop", "1", "-t", num(seconds), "-i", path] });
 }
 
-export function sourceInput(source: Source, seconds: number, ctx: BuildContext, opts: { inSeconds?: number; speed?: number } = {}): string {
+export function sourceInput(source: Source, seconds: number, ctx: BuildContext,
+  opts: { inSeconds?: number; outSeconds?: number; speed?: number } = {}): string {
   if (source.type === "generate" || source.type === "audio") {
     throw new Vid2Error("E_CAPABILITY", `source type ${source.type} cannot be rendered as video`,
       { fix: source.type === "generate" ? "run vid2 assets to materialize generated sources first" : "use audio sources in timeline.audio" });
-  }
-  if (source.type === "capture") {
-    const footage = captureFootage(source.session);
-    const speed = opts.speed ?? 1;
-    return ctx.inputs.add({ kind: "video", path: footage, args: ["-ss", num(opts.inSeconds ?? 0), "-t", num(seconds * speed), "-i", footage] });
   }
   if (source.type === "color") {
     const lavfi = `color=c=${escapeValue(source.color)}:s=${num(ctx.width)}x${num(ctx.height)}:r=${layerRate(ctx)}:d=${num(seconds)},format=rgba`;
     return ctx.inputs.add({ kind: "lavfi", lavfi, args: ["-f", "lavfi", "-i", lavfi] });
   }
-  const path = source.path;
-  if (source.type === "image") return ctx.inputs.add({ kind: "image", path,
-    args: ["-framerate", layerRate(ctx), "-loop", "1", "-t", num(seconds), "-i", path] });
+  if (source.type === "image") return ctx.inputs.add({ kind: "image", path: source.path,
+    args: ["-framerate", layerRate(ctx), "-loop", "1", "-t", num(seconds), "-i", source.path] });
+  const path = source.type === "capture" ? captureFootage(source.session) : source.path;
   const speed = opts.speed ?? 1;
-  return ctx.inputs.add({ kind: "video", path, args: ["-ss", num(opts.inSeconds ?? 0), "-t", num(seconds * speed), "-i", path] });
+  const inSeconds = opts.inSeconds ?? 0;
+  const read = opts.outSeconds === undefined ? seconds * speed : Math.min(seconds * speed, opts.outSeconds - inSeconds - 0.001);
+  return ctx.inputs.add({ kind: "video", path, args: ["-ss", num(inSeconds), "-t", num(read), "-i", path],
+    pretrim: { sourcePath: path, inSeconds, durationSeconds: read } });
 }
 
 export function fitFilters(mode: Media["fit"], width: number, height: number): string[] {
@@ -77,7 +76,8 @@ export function prepareMedia(layer: Media, ctx: BuildContext, width: number, hei
   const source = ctx.sources[layer.source];
   if (!source) throw new Vid2Error("E_SCHEMA", `unknown media source: ${layer.source}`);
   const duration = spanSeconds(layer, ctx);
-  const input = sourceInput(source, duration, ctx, { ...(layer.inSeconds === undefined ? {} : { inSeconds: layer.inSeconds }), speed: layer.speed });
+  const input = sourceInput(source, duration, ctx, { ...(layer.inSeconds === undefined ? {} : { inSeconds: layer.inSeconds }),
+    ...(layer.outSeconds === undefined ? {} : { outSeconds: layer.outSeconds }), speed: layer.speed });
   const rate = layerRate(ctx);
   // Footage shorter than its layer holds the last frame (no black tail); the stream is then cut to the span.
   const moving = source.type === "video" || source.type === "capture";
