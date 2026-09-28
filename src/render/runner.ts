@@ -18,6 +18,7 @@ import { verifyVideo } from "./verify.ts";
 import { materializeStages } from "./stages.ts";
 import type { StageResult } from "./stages.ts";
 import { materializePretrim } from "./pretrim.ts";
+import { StallWatch, stallLimitMs } from "./watchdog.ts";
 
 export interface RenderEvent { stage: "segment" | "join" | "post" | "stage" | "pretrim"; id?: string; progress?: RenderProgress; message?: string }
 export interface RenderOptions { jobs?: number; signal?: AbortSignal; noCache?: boolean; segments?: string[];
@@ -49,6 +50,7 @@ function runFfmpeg(plan: RenderPlan, args: string[], opts: RenderOptions, stage:
     const child = spawn(plan.tool.ffmpeg, ["-hide_banner", "-nostdin", "-y", "-nostats", "-progress", "pipe:2", ...args],
       { cwd: plan.workDir, signal: opts.signal, windowsHide: true });
     const parser = new ProgressParser((progress) => opts.logger?.({ stage, ...(id ? { id } : {}), progress }));
+    const watch = new StallWatch(stallLimitMs(), () => child.kill("SIGKILL"));
     let tail = "";
     let pending = "";
     child.stderr.on("data", (chunk: Buffer) => {
@@ -57,16 +59,34 @@ function runFfmpeg(plan: RenderPlan, args: string[], opts: RenderOptions, stage:
       pending += text;
       const lines = pending.split(/\r?\n/);
       pending = lines.pop() ?? "";
-      for (const line of lines) parser.line(line);
+      for (const line of lines) {
+        parser.line(line);
+        if (line.startsWith("frame=")) watch.progress(Number(line.slice(6)));
+      }
     });
-    child.on("error", (cause) => reject(new Vid2Error(opts.signal?.aborted ? "E_INTERRUPTED" : "E_RENDER", "ffmpeg could not start", { cause })));
+    child.on("error", (cause) => {
+      watch.stop();
+      reject(new Vid2Error(opts.signal?.aborted ? "E_INTERRUPTED" : "E_RENDER", "ffmpeg could not start", { cause }));
+    });
     child.on("close", (code) => {
+      watch.stop();
       if (pending) parser.line(pending);
       if (code === 0) resolvePromise(Date.now() - started);
+      else if (watch.fired) reject(new Vid2Error("E_RENDER", `ffmpeg ${stage} stalled`,
+        { retryable: true, details: { id, stalled: true, frame: watch.frame ?? null, limitMs: stallLimitMs() } }));
       else reject(new Vid2Error(opts.signal?.aborted ? "E_INTERRUPTED" : "E_RENDER", `ffmpeg ${stage} failed`,
         { details: { id, code, stderrTail: tail.split(/\r?\n/).slice(-20).join("\n") } }));
     });
   });
+}
+
+/** One retry when the watchdog killed a stalled ffmpeg; every other failure propagates. */
+async function runFfmpegOnceMore(plan: RenderPlan, args: string[], opts: RenderOptions, stage: RenderEvent["stage"], id?: string): Promise<number> {
+  try { return await runFfmpeg(plan, args, opts, stage, id); } catch (error) {
+    if (!(error instanceof Vid2Error) || error.details?.["stalled"] !== true) throw error;
+    opts.logger?.({ stage, ...(id ? { id } : {}), message: "ffmpeg stalled; retrying once" });
+    return runFfmpeg(plan, args, opts, stage, id);
+  }
 }
 
 function outputArgs(plan: RenderPlan, intermediate: boolean, hardware: string[]): string[] {
@@ -103,7 +123,7 @@ async function renderSegment(plan: RenderPlan, segment: SegmentPlan, opts: Rende
   const graph = await graphArgs(plan, `segment-${segment.index}`, segment.graph);
   const args = [...inputArgs, ...graph, "-map", `[${segment.outLabel}]`,
     "-an", "-frames:v", String(segment.renderFrames), ...outputArgs(plan, true, []), output];
-  const ms = await runFfmpeg(plan, args, opts, "segment", segment.id);
+  const ms = await runFfmpegOnceMore(plan, args, opts, "segment", segment.id);
   await verifyVideo(output, plan.tool.ffprobe, { width: segment.width, height: segment.height,
     frames: segment.renderFrames, pixFmt: "yuv420p", range: "tv" });
   if (!opts.noCache) await saveSegmentCache(output, cached);

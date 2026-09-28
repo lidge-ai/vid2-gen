@@ -10,6 +10,8 @@
 
 A segment that reads the same file more than once (several cuts from one recording) does not seek the source repeatedly — ffmpeg could stall with every input open on one file. On a segment cache miss the runner cuts each such read into a lossless FFV1 MKV under `cacheDir("pretrim")`, keyed by the source's full content hash, the in point, the read duration and the ffmpeg version, verifies it (at least one frame, duration within one source frame, source pixel format and range kept) and feeds the cut instead. `noCache` recuts. There is no automatic prune; delete `$VID2_HOME/cache/pretrim` to reclaim space.
 
+Every ffmpeg child runs under a stall watchdog (`src/render/watchdog.ts`). ffmpeg 8 occasionally deadlocked on a segment with ten looped inputs: the process sat idle with no CPU and no progress, and the same command finished in 15 s when rerun. When the `-progress` frame count stops advancing for `VID2_FFMPEG_STALL_MS` (default 180000), the runner kills the process. A killed segment is retried once, and a second stall fails with `E_RENDER`, `retryable: true` and `details.stalled`.
+
 Segment cache entries live under `cacheDir("segments")` and include the graph, inputs, font contents, profile and ffmpeg version in their key. `noCache` bypasses the cache; named `segments` force a fresh render. ffmpeg's `-progress pipe:2` reports frame, output time and speed to the caller's logger.
 
 ## Verification
