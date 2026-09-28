@@ -76,7 +76,7 @@ void test("post graph concatenates HUD inputs then overlays only its half-open s
   assert.equal(inputs.list().length, 3);
   assert.ok(inputs.list().every((input, i) => input.args.join(" ") === `-i /tmp/hud-${i}.mkv`));
   assert.match(graph.toString(), /concat=n=3:v=1:a=0/);
-  assert.match(graph.toString(), /setpts=PTS-STARTPTS\+0\/TB/);
+  assert.match(graph.toString(), /setpts=\(N\+0\)\*1\/\(30\*TB\)/);
   assert.match(graph.toString(), /gte\(t,-0\.016667\)\*lt\(t,2\.983333\)/);
   assert.deepEqual(graph.dangling(), [output]);
 });

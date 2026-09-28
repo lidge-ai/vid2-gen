@@ -1,6 +1,6 @@
 /** Full-timeline HUD stage clips and their post placement (030 G-11, B5, R2-10; 031). Stub signatures by main; W3 implements. */
 import { join } from "node:path";
-import { fpsValue, framesToSeconds, hashJson, Vid2Error } from "../../shared/index.ts";
+import { fpsValue, hashJson, Vid2Error } from "../../shared/index.ts";
 import { buildHudSpec } from "../../stage/presets/hud.ts";
 import type { ResolvedHud } from "../../timeline/film.ts";
 import type { ResolvedTimeline } from "../../timeline/index.ts";
@@ -46,8 +46,10 @@ export function placeHud(ctx: Pick<BuildContext, "graph" | "inputs" | "fps">, ca
     return ctx.graph.add([input], ["setpts=PTS-STARTPTS", "format=rgba"]);
   });
   const joined = ctx.graph.add(inputs, [`concat=n=${inputs.length}:v=1:a=0`]);
-  const at = num(framesToSeconds(h.startFrame, ctx.fps));
-  const overlay = ctx.graph.add([joined], [`setpts=PTS-STARTPTS+${at}/TB`, "format=rgba"]);
+  // Chunk clips carry millisecond MKV timestamps, so concat could start a later chunk one frame early or late.
+  // Re-time by frame index instead: output frame k of the HUD sits exactly at (startFrame + k) / fps.
+  const overlay = ctx.graph.add([joined], [
+    `setpts=(N+${num(h.startFrame)})*${num(ctx.fps.den)}/(${num(ctx.fps.num)}*TB)`, "format=rgba"]);
   const fps = fpsValue(ctx.fps);
   const from = num((h.startFrame - 0.5) / fps);
   const to = num((h.endFrame - 0.5) / fps);
