@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-09-28
+
+Cuts that land on the beat, a film you can inspect without watching it, and a finishing layer for looks and HUDs.
+Every change here came from frame-by-frame measurements of reference launch films against our own (devlog/_fin/260928_film_grammar).
+The launch film from 0.2.0 stays attached to [v0.2.0](https://github.com/lidge-ai/vid2-gen/releases/tag/v0.2.0).
 
 **Generated clips.** ima2 video requests validate options and ordered image references before a provider call. Reference cache keys track image bytes and order while requests without references retain their prior keys. A generated clip read beyond its duration holds the last frame and reports `W_GENERATED_CLIP_HOLD` in render output and the saved render manifest. A Grok example has an offline file-provider twin. Windows absolute `--ref` path parsing remains untested with ima2; live Grok verification is macOS only.
 
