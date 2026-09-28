@@ -29,7 +29,7 @@ test("packed install runs outside the checkout", { skip: process.env["VID2_PACK_
     : ["version", "--json"];
   const data = JSON.parse(command(launcher, args, root)) as { ok: boolean; data: Record<string, unknown> };
   assert.equal(data.ok, true);
-  assert.equal(data.data["version"], "0.1.0");
+  assert.equal(data.data["version"], (JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as { version: string }).version);
 
   // wp3 package contract: the installed CLI renders a 1 s timeline with bundled fonts, verified by ffprobe.
   const timeline = join(root, "smoke.json");

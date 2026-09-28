@@ -13,18 +13,18 @@ music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 | You get | How |
 |---|---|
 | Real product footage | `vid2 capture web` (Chromium) and `capture native` record an action log next to the pixels; the camera zooms where you clicked and a synthetic cursor follows |
-| Motion design without an editor | sub-pixel camera moves, window cards with perspective, 30+ transitions, kinetic typography (libass, or pure-JS text when ffmpeg lacks it) |
+| Motion design without an editor | kinetic typography (word-by-word builds, magic move, inline icons, typing with accent decay), rebuilt UI (input field, bar chart, ticker, chips), sub-pixel camera moves, window cards, 30+ transitions including `zoomfrom` and `iris` |
 | Sound that fits | synthesized music beds, sound effects anchored to cuts and clicks, voice ducking, two-pass loudness to −14 LUFS |
 | Generated assets | optional [ima2-gen](https://github.com/lidge-ai/ima2-gen) images and Grok clips, cached so renders stay offline and repeatable |
 | Proof, not vibes | `vid2 qa` writes a contact sheet, seam stills, loudness and black/freeze checks; `vid2 preview` renders any frame exactly |
-| Agent-ready | JSON everywhere, typed exit codes, `vid2 capabilities`, six packaged Agent Skills, four templates |
+| Agent-ready | JSON everywhere, typed exit codes, `vid2 capabilities`, six packaged Agent Skills, five templates |
 
 ## Install
 
 Requires **Node.js 22.18 or newer** and **ffmpeg/ffprobe 6.1 or newer** on your PATH. ffmpeg 7.1+ is recommended. Install ffmpeg with `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg` on Windows, or your Linux distribution's package manager.
 
 ```bash
-npm install -g https://github.com/lidge-ai/vid2-gen/releases/download/v0.1.0/vid2-gen-0.1.0.tgz
+npm install -g https://github.com/lidge-ai/vid2-gen/releases/download/v0.2.0/vid2-gen-0.2.0.tgz
 vid2 doctor
 ```
 
@@ -74,6 +74,32 @@ vid2 compile timeline.json -o intro.plan.json            # inspect the ffmpeg pl
 
 Each scene renders as its own cached segment, transitions are joined with exact frame math, and the output is checked with ffprobe (frame count, size, pixel format, faststart). Text uses libass with the bundled Geist, Geist Mono and Instrument Serif fonts (SIL OFL).
 
+## Kinetic launch films
+
+0.2 adds a motion-graphics engine that draws each frame in JavaScript and hands ffmpeg a lossless alpha clip, so words, glyphs, icons
+and UI pieces can move on their own. [examples/ima2-launch](examples/ima2-launch) is a 50-second launch film for ima2-gen built only with
+it ([watch it](https://github.com/lidge-ai/vid2-gen/releases/tag/v0.2.0)); `vid2 init kinetic-launch` gives you a 30-second skeleton.
+
+```json
+{ "type": "kinetic", "size": 92, "accent": {},
+  "states": [ { "at": "0.1s", "text": "Anything you can do in a {globe} browser" },
+              { "at": "2.2s", "text": "{globe} browser" } ] }
+{ "type": "field", "grow": {}, "cursor": { "from": { "x": 1500, "y": 860 }, "at": "0.5s", "click": "0.6s" },
+  "typing": [ { "at": "0.9s", "text": "a cat astronaut, 35mm film" } ] }
+{ "type": "bars", "items": [ { "label": "ours", "value": 12, "highlight": true }, { "label": "theirs", "value": 1 } ], "max": 12, "unit": "" }
+```
+
+| Layer | What it does |
+|---|---|
+| `kinetic` | token states: words rise/blur/pop in, glyphs type/drop/scramble, words shared by the next state glide there (magic move), `{icon}` tokens, accent decay, reading highlight, pill, camera follow, `expand` an icon to the frame |
+| `field` | input pill that grows as you type, caret, synthetic cursor with click ripple, masking |
+| `bars`, `ticker`, `chips` | bar chart with count-up and glow; slot-machine list with icons; pills with connector lines |
+| `stage` | raw nodes (text, image, rect, group) with keyframes and springs, for anything the presets don't cover |
+
+With `audio.autoCues: true` the animation drives the sound: typing ticks, pops, clicks, a riser that ends when an expand fills the frame.
+`vid2 qa` checks the contrast of stage text too. The [kinetic grammar](skills/vid2-direction/references/kinetic-grammar.md) in the
+direction skill explains the rules the defaults follow. See [structure/stage.md](structure/stage.md).
+
 ## Capture your real app
 
 ```bash
@@ -107,24 +133,23 @@ under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step ser
 
 ## Commands and delivery
 
-| Command | Availability | Purpose |
-|---|---|---|
-| `doctor`, `schema`, `validate`, `resolve`, `help`, `version` | 0.1 foundations (wp2) | Discover tools, inspect the contract, and validate or resolve timelines |
-| `compile`, `render` | wp3 | Compile a timeline to an ffmpeg plan and render it |
-| `preview` | Planned wp7 | Inspect a composed frame |
-| `capture` | wp4 | Record web (Chromium), Electron, native screen and terminal footage with an action log |
-| `audio` | wp5 | Beat detection, synth beds, SFX, provider audio; mixing and mastering happen in `render` |
-| `assets` | wp6 | Generate images and Grok clips through ima2-gen (optional), cached by request |
-| `preview`, `qa`, `probe` | wp7 | Frames through the real composition; evidence report (contact sheet, seams, loudness, black/freeze) |
-| `init`, `skill`, `capabilities` | wp7 | Templates, packaged agent skills, one-call capability summary |
+| Command | Purpose |
+|---|---|
+| `doctor`, `schema`, `validate`, `resolve`, `help`, `version` | Discover tools, inspect the contract, and validate or resolve timelines |
+| `compile`, `render` | Compile a timeline to an ffmpeg plan (with stage clips) and render it |
+| `capture` | Record web (Chromium), Electron, native screen and terminal footage with an action log |
+| `audio` | Beat detection, synth beds, SFX, provider audio; mixing and mastering happen in `render` |
+| `assets` | Generate images and Grok clips through ima2-gen (optional), cached by request |
+| `preview`, `qa`, `probe` | Frames through the real composition; evidence report (contact sheet, seams, loudness, black/freeze, contrast) |
+| `init`, `skill`, `capabilities` | Templates, packaged agent skills, one-call capability summary (layers, icons, transitions) |
 
-The intended flow is **capture → author one timeline → resolve assets → compile → render → QA**. Rendering will use ffmpeg locally; generated assets remain optional. The [structure guide](structure/INDEX.md) explains module boundaries and the public CLI contract.
+The intended flow is **capture → author one timeline → resolve assets → compile → render → QA**. Rendering uses ffmpeg locally; generated assets remain optional. The [structure guide](structure/INDEX.md) explains module boundaries and the public CLI contract.
 
 ## For coding agents
 
 ```bash
 vid2 skill install --agent codex      # or --agent claude, --dir <path>, --tmp
-vid2 init launch-teaser my-video      # launch-teaser, feature-demo, changelog, social-vertical
+vid2 init kinetic-launch my-video     # kinetic-launch, launch-teaser, feature-demo, changelog, social-vertical
 vid2 preview my-video/timeline.json --at 0,50%,drop --placeholders
 vid2 render my-video/timeline.json --profile proxy --placeholders -o proxy.mp4
 vid2 qa proxy.mp4 --timeline my-video/timeline.json
@@ -133,7 +158,7 @@ vid2 qa proxy.mp4 --timeline my-video/timeline.json
 The packaged skills teach the loop (validate → preview stills → proxy → qa → final), the timeline contract, directing defaults with concrete
 replacements for common clichés, capture, audio and ima2 recipes.
 
-Use `vid2 help --json` to discover the current command set, `vid2 schema --json` to obtain the timeline contract, and `vid2 validate <file> --json` before later render steps. JSON mode prints one result object to stdout; diagnostics go to stderr. Exit codes distinguish input errors, missing capabilities, access/provider failures, rendering, QA, and interruption. The packaged agent skill and starter templates are planned for wp7.
+Use `vid2 help --json` to discover the current command set, `vid2 schema --json` to obtain the timeline contract, and `vid2 validate <file> --json` before later render steps. JSON mode prints one result object to stdout; diagnostics go to stderr. Exit codes distinguish input errors, missing capabilities, access/provider failures, rendering, QA, and interruption.
 
 ## Why ffmpeg?
 

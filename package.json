@@ -1,6 +1,6 @@
 {
   "name": "vid2-gen",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The video CLI for coding agents: capture your real app, generate assets, cut to the beat. Powered by ffmpeg.",
   "type": "module",
   "license": "MIT",
