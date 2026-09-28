@@ -4,7 +4,7 @@ import { packageRoot } from "../../shared/paths.ts";
 import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandSpec } from "../registry.ts";
 
-const NAMES = ["launch-teaser", "feature-demo", "changelog", "social-vertical"] as const;
+const NAMES = ["launch-teaser", "feature-demo", "changelog", "social-vertical", "kinetic-launch"] as const;
 export type TemplateName = (typeof NAMES)[number];
 
 export function listTemplates(): TemplateName[] { return [...NAMES]; }

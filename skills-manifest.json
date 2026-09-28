@@ -26,15 +26,16 @@
   },
   "vid2-direction": {
     "files": {
-      "SKILL.md": "30ba272ef0f8ff1639723f408c70e5dd59c8ea84df9d02bf95634163524c7f89",
+      "SKILL.md": "76d688cac6ffa712cdbfe7d1af2595320bcc30ebb67c79b1bd7597e2ae3f3ebb",
       "references/anti-patterns.md": "ad076caab179fb31f4235d6ceea608ff14db8e78bcb13bb369b0a219dfb7b14f",
       "references/brief-template.md": "204234226c4d4746068f9908c28396a147b82615fdf9afe35608d041f474c435",
       "references/camera.md": "cd583f9550403da5bd21a0bb925bb9e980829b8af501b8c4ba39d520977a4848",
+      "references/kinetic-grammar.md": "c213e0ae6752bed298253eb28b0489c6021588c732efbf5b134e4ba0dfeb0322",
       "references/motion.md": "fb1f5a0ab46312f58b485b91734847144c20f10c3256c0c0239a81f9016ee2ce",
       "references/storyboard.md": "d316f34f7261a7594a3d815d61593268cbae269e47f554459290aa77bd92c429",
       "references/typography.md": "83c4817821ff5651cce0f8c14569105411eb1e73ac00c8f0070b5b140ea97867"
     },
-    "sha256": "d3be61a187ba7602816570d582950b93bc3a69cd4ec472c9ada7a130f560baca"
+    "sha256": "5092fd016d0bd10bd4d6b52255d862f01803eb1dd72acdddb98c8c73123d2f1f"
   },
   "vid2-timeline": {
     "files": {

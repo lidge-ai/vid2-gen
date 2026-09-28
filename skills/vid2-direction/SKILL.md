@@ -12,3 +12,5 @@ Default 30 s structure: 0–5 s establish the problem, 5–18 s build with 2–4
 Before motion, make one still for every scene and arrange a contact sheet. Check subject scale, real UI, readable type, safe margins, and shot-to-shot continuity. Then preview first/middle/last and both sides of transitions. Change one variable per review pass so the cause of improvement is visible.
 
 Use [camera and shot grammar](references/camera.md), [motion/easing/transitions](references/motion.md), [typography](references/typography.md), [anti-pattern replacements](references/anti-patterns.md), [storyboard review](references/storyboard.md), and the [brief table](references/brief-template.md). Numbers there are starting points, not brand rules.
+
+For a launch film that should feel designed (word-by-word builds, magic move, rebuilt UI, sound that follows motion), read [kinetic grammar](references/kinetic-grammar.md) and start from `vid2 init kinetic-launch`.

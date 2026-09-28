@@ -14,7 +14,8 @@ const entry = join(root, "src/cli/index.ts");
 const expected = { "launch-teaser": { width: 960, height: 540, frames: 900 },
   "feature-demo": { width: 640, height: 360, frames: 105 },
   changelog: { width: 960, height: 540, frames: 600 },
-  "social-vertical": { width: 540, height: 960, frames: 450 } } as const;
+  "social-vertical": { width: 540, height: 960, frames: 450 },
+  "kinetic-launch": { width: 960, height: 540, frames: 900 } } as const;
 
 async function vid2(cwd: string, args: string[], home: string): Promise<Record<string, unknown>> {
   const result = await run(process.execPath, [entry, ...args, "--json"], { cwd, env: { ...process.env, VID2_HOME: home } });
@@ -32,8 +33,8 @@ async function videoFacts(path: string): Promise<{ width: number; height: number
   return { width: stream.width, height: stream.height, frames: Number(stream.nb_read_packets) };
 }
 
-void test("init lists four templates and protects a non-empty destination", async () => {
-  assert.deepEqual(listTemplates(), ["launch-teaser", "feature-demo", "changelog", "social-vertical"]);
+void test("init lists five templates and protects a non-empty destination", async () => {
+  assert.deepEqual(listTemplates(), ["launch-teaser", "feature-demo", "changelog", "social-vertical", "kinetic-launch"]);
   const list = await init.run({ args: [], values: { list: true }, json: true, cwd: tempDir(), stderr: process.stderr });
   assert.deepEqual(list.data["templates"], listTemplates());
   const dir = tempDir("vid2-init-guard-");

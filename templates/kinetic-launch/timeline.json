@@ -1,0 +1,409 @@
+{
+ "$schema": "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json",
+ "version": 1,
+ "output": {
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "background": "#0B0B0F"
+ },
+ "beat": {
+  "bpm": 120
+ },
+ "sources": {
+  "backdrop": {
+   "type": "generate",
+   "provider": "ima2",
+   "kind": "image",
+   "prompt": "abstract vertical light rays, deep teal to midnight navy gradient, soft volumetric glow, cinematic, minimal, no text",
+   "options": {
+    "size": "1536x1024"
+   }
+  },
+  "hero": {
+   "type": "generate",
+   "provider": "ima2",
+   "kind": "image",
+   "prompt": "the single best result your product produces, photographed on a neutral backdrop, soft light",
+   "options": {
+    "size": "1536x1024"
+   }
+  }
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "duration": "3.4s",
+   "notes": "the first action a user takes, typed into a pill",
+   "layers": [
+    {
+     "type": "field",
+     "x": 960,
+     "y": 540,
+     "width": 560,
+     "height": 92,
+     "size": 40,
+     "grow": {
+      "maxWidth": 1500,
+      "padX": 40
+     },
+     "placeholder": "Ask anything…",
+     "accent": {},
+     "cursor": {
+      "from": {
+       "x": 1500,
+       "y": 860
+      },
+      "at": "0.55s",
+      "click": "0.65s"
+     },
+     "typing": [
+      {
+       "at": "0.9s",
+       "text": "do the tedious part for me",
+       "glyph": "0.045s"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "problem",
+   "duration": "3.2s",
+   "notes": "build the pain, keep one word",
+   "layers": [
+    {
+     "type": "kinetic",
+     "size": 92,
+     "maxWidth": 1500,
+     "accent": {},
+     "states": [
+      {
+       "at": "0.1s",
+       "text": "Most tools bury you in {globe} tabs, {key} settings and {clock} waiting."
+      },
+      {
+       "at": "2.1s",
+       "text": "{clock} waiting."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "intro",
+   "duration": "2.2s",
+   "notes": "the product icon opens into the reveal",
+   "layers": [
+    {
+     "type": "kinetic",
+     "size": 84,
+     "lineHeight": 1.9,
+     "iconScale": 1.9,
+     "states": [
+      {
+       "at": "0.05s",
+       "text": "Introducing\n{sparkles}"
+      },
+      {
+       "at": "1.2s",
+       "text": "{sparkles}",
+       "expand": {
+        "token": "icon:sparkles#0",
+        "fill": "#07131F"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "brand",
+   "duration": "3s",
+   "background": "#07131F",
+   "notes": "name over a slow push",
+   "layers": [
+    {
+     "type": "media",
+     "source": "backdrop",
+     "camera": [
+      {
+       "at": 0,
+       "zoom": 1
+      },
+      {
+       "at": "3s",
+       "zoom": 1.1,
+       "ease": "out"
+      }
+     ]
+    },
+    {
+     "type": "kinetic",
+     "size": 220,
+     "weight": "bold",
+     "letterSpacing": -6,
+     "enter": {
+      "style": "blur",
+      "duration": "0.9s"
+     },
+     "states": [
+      {
+       "at": "0.15s",
+       "text": "Product"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "promise",
+   "duration": "3.2s",
+   "background": "#F5F5F7",
+   "notes": "one sentence, read with the highlight",
+   "layers": [
+    {
+     "type": "kinetic",
+     "size": 96,
+     "color": "#1C1C1E",
+     "highlight": {
+      "dim": "#C7C7CC"
+     },
+     "states": [
+      {
+       "at": "0.1s",
+       "text": "The one promise\nyour product keeps."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "proof",
+   "duration": "3.6s",
+   "transition": {
+    "type": "iris",
+    "duration": "0.5s"
+   },
+   "notes": "work happening in parallel",
+   "layers": [
+    {
+     "type": "kinetic",
+     "x": 560,
+     "y": 540,
+     "size": 72,
+     "align": "center",
+     "states": [
+      {
+       "at": "0.1s",
+       "text": "It works\nfor you."
+      }
+     ]
+    },
+    {
+     "type": "chips",
+     "x": 1000,
+     "y": 340,
+     "connector": {
+      "from": {
+       "x": 860,
+       "y": 540
+      }
+     },
+     "items": [
+      {
+       "at": "0.8s",
+       "text": "Task",
+       "icon": "check",
+       "note": "first"
+      },
+      {
+       "at": "1.2s",
+       "text": "Task",
+       "icon": "check",
+       "note": "second"
+      },
+      {
+       "at": "1.6s",
+       "text": "Task",
+       "icon": "check",
+       "note": "third"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "number",
+   "duration": "3.2s",
+   "notes": "one honest number",
+   "layers": [
+    {
+     "type": "bars",
+     "x": 360,
+     "y": 440,
+     "width": 1100,
+     "rowHeight": 64,
+     "gap": 22,
+     "size": 30,
+     "delay": "0.3s",
+     "items": [
+      {
+       "label": "Product",
+       "note": "your measure",
+       "value": 92,
+       "highlight": true
+      },
+      {
+       "label": "The old way",
+       "value": 40
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "can",
+   "duration": "4s",
+   "background": "#F5F5F7",
+   "transition": {
+    "type": "zoomfrom",
+    "duration": "0.6s",
+    "rect": {
+     "x": 880,
+     "y": 700,
+     "width": 160,
+     "height": 160,
+     "radius": 36
+    }
+   },
+   "notes": "everything it can do",
+   "layers": [
+    {
+     "type": "ticker",
+     "x": 520,
+     "y": 520,
+     "prefix": "It can",
+     "theme": "light",
+     "size": 84,
+     "interval": "0.6s",
+     "delay": "0.3s",
+     "items": [
+      {
+       "text": "write",
+       "icon": "file"
+      },
+      {
+       "text": "search",
+       "icon": "search"
+      },
+      {
+       "text": "plan",
+       "icon": "layers"
+      },
+      {
+       "text": "ship",
+       "icon": "rocket"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hero",
+   "duration": "2.6s",
+   "notes": "the result, full frame",
+   "layers": [
+    {
+     "type": "media",
+     "source": "hero",
+     "camera": [
+      {
+       "at": 0,
+       "zoom": 1.04
+      },
+      {
+       "at": "2.6s",
+       "zoom": 1.12,
+       "ease": "out"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "duration": "2.7s",
+   "notes": "name and the one command or URL",
+   "layers": [
+    {
+     "type": "kinetic",
+     "y": 440,
+     "size": 120,
+     "weight": "bold",
+     "states": [
+      {
+       "at": "0.1s",
+       "text": "{sparkles} Product"
+      }
+     ]
+    },
+    {
+     "type": "field",
+     "y": 640,
+     "width": 420,
+     "height": 84,
+     "size": 34,
+     "font": "mono",
+     "grow": {
+      "maxWidth": 900
+     },
+     "typing": [
+      {
+       "at": "0.6s",
+       "text": "example.com",
+       "glyph": "0.05s"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "audio": {
+  "music": {
+   "synth": {
+    "preset": "launch",
+    "key": "Am",
+    "sections": [
+     {
+      "at": 0,
+      "energy": "intro"
+     },
+     {
+      "at": "8s",
+      "energy": "build"
+     },
+     {
+      "at": "8.8s",
+      "energy": "drop"
+     },
+     {
+      "at": "11.8s",
+      "energy": "break"
+     },
+     {
+      "at": "18s",
+      "energy": "build"
+     },
+     {
+      "at": "27s",
+      "energy": "outro"
+     }
+    ]
+   },
+   "volume": 1,
+   "fadeOut": "1.5s"
+  },
+  "autoCues": true
+ }
+}
