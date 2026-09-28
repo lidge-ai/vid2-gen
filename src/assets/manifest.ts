@@ -7,7 +7,9 @@ import { cacheDir, hashFile, hashJson, Vid2Error } from "../shared/index.ts";
 import { DEFAULT_IMAGE_MODEL, DEFAULT_VIDEO_MODEL } from "./provider.ts";
 import type { AssetKind, AssetProvider, GenerateRequest, ImageOptions, MaterializedAsset, VideoOptions } from "./provider.ts";
 
-export interface AssetRequestKey { provider: string; kind: AssetKind; prompt: string; options: Record<string, unknown>; seedImageSha?: string }
+/** A request without referenceImages must hash byte-identically to 0.2 (041): cached Grok clips must not miss. */
+export interface AssetRequestKey { provider: string; kind: AssetKind; prompt: string; options: Record<string, unknown>; seedImageSha?: string;
+  referenceImagesSha?: string[] }
 export type AssetManifest = Record<string, MaterializedAsset>;
 
 export function normalizeAssetOptions(kind: AssetKind, options: Record<string, unknown>): ImageOptions | VideoOptions {

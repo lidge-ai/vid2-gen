@@ -17,7 +17,9 @@ export interface MaterializeOptions {
   ctx?: ProviderContext;
   providers?: (id: string) => AssetProvider;
 }
-export interface MaterializeResult { timeline: Timeline; assets: SourceAssetStatus[]; warnings: string[] }
+/** generatedVideos: generated video source id → clip seconds (manifest durationS on a hit, else probed; null if unknown). */
+export interface MaterializeResult { timeline: Timeline; assets: SourceAssetStatus[]; warnings: string[];
+  generatedVideos?: Record<string, { durationS: number | null }> }
 
 async function requestFor(source: Extract<Timeline["sources"][string], { type: "generate" }>, baseDir: string,
   mode: MaterializeOptions["mode"]): Promise<{ req: GenerateRequest; hash: string; seedMissing: boolean }> {
