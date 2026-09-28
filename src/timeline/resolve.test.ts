@@ -32,6 +32,40 @@ test("cuts do not overlap", () => {
   assert.deepEqual(resolveTimeline(t, { baseDir }).scenes.map(s => s.startFrame), [0, 60, 120]);
 });
 
+test("frame-only scenes and transitions keep their integer-frame placement", () => {
+  const t = TimelineSchema.parse({ version: 1, scenes: [
+    { id: "one", duration: "10f", transition: { type: "fade", duration: "2f" } },
+    { id: "two", duration: "7f", transition: { type: "cut", duration: "3f" } },
+    { id: "three", duration: "11f" },
+  ] });
+  const r = resolveTimeline(t, { baseDir });
+  assert.deepEqual(r.scenes.map(s => [s.startFrame, s.frames, s.transitionOut?.frames ?? 0]), [[0, 10, 2], [8, 7, 0], [15, 11, 0]]);
+  assert.equal(r.totalFrames, 26);
+});
+
+test("64 quarter-bar scenes at rational fps stay within half a frame of the exact grid", () => {
+  const t = TimelineSchema.parse({ version: 1, output: { fps: "30000/1001" }, beat: { bpm: 132, meter: 4 },
+    scenes: Array.from({ length: 64 }, (_, i) => ({ id: `bar-${i}`, duration: "0.25bar" })) });
+  const r = resolveTimeline(t, { baseDir });
+  for (const [i, scene] of r.scenes.entries()) {
+    const exactFrame = i * 60 / 132 * 30000 / 1001;
+    assert.ok(Math.abs(scene.startFrame - exactFrame) <= 0.5, `scene ${i}: ${scene.startFrame} vs ${exactFrame}`);
+  }
+});
+
+test("beat and bar positions add the grid offset once, while durations and signed offsets do not", () => {
+  const t = TimelineSchema.parse({ version: 1, beat: { bpm: 120, offset: "8f", meter: 4 },
+    markers: { next: "1bar" }, scenes: [{ id: "one", duration: "1bar" }], audio: { cues: [
+      { at: "2b", sfx: "preset:click" }, { at: "1bar", sfx: "preset:click" },
+      { at: { marker: "next", offset: "1bar" }, sfx: "preset:click" },
+      { at: { bar: 2, beat: 1 }, sfx: "preset:click" },
+    ] } });
+  const r = resolveTimeline(t, { baseDir });
+  assert.equal(r.scenes[0]?.frames, 60);
+  assert.equal(r.markers.next?.frame, 68);
+  assert.deepEqual(r.audio?.cues.map(c => c.frame), [38, 68, 128, 68]);
+});
+
 test("bar and marker references include signed offsets", () => {
   const r = resolveTimeline(fixture("markers"), { baseDir });
   assert.equal(r.markers.bar3?.frame, 120);
@@ -92,4 +126,3 @@ test("qa.waive parses, rejects unknown keys and resolves to frames", () => {
   assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: 1 }], qa: { waive: [], typo: 1 } }).success, false);
   assert.equal(TimelineSchema.safeParse({ version: 1, scenes: [{ id: "one", duration: 1 }], qa: { waive: [{ check: "vibes", from: 0, to: 1, reason: "xyz" }] } }).success, false);
 });
-

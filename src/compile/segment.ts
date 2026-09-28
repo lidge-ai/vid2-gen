@@ -70,7 +70,7 @@ function buildLayer(layer: ResolvedLayer, ctx: BuildContext): LayerOutput {
 }
 
 /** Walk layers in order; consecutive text layers become one ASS run applied at that position. */
-export function compositeLayers(ctx: BuildContext, canvas: string, layers: ResolvedLayer[]): { canvas: string; ass: SegmentPlan["assFiles"]; fonts: string[] } {
+export function compositeLayers(ctx: BuildContext, canvas: string, layers: ResolvedLayer[], pathOf?: (index: number) => string): { canvas: string; ass: SegmentPlan["assFiles"]; fonts: string[] } {
   const ass: SegmentPlan["assFiles"] = [];
   const fonts: string[] = [];
   let run: LayerOf<"text">[] = [];
@@ -82,7 +82,8 @@ export function compositeLayers(ctx: BuildContext, canvas: string, layers: Resol
     canvas = ctx.graph.add([canvas], [text.filter, "format=rgba"]);
     run = [];
   };
-  for (const layer of layers) {
+  for (const [index, layer] of layers.entries()) {
+    if (pathOf) ctx.layerPath = pathOf(index);
     if (layer.type === "text" && ctx.textBackend === "raster") { flush(); canvas = composite(ctx, canvas, buildRasterText(layer, ctx), layer); continue; }
     if (layer.type === "text") { run.push(layer); continue; }
     flush();
@@ -116,14 +117,23 @@ export function compileSegment(scene: ResolvedScene, base: SegmentBase, last: bo
   const lavfi = `color=c=${escapeValue(background)}:s=${base.width}x${base.height}:r=${fpsString({ num: base.fps.num * rate, den: base.fps.den })}:d=${num(seconds)}`;
   const bgInput = ctx.inputs.add({ kind: "lavfi", lavfi, args: ["-f", "lavfi", "-i", lavfi] });
   let canvas = ctx.graph.add([bgInput], ["format=rgba", "setsar=1"]);
-  const built = compositeLayers(ctx, canvas, layers);
+  const offset = layers.length - scene.layers.length;
+  const built = compositeLayers(ctx, canvas, layers, (index) => index < offset ? `scenes.${scene.index}.background` : `scenes.${scene.index}.layers.${index - offset}`);
   canvas = built.canvas;
   const ordered = [...scene.effects.filter((e) => e.type !== "motionblur"), ...scene.effects.filter((e) => e.type === "motionblur")];
   const effectCtx = { fps: base.fps, rate, frames: renderFrames, width: base.width, height: base.height, clock: "segment" as const };
   const filters = ordered.flatMap((e) => effectFilters(e, effectCtx));
   if (rate > 1 && !filters.some((f) => f.startsWith("fps="))) filters.push(`fps=${fpsString(base.fps)}`);
   const out = ctx.graph.add([canvas], [...filters, `trim=end_frame=${renderFrames}`, "setpts=PTS-STARTPTS", "format=yuv420p", "setsar=1"], "vout");
-  const inputs = ctx.inputs.list();
+  const registered = ctx.inputs.list();
+  const reads = new Map<string, number>();
+  for (const input of registered) if (input.pretrim) reads.set(input.pretrim.sourcePath, (reads.get(input.pretrim.sourcePath) ?? 0) + 1);
+  const inputs = registered.map((input) => {
+    if (!input.pretrim || reads.get(input.pretrim.sourcePath) !== 1) return input;
+    const single = { ...input };
+    delete single.pretrim;
+    return single;
+  });
   const graph = ctx.graph.toString();
   const paths = new Set(inputs.flatMap((i) => (i.path ? [i.path] : [])));
   const stageDeps = [...(base.stages?.values() ?? [])].filter((s) => paths.has(s.out)).map((s) => s.id);

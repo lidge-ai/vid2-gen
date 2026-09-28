@@ -2,7 +2,7 @@
 import { Vid2Error } from "./errors.ts";
 
 export interface Fps { num: number; den: number }
-export type TimeUnit = "s" | "f" | "b";
+export type TimeUnit = "s" | "f" | "b" | "bar";
 export interface TimeLiteralValue { unit: TimeUnit; value: number }
 export interface BeatGrid { bpm: number; offsetFrames: number; meter: number }
 
@@ -29,7 +29,7 @@ export const secondsToFrames = (s: number, f: Fps): number => Math.round((s * f.
 export const framesToSeconds = (n: number, f: Fps): number => (n * f.den) / f.num;
 export const fpsString = (f: Fps): string => (f.den === 1 ? String(f.num) : `${f.num}/${f.den}`);
 
-const LITERAL = /^(\d+(?:\.\d+)?)(s|ms|f|b)$/;
+const LITERAL = /^(\d+(?:\.\d+)?)(s|ms|f|bar|b)$/;
 
 export function parseTimeLiteral(v: number | string): TimeLiteralValue {
   if (typeof v === "number") {
@@ -37,7 +37,7 @@ export function parseTimeLiteral(v: number | string): TimeLiteralValue {
     return { unit: "s", value: v };
   }
   const m = LITERAL.exec(v.trim());
-  if (!m) throw new Vid2Error("E_SCHEMA", `invalid time literal: ${v}`, { fix: 'use seconds (1.5 or "1.5s"), "1500ms", frames "45f" or beats "2b"' });
+  if (!m) throw new Vid2Error("E_SCHEMA", `invalid time literal: ${v}`, { fix: 'use seconds (1.5 or "1.5s"), "1500ms", frames "45f", beats "2b" or bars "1bar"' });
   const value = Number(m[1]);
   const unit = m[2];
   if (unit === "ms") return { unit: "s", value: value / 1000 };
@@ -51,11 +51,16 @@ export function parseSignedLiteral(v: string): { sign: 1 | -1; lit: TimeLiteralV
   return { sign: 1, lit: parseTimeLiteral(t.startsWith("+") ? t.slice(1) : t) };
 }
 
-export function toFrames(lit: TimeLiteralValue, ctx: { fps: Fps; beat?: BeatGrid }, kind: "position" | "duration"): number {
-  if (lit.unit === "f") return Math.round(lit.value);
-  if (lit.unit === "s") return secondsToFrames(lit.value, ctx.fps);
+/** Unrounded seconds for authored time; frame literals remain integral. */
+export function toSeconds(lit: TimeLiteralValue, ctx: { fps: Fps; beat?: BeatGrid }): number {
+  if (lit.unit === "s") return lit.value;
+  if (lit.unit === "f") return framesToSeconds(Math.round(lit.value), ctx.fps);
   if (!ctx.beat) throw new Vid2Error("E_SCHEMA", "beat units need a beat grid", { fix: 'add "beat": {"bpm": 120} to the timeline' });
-  const frames = secondsToFrames((lit.value * 60) / ctx.beat.bpm, ctx.fps);
-  return kind === "position" ? ctx.beat.offsetFrames + frames : frames;
+  const beats = lit.unit === "bar" ? lit.value * ctx.beat.meter : lit.value;
+  return beats * 60 / ctx.beat.bpm;
 }
 
+export function toFrames(lit: TimeLiteralValue, ctx: { fps: Fps; beat?: BeatGrid }, kind: "position" | "duration"): number {
+  const frames = secondsToFrames(toSeconds(lit, ctx), ctx.fps);
+  return kind === "position" && (lit.unit === "b" || lit.unit === "bar") ? (ctx.beat?.offsetFrames ?? 0) + frames : frames;
+}

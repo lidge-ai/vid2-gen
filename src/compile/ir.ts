@@ -24,7 +24,8 @@ export interface ResolvedOutput {
 
 export type InputKind = "image" | "video" | "audio" | "lavfi" | "png";
 /** One ffmpeg input; args are everything before and including "-i <path|lavfi>". */
-export interface InputSpec { id: string; args: string[]; path?: string; lavfi?: string; kind: InputKind }
+export interface InputSpec { id: string; args: string[]; path?: string; lavfi?: string; kind: InputKind;
+  pretrim?: { sourcePath: string; inSeconds: number; durationSeconds: number } }
 
 /** Registers a command-line input for the current segment and returns its video stream label ("3:v"). */
 export interface InputRegistry {
@@ -57,6 +58,8 @@ export interface BuildContext {
   oversample: 1 | 2;
   profile: ProfileName;
   sceneId: string;
+  /** Authored path of the layer being built ("scenes.i.layers.j"), for pathful compile errors. */
+  layerPath?: string;
   sources: SourceMap;
   fonts: FontMap;
   /** Per-plan scratch directory (ASS files, fonts copies). */

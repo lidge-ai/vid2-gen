@@ -1,5 +1,6 @@
 /** Kinetic typography layer (020) → KineticConfig → stage spec, composited like any stage layer. */
 import { fpsValue, parseTimeLiteral, toFrames, Vid2Error } from "../../shared/index.ts";
+import { toSeconds } from "../../shared/time.ts";
 import { iconPaths } from "../../stage/icons/lucide.ts";
 import { SpecBuilder } from "../../stage/presets/builder.ts";
 import { buildKinetic, kineticStates } from "../../stage/presets/kinetic.ts";
@@ -34,7 +35,7 @@ export function kineticConfig(layer: Kinetic, ctx: BuildContext): KineticConfig 
     color: layer.color, letterSpacing: layer.letterSpacing,
     accent: layer.accent ? { color: layer.accent.color, decay: seconds(layer.accent.decay, ctx) } : undefined,
     enter: { style: layer.enter.style, duration: seconds(layer.enter.duration, ctx), stagger: seconds(layer.enter.stagger, ctx),
-      glyphStagger: parseTimeLiteral(layer.enter.glyphStagger).value * (parseTimeLiteral(layer.enter.glyphStagger).unit === "f" ? 1 / fpsValue(ctx.fps) : 1),
+      glyphStagger: toSeconds(parseTimeLiteral(layer.enter.glyphStagger), ctx),
       distance: layer.enter.distance, blur: layer.enter.blur },
     exit: { style: layer.exit.style, duration: seconds(layer.exit.duration, ctx) },
     move: layer.move,

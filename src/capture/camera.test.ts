@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { planCamera } from "./camera.ts";
 import type { CameraKeyOut, CameraOptions } from "./camera.ts";
+import { Vid2Error } from "../shared/errors.ts";
 
 const opts: CameraOptions = { fps: { num: 30, den: 1 }, startFrame: 300, frames: 90, width: 1920, height: 1080 };
 
@@ -90,4 +91,28 @@ void test("merged targets that fit keep both padded boxes in a zoomed view", () 
       assert.ok(top <= box.y - box.height * pad + 1e-6 && bottom >= box.y + box.height * (1 + pad) - 1e-6);
     }
   }
+});
+
+void test("a dense typing trace simplifies to no more than 24 keys", () => {
+  const actions = Array.from({ length: 200 }, (_, i) => ({ frame: 10 + i * 2,
+    bbox: { x: 800 + i % 3, y: 350, width: 200, height: 40 } }));
+  const keys = planCamera(actions, { ...opts, frames: 480, hold: 0.8, merge: 0.8 });
+  assert.ok(keys.length <= 24, `kept ${keys.length} keys`);
+  assert.equal(keys[0]?.at, 0);
+  assert.ok(keys.at(-1)!.at <= 479 / 30);
+});
+
+void test("30 alternating corner clicks exceed the camera error budget", () => {
+  const actions = Array.from({ length: 30 }, (_, i) => ({ frame: 15 + i * 30,
+    point: { x: i % 2 ? 1800 : 120, y: i % 2 ? 900 : 120 } }));
+  // Even one corner group moves farther than the 1.5% horizontal tolerance.
+  const firstGroup = planCamera(actions.slice(0, 1), { ...opts, frames: 90, hold: 0, merge: 0 });
+  assert.ok(Math.max(...firstGroup.map((key) => Math.abs(key.x - 0.5))) > 0.015);
+  assert.throws(() => planCamera(actions, { ...opts, frames: 930, hold: 0, merge: 0,
+    path: "scenes.2.layers.3.camera" }), (error: unknown) => {
+    assert.ok(error instanceof Vid2Error);
+    assert.equal(error.code, "E_INPUT");
+    assert.equal(error.details?.path, "scenes.2.layers.3.camera");
+    return true;
+  });
 });

@@ -71,6 +71,13 @@ test("all animation presets emit their promised ASS override", () => {
   }
 });
 
+test("ASS animation duration accepts a full bar in the timeline meter", () => {
+  const ctx = context(tempDir("vid2-ass-bar-"));
+  ctx.beat = { bpm: 120, meter: 3, offsetFrames: 0 };
+  const result = buildTextRuns([layer({ animation: "fade", animationDuration: "1bar" })], ctx, 0);
+  assert.match(result.ass.content, /\\fad\(1500,120\)/);
+});
+
 test("custom path font is copied into the plan directory", () => {
   const ctx = context(tempDir("vid2-font-"));
   ctx.fonts.custom = { path: join(packageRoot(), "assets/fonts/Geist-Regular.ttf") };

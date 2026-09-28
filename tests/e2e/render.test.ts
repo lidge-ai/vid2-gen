@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { run } from "../../src/shared/exec.ts";
 import { solidRect } from "../../src/compile/png.ts";
@@ -138,6 +138,33 @@ void test("wp3 render fixtures produce visible, frame-exact output", async (t) =
     const result = await render("window", dir, paths);
     const frame = await rawFrame(result.path, 15);
     assert.ok(mean(frame, 110, 60, 80, 50) > mean(frame, 0, 0, 40, 30) + 15);
+  });
+
+  await t.test("one segment reads the same video three times and reuses its cuts", async () => {
+    const home = join(dir, "repeated-home");
+    const edits = (background: string) => (timeline: Record<string, unknown>): void => {
+      const scene = (timeline["scenes"] as Record<string, unknown>[])[0]!;
+      scene["background"] = background;
+      scene["layers"] = [1, 2, 3].map((second) => ({ type: "media", source: "clip", in: `${second}s` }));
+    };
+    const first = await render("window", dir, paths, edits("#101010"), "final", home);
+    assert.equal((await probe(first.path)).frames, 30);
+    assert.equal(first.data.segments[0]?.cached, false);
+    const cuts = join(home, "cache", "pretrim");
+    const names = readdirSync(cuts).filter((name) => name.endsWith(".mkv"));
+    assert.equal(names.length, 3);
+    const mtimes = names.map((name) => statSync(join(cuts, name)).mtimeMs);
+    const secondTimeline = authored("window", paths);
+    edits("#202020")(secondTimeline);
+    const secondInput = join(dir, "repeated-second.json");
+    const secondOutput = join(dir, "repeated-second.mp4");
+    writeFileSync(secondInput, JSON.stringify(secondTimeline));
+    const second = await command(process.execPath, [join(root, "src/cli/index.ts"), "render", secondInput,
+      "-o", secondOutput, "--jobs", "2"], { VID2_HOME: home });
+    assert.equal((await probe(secondOutput)).frames, 30);
+    assert.equal((second.stderr.match(/pretrim: cached/g) ?? []).length, 3);
+    assert.deepEqual(readdirSync(cuts).filter((name) => name.endsWith(".mkv")).sort(), names.sort());
+    assert.deepEqual(names.map((name) => statSync(join(cuts, name)).mtimeMs), mtimes);
   });
 
   await t.test("motionblur keeps the 30-frame scene length", async () => {

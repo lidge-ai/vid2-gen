@@ -68,7 +68,7 @@ void test("preview matches full proxy at fade, flash, second sweep seam and thir
     assert.ok(differences.every((difference) => difference < 2), `preview differences: ${differences.join(", ")}`);
     assert.deepEqual(stills[2]?.scenes, ["green", "motion"]);
     assert.equal(stills[2]?.window.startFrame, 22);
-    assert.equal(stills[3]?.window.startFrame, 44);
+    assert.equal(stills[3]?.window.startFrame, 45);
     const segment = await preview(plan, [15], { out: join(dir, "segment"), segmentOnly: true });
     const segmentFrame = segment[0];
     assert.ok(segmentFrame);

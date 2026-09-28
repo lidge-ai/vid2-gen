@@ -14,7 +14,7 @@ ResolvedTimeline ──► per scene: SegmentPlan (inputs + filtergraph + ASS ru
 Each scene renders on its own at `fps × internalRate` (internalRate is the motion-blur frame count, otherwise 1):
 
 1. A `color` lavfi canvas of the scene background (a colour, or a source id drawn as a full-frame cover layer).
-2. Layers composite in authored order. Stage layers compile to a `StageRender` (structure/stage.md) whose FFV1 alpha clip is overlaid like media. Media, window, shape and overlay layers are built by `src/compile/layers/*` and placed with
+2. Layers composite in authored order. A moving media read (video or capture) opens its source at `in` and reads `min(span × speed, out − in − 1 ms)`, so `out` is honored and the last allowed frame holds for the rest of the span; every such input records `pretrim{sourcePath,inSeconds,durationSeconds}`, which `compileSegment` keeps only for paths read more than once in the segment (structure/render.md). Stage layers compile to a `StageRender` (structure/stage.md) whose FFV1 alpha clip is overlaid like media. Media, window, shape and overlay layers are built by `src/compile/layers/*` and placed with
    `overlay=…:eof_action=pass:enable='gte(t,(start×rate−½)/R)*lt(t,(end×rate−½)/R)'` (R = fps × rate; `t` because ffmpeg 6.1's overlay miscounts `n`); each layer stream starts at t=0 and is shifted with
    `setpts=PTS-STARTPTS+start/TB`, so delayed layers show their first frame at their start. Screen/add overlays use `blend` on gbrp.
 3. Consecutive text layers form one run → one ASS file (`src/compile/text/*`) applied at that position, so a later shape can cover text.

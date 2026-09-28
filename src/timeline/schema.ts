@@ -7,7 +7,7 @@ import { BarsLayer, ChipsLayer, FieldLayer, TickerLayer } from "./components-sch
 
 export { Color, TimeLiteral };
 export { BarsLayer, ChipsLayer, FieldLayer, KineticLayer, StageLayer, TickerLayer };
-const SignedOffset = z.string().regex(/^-?\d+(\.\d+)?(s|ms|f|b)$/);
+const SignedOffset = z.string().regex(/^-?\d+(\.\d+)?(s|ms|f|bar|b)$/);
 export const EventRef = z.strictObject({ event: z.string().min(1), source: z.string().optional(), offset: SignedOffset.optional() });
 export const MarkerRef = z.strictObject({ marker: z.string().min(1), offset: SignedOffset.optional() });
 export const BarRef = z.strictObject({ bar: z.number().int().min(1), beat: z.number().min(1).default(1) });

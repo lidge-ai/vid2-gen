@@ -13,7 +13,7 @@
       { "type": "text", "text": "A REAL RESULT.", "x": 100, "y": 780, "align": "left", "size": 105, "font": "serif", "weight": "regular", "color": "#B64D33", "animation": "fade", "start": "0.9s" },
       { "type": "text", "text": "REPLACE WITH YOUR PROOF POINT", "x": 100, "y": 1260, "align": "left", "font": "mono", "size": 40, "color": "#35434B", "animation": "none" }
     ] },
-    { "id": "action", "duration": "5.533333s", "background": "#B64D33", "layers": [
+    { "id": "action", "duration": "5.5s", "background": "#B64D33", "layers": [
       { "type": "text", "text": "SEE IT", "x": 100, "y": 650, "align": "left", "size": 175, "weight": "black", "color": "#FFFFFF", "animation": "rise" },
       { "type": "text", "text": "FOR YOURSELF.", "x": 100, "y": 875, "align": "left", "font": "serif", "size": 135, "weight": "regular", "color": "#F7E8D2", "animation": "fade", "start": "0.7s" }
     ] }

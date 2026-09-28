@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { BuildContext, LayerOf } from "./ir.ts";
 import { GraphBuilder } from "./graph.ts";
 import { motionCanvas, perspectiveFilters, projectWindowCorners } from "./motion.ts";
+import { Vid2Error } from "../shared/errors.ts";
 
 const ctx = { graph: new GraphBuilder(), width: 1920, height: 1080, scale: 1, fps: { num: 30, den: 1 },
   rate: 1, frames: 90, renderFrames: 90, background: "#000000", oversample: 2, profile: "final", sceneId: "s",
@@ -37,4 +38,27 @@ void test("pinhole window projection leaves zero rotation unchanged and skews ry
   assert.notEqual(tilted[0].x, 0);
   assert.notEqual(tilted[1].x, 320);
   assert.ok(Math.abs(tilted[0].x - tilted[2].x) < 1e-6);
+});
+
+void test("camera key beat and bar positions use the build context beat grid", () => {
+  const layer = media(1);
+  for (const [at, frame] of [["2b", 30], ["1bar", 60]] as const) {
+    layer.camera = [{ at: "0s", zoom: 1, x: 0.5, y: 0.5, ease: "linear" },
+      { at, zoom: 1.2, x: 0.6, y: 0.5, ease: "linear" }];
+    const filters = perspectiveFilters(layer, { ...ctx, beat: { bpm: 120, meter: 4, offsetFrames: 0 } }, 1920, 1080);
+    assert.ok(filters.perspective.includes(`gte(in,${frame})`));
+  }
+});
+
+void test("96 manual camera keys reject an oversized assembled expression", () => {
+  const layer = media(1);
+  layer.camera = Array.from({ length: 96 }, (_, i) => ({ at: i / 30, zoom: i % 2 ? 1.6 : 1,
+    x: i % 2 ? 0.75 : 0.25, y: i % 2 ? 0.7 : 0.3, ease: "linear" as const }));
+  assert.throws(() => perspectiveFilters(layer, { ...ctx, layerPath: "scenes.0.layers.0" }, 1920, 1080), (error: unknown) => {
+    assert.ok(error instanceof Vid2Error);
+    assert.equal(error.code, "E_INPUT");
+    assert.equal(error.details?.path, "scenes.0.layers.0.camera");
+    assert.match(error.fix ?? "", /fewer camera keys or split the layer/);
+    return true;
+  });
 });

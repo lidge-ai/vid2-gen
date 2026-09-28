@@ -21,7 +21,7 @@ function timeFrame(token: string, total: number, resolved: ResolvedTimeline,
   }
   const marker = resolved.markers[token];
   if (marker) return marker.frame;
-  if (/^\d+(?:\.\d+)?(?:s|ms|f|b)?$/.test(token)) {
+  if (/^\d+(?:\.\d+)?(?:s|ms|f|bar|b)?$/.test(token)) {
     const literal = /^\d+(?:\.\d+)?$/.test(token) ? Number(token) : token;
     return toFrames(parseTimeLiteral(literal), { fps: resolved.fps, ...(resolved.beat ? { beat: resolved.beat } : {}) }, "position");
   }
@@ -42,7 +42,7 @@ export const preview: CommandSpec = {
   summary: "Render storyboard stills at timeline times, markers or capture events",
   usage: "vid2 preview <timeline> --at 0,25%,1.5s,drop,click#2 [--out dir] [--profile proxy|final] [--placeholders] [--segment-only] [--json]",
   options: {
-    at: { type: "string", description: "comma-separated seconds, frames, beats, percent, marker or event" },
+    at: { type: "string", description: "comma-separated seconds, frames, beats, bars, percent, marker or event" },
     out: { type: "string", short: "o", description: "stills output directory" },
     profile: { type: "string", description: "proxy (default) or final" },
     placeholders: { type: "boolean", description: "substitute missing media without calling providers" },

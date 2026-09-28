@@ -8,6 +8,8 @@
 
 ## Cache and progress
 
+A segment that reads the same file more than once (several cuts from one recording) does not seek the source repeatedly — ffmpeg could stall with every input open on one file. On a segment cache miss the runner cuts each such read into a lossless FFV1 MKV under `cacheDir("pretrim")`, keyed by the source's full content hash, the in point, the read duration and the ffmpeg version, verifies it (at least one frame, duration within one source frame, source pixel format and range kept) and feeds the cut instead. `noCache` recuts. There is no automatic prune; delete `$VID2_HOME/cache/pretrim` to reclaim space.
+
 Segment cache entries live under `cacheDir("segments")` and include the graph, inputs, font contents, profile and ffmpeg version in their key. `noCache` bypasses the cache; named `segments` force a fresh render. ffmpeg's `-progress pipe:2` reports frame, output time and speed to the caller's logger.
 
 ## Verification
