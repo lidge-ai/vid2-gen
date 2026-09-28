@@ -1,5 +1,6 @@
 import type { BeatGrid, Fps } from "../shared/time.ts";
 import type { Timeline } from "./schema.ts";
+import type { LookSpec, ResolvedHud } from "./film.ts";
 
 /** Where the first media layer using a capture source sits: absolute timeline start frame, footage in-point, speed, timeline fps. */
 export interface CapturePlacement { startFrame: number; inSeconds: number; speed: number; fps: Fps }
@@ -80,8 +81,12 @@ export interface ResolvedTimeline {
   fonts: Timeline["fonts"];
   markers: Record<string, ResolvedTime>;
   scenes: ResolvedScene[];
+  /** Only type "overlay" entries; an authored {type:"hud"} resolves into `hud` (at most one, else HUD_DUPLICATE at overlays.<i>). */
   overlays: ResolvedLayer[];
   effects: ResolvedEffect[];
+  /** Present whenever authored, including strength 0 (the compiler skips the chain then). */
+  look?: LookSpec;
+  hud?: ResolvedHud;
   audio?: ResolvedAudio;
   captureEvents?: CaptureEvent[];
   qa: { waivers: { check: string; fromFrame: number; toFrame: number; fromS: number; toS: number; reason: string }[] };

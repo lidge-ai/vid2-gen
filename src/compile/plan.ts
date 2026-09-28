@@ -30,6 +30,8 @@ export interface CompileOptions {
   textBackend?: TextBackend;
   /** Timeline path shown in the fix hint when provider audio is missing (vid2 audio generate <path>). */
   timelinePath?: string;
+  /** HUD chunk length in seconds (default 20); tests force 1 to exercise chunking (030 R2-10). */
+  hudChunkSeconds?: number;
 }
 
 /** Output settings of a resolved timeline before any profile is applied. */
