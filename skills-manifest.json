@@ -30,17 +30,17 @@
       "references/anti-patterns.md": "ad076caab179fb31f4235d6ceea608ff14db8e78bcb13bb369b0a219dfb7b14f",
       "references/brief-template.md": "204234226c4d4746068f9908c28396a147b82615fdf9afe35608d041f474c435",
       "references/camera.md": "cd583f9550403da5bd21a0bb925bb9e980829b8af501b8c4ba39d520977a4848",
-      "references/color-script.md": "64b96109f903f70c9aba3283c33d304a956d4ea5c2672bbcbcd1533bf0aec7ea",
-      "references/edit-rhythm.md": "79a0c2dd1788399d2ba57a3ef1e088bc295cb63914e8b9af2dcfdf4a9db201bc",
+      "references/color-script.md": "735916fa8d8248b85b5c609cbae40ee429047049000413f1e89cf4c862070724",
+      "references/edit-rhythm.md": "ab63f18bde32f271fc41ab3d135e933af12a8be77414b27d62423a1f247e1fa9",
       "references/kinetic-grammar.md": "c213e0ae6752bed298253eb28b0489c6021588c732efbf5b134e4ba0dfeb0322",
       "references/motion.md": "fb1f5a0ab46312f58b485b91734847144c20f10c3256c0c0239a81f9016ee2ce",
-      "references/reference-films.md": "0b3747b06e6ea805b7999e7935a5927ad507eff87e362aafec9f2d173229d118",
-      "references/review-rubric.md": "1a2e7d26862325205e1966ac1f0274c27156b642d49f9aa524ec6147adf48506",
-      "references/sound-cues.md": "b1bbf8367e0595fde64d9840c2b5df1fe22984a033eb8540b30741bce0b45979",
+      "references/reference-films.md": "31bbbe9091ee87c1eb303774e87295c857563271e65d7fdd0674ebb31bd3b1f7",
+      "references/review-rubric.md": "fd1259c518af4b9ea2d921bef84069d006598b7ac01bb651622c11706f25d94c",
+      "references/sound-cues.md": "1279e65e5f13be752f98b407c225423100ec684b1082fcc8a196eac759f23f67",
       "references/storyboard.md": "d316f34f7261a7594a3d815d61593268cbae269e47f554459290aa77bd92c429",
       "references/typography.md": "83c4817821ff5651cce0f8c14569105411eb1e73ac00c8f0070b5b140ea97867"
     },
-    "sha256": "6819ddcb4f8dbe349b889f1eaebabd11e7830db3511c75b997821ea31b574f57"
+    "sha256": "ac501cdc878f3641d20fe0bed0b0beb0984f91be28efaa2c608d9b69a7057819"
   },
   "vid2-timeline": {
     "files": {
