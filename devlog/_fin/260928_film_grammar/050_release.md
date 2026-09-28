@@ -45,3 +45,12 @@ Main and tag at the same SHA with green CI; release lists the three assets; unit
 - X-4 tag: annotated v0.3.0 on the merged main SHA after its CI is green, pushed by explicit URL; release.yml publishes to npm only when NPM_PUBLISH_MODE is set (it is not), so the tag push is harmless. `gh release create v0.3.0 --verify-tag -R lidge-ai/vid2-gen` with the tgz and notes from the CHANGELOG entry.
 - X-5 stop conditions unchanged; a red main is fixed forward before tagging.
 
+
+## Amendments from wp6 reflection (X-6..X-10)
+
+- X-6 push only refs/tags/v0.3.0 to the vid2 URL; local vid2 tags are deleted from the shared ima2-gen git store so a tag push from ima2-gen can never carry them.
+- X-7 pack from a clean detached worktree of the tagged commit (stale dist/ in this checkout must not ship) and record the tarball sha256.
+- X-8 README install line → 0.3.0; the v0.2.0 film and poster are re-attached to v0.3.0 so releases/latest links keep working.
+- X-9 merge through PR release/0.3.0; tag the merge commit on main after its push CI is green.
+- X-10 re-check NPM_PUBLISH_MODE (none) right before the tag push.
+
