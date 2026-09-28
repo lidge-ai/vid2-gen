@@ -1,0 +1,52 @@
+[
+ {
+  "goto": "/"
+ },
+ {
+  "wait": 2500
+ },
+ {
+  "mark": "start"
+ },
+ {
+  "hover": "#positive-prompt-sidebar"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "click": "#positive-prompt-sidebar",
+  "label": "prompt"
+ },
+ {
+  "wait": 300
+ },
+ {
+  "type": "#positive-prompt-sidebar",
+  "text": "a cat astronaut, 35mm film, golden hour",
+  "delayMs": 45,
+  "label": "typing"
+ },
+ {
+  "mark": "typed"
+ },
+ {
+  "wait": 500
+ },
+ {
+  "click": "button:has-text(\"Generate\")",
+  "label": "generate"
+ },
+ {
+  "mark": "generate"
+ },
+ {
+  "wait": 32000
+ },
+ {
+  "mark": "result"
+ },
+ {
+  "wait": 2500
+ }
+]

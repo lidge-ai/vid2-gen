@@ -6,3 +6,5 @@ coverage/
 .DS_Store
 out/
 .tmp/
+examples/ima2-launch/*.vid2cap/
+examples/ima2-launch/.work/
