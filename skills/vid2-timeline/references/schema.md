@@ -50,6 +50,14 @@ The authoritative machine contract is [timeline.v1.json](../assets/timeline.v1.j
 
 Transition names are the installed schema's `cut|fade|fadeblack|fadewhite|dissolve|slide*|wipe*|circleopen|circleclose|radial|smooth*|pixelize|zoomin|diag*|hlslice|hrslice|vuslice|vdslice|squeeze*|distance|hblur`; inspect `vid2 schema --json` for the exact enum. Effect branches are `grade`, `motionblur`, `vignette`, `grain`, `flash`, `rgbsplit`. Audio music can instead be `{"synth":{"preset":"launch","key":"Am","progression":["Am","F"],"sections":[{"at":"0s","energy":"intro"}]},"volume":0.7,"fadeOut":"1.5s"}` or `{"provider":"elevenlabs","prompt":"restrained pulse","volume":0.7,"fadeOut":"1s"}`. Voice can instead be `{"tts":{"provider":"elevenlabs","text":"See the result","voice":"voice-id","language":"en"},"at":"0s","volume":1}`. `qa.waive` accepts `format|duration|black|frozen|silence|loudness|av_sync|text_safe|contrast`; give a scoped range and a real reason, never a blanket waiver to hide an unknown defect.
 
+## Generated video sources
+
+```json
+"clip": {"type":"generate","provider":"ima2","kind":"video","prompt":"A paper boat drifting past a blue window, locked camera, no text","options":{"model":"grok/grok-imagine-video-1.5","durationS":5,"resolution":"720p","aspectRatio":"16:9"}}
+```
+
+For ima2 video, allowed option keys are `durationS`, `resolution`, `aspectRatio`, `model`, `seedImage`, `referenceImages`, and `timeoutS`; unknown keys are `E_INPUT`. Duration is an integer from 1 to 15 seconds. Resolution is `480p|720p|1080p`; aspect ratio is `1:1|16:9|9:16|4:3|3:4|3:2|2:3|auto`. `seedImage` and `referenceImages` are mutually exclusive. References are an ordered list of readable image paths, 1–7 for a `grok/` model lane and 1–3 otherwise, and cap resolution at 720p. A seed image may use 1080p. Timeline image paths resolve relative to the timeline file. These ima2 guards do not apply to the `file` provider. Materialize with `vid2 assets resolve` before rendering; an uncached `render --generate` explicitly authorizes a provider call. See the [generated-video example](../../../examples/generated-video/README.md) for a five-second clip read by a seven-second layer and its offline twin.
+
 ## Root look and HUD
 
 `look` is `{"preset":"film"|"riso"|"paper","palette"?:[2..6 hex colors],"strength"?:0..1,"seed"?:nonnegative integer}`. Strength defaults to 1 and seed to 0. Only riso accepts a palette; when omitted it uses the built-in four-color palette. A palette on film or paper produces a `look.palette` validation issue. Strength 0 remains in the resolved timeline while compilation skips the look chain.

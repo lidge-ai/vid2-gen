@@ -52,6 +52,8 @@ else if (command === "gen") {
     requestedSize: flag("--size") ?? null, actualSize: "16x16" }] });
 } else if (command === "video" && args[1] === "analyze") {
   print({ analysis: "The first frame is blue and the last is green.", method: "first-last-frame" });
+} else if (command === "video" && args[1] === "--help") {
+  process.stdout.write(`ima2 video [prompt] [--ref path]${mode === "no-as-reference" ? "" : " [--as-reference]"}\n`);
 } else if (command === "video") {
   const path = flag("-o");
   if (!path) fail(5, { ok: false, code: "VALIDATION_ERROR", message: "-o required" });

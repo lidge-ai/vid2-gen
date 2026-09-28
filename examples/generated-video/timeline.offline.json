@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "output": { "width": 320, "height": 180, "fps": 15 },
+  "sources": {
+    "grok_clip": {
+      "type": "generate",
+      "provider": "file",
+      "kind": "video",
+      "prompt": "generated-clip.mp4",
+      "options": { "durationS": 5 }
+    }
+  },
+  "scenes": [
+    {
+      "id": "boat_hold",
+      "duration": "7s",
+      "layers": [{ "type": "media", "source": "grok_clip", "fit": "cover" }]
+    }
+  ]
+}

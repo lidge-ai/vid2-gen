@@ -2,6 +2,10 @@
 
 `src/render` consumes a compiled `RenderPlan`. Segment graphs are written to files, rendered concurrently with a bounded job pool, checked with ffprobe, and cached by a content hash. Before any segment it materializes the plan's stage clips (`src/render/stages.ts`, structure/stage.md): content-keyed cache in `cacheDir("stage")`, otherwise a JS frame render piped into FFV1 and verified; `renderSegments` materializes only the requested segments' `stageDeps`. The runner then joins the verified segments, applies the optional post graph, encodes the final video, verifies it, and writes `<out>.render.json`.
 
+## Generated clip holds
+
+When a generated video is shorter than a scene media layer, scene background, or root overlay read, the final source frame holds. The plan carries a de-duplicated `W_GENERATED_CLIP_HOLD <sourceId> <sceneId> held <h>s (<n> frames): clip <c>s, read <r>s from <in>s` warning. Root overlays use `overlays` as the scene ID. An authored `out` trim limits the requested read; `speed` and `in` are included in the hold duration. A warning needs at least one held output frame. An unknown clip duration gives no warning. Render JSON and `<out>.render.json` preserve it, including when rendering a saved `.plan.json`; older plans without warnings replay with an empty list. See [the generated-video example](../examples/generated-video/README.md).
+
 ## Profiles and encoders
 
 `applyProfile` maps proxy to half-sized even dimensions, a 1× motion oversample and x264 ultrafast CRF 26. Final keeps the authored dimensions and 2× oversample; intermediate segments use high-quality x264, while the final encode uses the requested H.264, HEVC, VP9 or ProRes codec. MP4/MOV get `+faststart`. Software encoding is the default. `--hw` selects an available H.264 hardware encoder in videotoolbox, NVENC, QSV, AMF, VAAPI order; its quality settings are approximate and may depend on a working device.

@@ -89,3 +89,23 @@ void test("ima2-launch timeline matches the schema and keeps its capture and ren
   assert.match(ignore, /examples\/ima2-launch\/\*\.vid2cap\//);
   assert.ok(statSync(join(root, "examples/ima2-launch/media/ima2-icon.png")).size < 200 * 1024);
 });
+
+void test("generated-video offline example holds a five-second clip once across a seven-second layer", { timeout: 60_000 }, async (t) => {
+  if (!requireFfmpeg(t)) return;
+  const dir = tempDir("vid2-generated-example-");
+  const input = join(dir, "generated-clip.mp4");
+  cpSync(join(root, "examples/generated-video/timeline.offline.json"), join(dir, "timeline.offline.json"));
+  const clip = await run(process.env["VID2_FFMPEG"] ?? "ffmpeg", ["-hide_banner", "-v", "error", "-y", "-f", "lavfi", "-i",
+    "testsrc2=size=320x180:rate=15:duration=5", "-frames:v", "75", "-an", "-c:v", "mpeg4", "-q:v", "4", input], { timeoutMs: 10_000 });
+  assert.equal(clip.code, 0, clip.stderr);
+  const rendered = await run(process.execPath, [cli, "render", "timeline.offline.json", "--generate", "--profile", "proxy",
+    "-o", "offline.mp4", "--json"], { cwd: dir, env: { ...process.env, VID2_HOME: join(dir, "home") }, timeoutMs: 50_000 });
+  assert.equal(rendered.code, 0, rendered.stderr || rendered.stdout.toString("utf8"));
+  const body = JSON.parse(rendered.stdout.toString("utf8")) as { ok: boolean; warnings?: string[] };
+  assert.equal(body.ok, true);
+  const holds = (body.warnings ?? []).filter((w) => w.startsWith("W_GENERATED_CLIP_HOLD"));
+  assert.equal(holds.length, 1, JSON.stringify(body.warnings));
+  assert.match(holds[0]!, /^W_GENERATED_CLIP_HOLD grok_clip boat_hold held 2\.00s \(30 frames\): clip 5\.00s, read 7\.00s from 0\.00s$/);
+  const manifest = JSON.parse(readFileSync(join(dir, "offline.mp4.render.json"), "utf8")) as { warnings: string[] };
+  assert.deepEqual(manifest.warnings.filter((w) => w.startsWith("W_GENERATED_CLIP_HOLD")), holds);
+});

@@ -28,6 +28,7 @@ export const compile: CommandSpec = {
       join: plan.join.steps, post: { overlays: plan.post.overlays.length, effects: plan.post.effects.map((e) => e.type),
         ...(plan.post.look ? { look: { preset: plan.post.look.preset, strength: plan.post.look.strength } } : {}),
         ...(plan.post.hud ? { hudChunks: plan.post.hud.renders.length } : {}) } };
-    return { command: "compile", data: artifacts.length ? summary : { ...summary, plan }, artifacts, warnings };
+    return { command: "compile", data: artifacts.length ? summary : { ...summary, plan }, artifacts,
+      warnings: [...new Set([...warnings, ...(plan.warnings ?? [])])] };
   },
 };

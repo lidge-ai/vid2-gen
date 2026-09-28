@@ -7,7 +7,7 @@ import { cacheDir, hashFile, hashJson, runChecked, Vid2Error } from "../shared/i
 
 interface VideoFacts { pix_fmt?: string; color_range?: string; avg_frame_rate?: string; r_frame_rate?: string;
   nb_read_frames?: string; duration?: string }
-interface ProbeData { streams?: VideoFacts[]; format?: { duration?: string } }
+export interface ProbeData { streams?: VideoFacts[]; format?: { duration?: string } }
 export interface PretrimOptions { noCache?: boolean; hashes: Map<string, Promise<string>>; signal?: AbortSignal }
 export interface PretrimResult { path: string; cached: boolean }
 
@@ -25,6 +25,12 @@ function frameSeconds(stream: VideoFacts): number {
   const [numerator, denominator] = (rate ?? "0/0").split("/").map(Number);
   if (!numerator || !denominator) throw new Error("source frame rate unavailable");
   return denominator / numerator;
+}
+
+/** A read past the source end yields only the remaining frames; the segment graph's tpad holds the last one (wp5 hold). */
+export function expectedCutSeconds(source: ProbeData, inSeconds: number, requested: number): number {
+  const available = Number(source.format?.duration ?? source.streams?.[0]?.duration) - inSeconds;
+  return Number.isFinite(available) && available > 0 ? Math.min(requested, available) : requested;
 }
 
 function checkCut(source: ProbeData, cut: ProbeData, durationSeconds: number): void {
@@ -57,7 +63,7 @@ async function cutFresh(input: NonNullable<InputSpec["pretrim"]>, plan: RenderPl
       "-ss", String(input.inSeconds), "-i", input.sourcePath, "-t", String(input.durationSeconds),
       "-map", "0:v:0", "-an", "-c:v", "ffv1", "-pix_fmt", stream.pix_fmt,
       ...(stream.color_range ? ["-color_range", stream.color_range] : []), "-fps_mode", "passthrough", temp]);
-    checkCut(source, await probe(plan.tool.ffprobe, temp, true), input.durationSeconds);
+    checkCut(source, await probe(plan.tool.ffprobe, temp, true), expectedCutSeconds(source, input.inSeconds, input.durationSeconds));
     await rename(temp, target);
   } finally { await rm(temp, { force: true }); }
 }

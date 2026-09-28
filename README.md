@@ -122,6 +122,8 @@ to zoom where things happen, draw a smooth synthetic cursor, or cue a sound on `
 `vid2 assets resolve timeline.json` (or `vid2 render --generate`) asks a running [ima2-gen](https://github.com/lidge-ai/ima2-gen) for images
 and Grok video clips once and caches them; renders stay offline and repeatable. See [structure/assets.md](structure/assets.md).
 
+The [generated-video example](examples/generated-video/README.md) puts a five-second Grok clip on a seven-second layer; the final two seconds hold its last frame and produce one `W_GENERATED_CLIP_HOLD` warning. Its offline twin uses a local clip with the `file` provider. Video options are checked before an ima2 request: duration 1–15 seconds, supported resolution and aspect ratio, and readable image references. `seedImage` and `referenceImages` are exclusive; references cap resolution at 720p. The [assets contract](structure/assets.md) lists the full guard and platform limits.
+
 ## Sound
 
 ```json

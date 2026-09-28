@@ -10,6 +10,7 @@ import { resolveTimeline, validateTimeline } from "../../timeline/index.ts";
 import { loadTimeline } from "./timeline-file.ts";
 import { existsSync } from "node:fs";
 import { materializeSources } from "../../assets/index.ts";
+import { holdWarnings } from "../../assets/hold.ts";
 import { decorateCaptureLayers, loadCaptures } from "../../capture/index.ts";
 
 export function profileOf(value: unknown): ProfileName {
@@ -29,7 +30,7 @@ export async function planFromTimeline(file: string | undefined, cwd: string, pr
   if (authoredIssues.length) throw new Vid2Error("E_INPUT", "timeline validation failed", { details: { issues: authoredIssues } });
   // Generated sources become local image/video files (050): manifest only, unless --generate.
   const mode = opts.generate ? "generate" : opts.placeholders ? "placeholders" : "require";
-  const { timeline, warnings } = await materializeSources(authored, baseDir, { mode });
+  const { timeline, warnings, generatedVideos } = await materializeSources(authored, baseDir, { mode });
   const issues = validateTimeline(timeline, { baseDir, ...(captures ? { events: captures.events } : {}) });
   if (issues.length) throw new Vid2Error("E_INPUT", "timeline validation failed", { details: { issues } });
   const base = resolveTimeline(timeline, { baseDir, ...(captures ? { events: captures.events } : {}) });
@@ -40,6 +41,7 @@ export async function planFromTimeline(file: string | undefined, cwd: string, pr
   const workDir = join(cacheDir("work"), `${hash.slice(0, 16)}-${profile}`);
   const plan = compileTimeline(resolved, { profile, output: applyProfile(timelineOutput(resolved), profile), workDir, ffmpeg,
     ffprobe: tools.ffprobe, timelineHash: hash, timelinePath: file ?? path });
+  plan.warnings = holdWarnings(resolved, generatedVideos);
   return { plan, path, warnings };
 }
 
@@ -50,7 +52,7 @@ export async function loadPlanOrTimeline(file: string | undefined, cwd: string, 
     const path = join(cwd, file);
     const raw = JSON.parse(await readFile(path, "utf8")) as RenderPlan;
     // 0.1 plans predate stage clips (010).
-    const plan: RenderPlan = { ...raw, stageRenders: raw.stageRenders ?? [],
+    const plan: RenderPlan = { ...raw, warnings: raw.warnings ?? [], stageRenders: raw.stageRenders ?? [],
       segments: raw.segments.map((s) => ({ ...s, stageDeps: s.stageDeps ?? [] })) };
     if (plan.planVersion !== 1) throw new Vid2Error("E_INPUT", "unsupported plan version", { details: { planVersion: plan.planVersion } });
     const stageFiles = plan.stageRenders.flatMap((r) => r.spec.nodes.flatMap((n) => (n.kind === "text" ? [n.font] : n.kind === "image" ? [n.image] : [])));
