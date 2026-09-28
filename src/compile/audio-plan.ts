@@ -119,8 +119,8 @@ function voices(b: Builder, a: Audio): void {
 /** Authored cues win: an auto cue anchored within 80 ms of an authored cue is dropped (040). */
 const AUTHORED_WINDOW = Math.round(0.08 * RATE);
 
-function automatic(b: Builder, a: Audio, synth: boolean, stageEvents: AbsoluteStageEvent[]): void {
-  if (!(a.autoCues ?? synth)) return;
+function automatic(b: Builder, a: Audio, synth: boolean, stageEvents: AbsoluteStageEvent[]): NonNullable<AudioPlan["autoCues"]> {
+  if (!(a.autoCues ?? synth)) return [];
   const t = b.t;
   const transitions = t.scenes.slice(0, -1).flatMap((s, i) => {
     const tr = s.transitionOut;
@@ -134,9 +134,14 @@ function automatic(b: Builder, a: Audio, synth: boolean, stageEvents: AbsoluteSt
       ...(e.endFrame === undefined ? {} : { durationSamples: b.sample(e.endFrame) - b.sample(e.frame) }) }] : []);
   const stage = stageEvents.map((e) => ({ atSample: b.sample(e.absoluteFrame), kind: e.kind, source: e.source }));
   const authored = a.cues.map((c) => b.sample(c.frame));
+  const ledger: NonNullable<AudioPlan["autoCues"]> = [];
   autoCues({ transitions, drops, captureEvents, synthMusic: synth, stageEvents: stage })
     .filter((c) => !authored.some((s) => Math.abs(s - c.anchorSample) <= AUTHORED_WINDOW))
-    .forEach((c, i) => b.place({ id: `auto-${i}`, role: "sfx", path: b.sfx(c.sfx), atSample: c.atSample, gain: c.gain }));
+    .forEach((c, i) => {
+      b.place({ id: `auto-${i}`, role: "sfx", path: b.sfx(c.sfx), atSample: c.atSample, gain: c.gain });
+      ledger.push({ stem: `auto-${i}`, sfx: c.sfx, kind: c.kind ?? "timeline", source: c.source ?? "timeline", anchorSample: c.anchorSample });
+    });
+  return ledger;
 }
 
 function mediaAudio(b: Builder): void {
@@ -156,7 +161,8 @@ export function buildAudioPlan(t: ResolvedTimeline, opts: { workDir: string; con
   const b = new Builder(t, dir, opts.timelinePath);
   const a = t.audio;
   const synth = a ? music(b, a) : false;
-  if (a) { voices(b, a); cues(b, a); automatic(b, a, synth, opts.stageEvents ?? []); }
+  let ledger: NonNullable<AudioPlan["autoCues"]> = [];
+  if (a) { voices(b, a); cues(b, a); ledger = automatic(b, a, synth, opts.stageEvents ?? []); }
   mediaAudio(b);
   if (!b.stems.length) return null;
   const durationSamples = b.sample(t.totalFrames);
@@ -164,5 +170,5 @@ export function buildAudioPlan(t: ResolvedTimeline, opts: { workDir: string; con
   return { version: 1, sampleRate: RATE, durationSamples, renders: [...b.renders.values()], stems: b.stems,
     graph: opts.mix(b.stems, { durationSamples, duck }), duck,
     target: { I: a?.loudness.target ?? -14, TP: a?.loudness.truePeak ?? -1, LRA: 11 }, codec: opts.container === "webm" ? "opus" : "aac",
-    premaster: join(dir, "premaster.wav"), master: join(dir, "master.wav"), provenance: b.provenance };
+    premaster: join(dir, "premaster.wav"), master: join(dir, "master.wav"), provenance: b.provenance, ...(ledger.length ? { autoCues: ledger } : {}) };
 }

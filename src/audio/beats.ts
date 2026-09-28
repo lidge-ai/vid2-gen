@@ -42,6 +42,30 @@ function analyze(samples: Float32Array): Analysis {
   return { flux, low, duration: samples.length / SAMPLE_RATE };
 }
 
+/**
+ * Onset times (seconds) of mono PCM at 22 050 Hz: peaks of the spectral flux (the same analysis the beat detector uses) that are local
+ * maxima within `radiusS` (default 50 ms) and exceed the mean flux by `threshold` standard deviations.
+ */
+export function onsetTimes(samples: Float32Array, threshold = 1.5, radiusS = 0.05): number[] {
+  const { flux } = analyze(samples);
+  let sum = 0; let sq = 0;
+  for (const v of flux) { sum += v; sq += v * v; }
+  const mean = sum / Math.max(1, flux.length);
+  const sd = Math.sqrt(Math.max(0, sq / Math.max(1, flux.length) - mean * mean));
+  const radius = Math.max(1, Math.round(radiusS / STEP));
+  const out: number[] = [];
+  for (let i = 0; i < flux.length; i++) {
+    const v = flux[i]!;
+    if (v <= mean + threshold * sd) continue;
+    let peak = true;
+    for (let j = Math.max(0, i - radius); j <= Math.min(flux.length - 1, i + radius) && peak; j++) if (flux[j]! > v || (flux[j] === v && j < i)) peak = false;
+    if (peak) out.push(i * STEP);
+  }
+  return out;
+}
+
+export const ONSET_SAMPLE_RATE = SAMPLE_RATE;
+
 function sampleAt(values: Float64Array, position: number): number {
   const left = Math.floor(position); const fraction = position - left;
   return (values[left] ?? 0) * (1 - fraction) + (values[left + 1] ?? 0) * fraction;

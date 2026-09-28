@@ -159,6 +159,8 @@ export interface AudioPlan {
   /** Duck music under voice (sidechain) when voice stems exist. */
   duck: boolean;
   target: { I: number; TP: number; LRA: number }; codec: "aac" | "opus"; premaster: string; master: string; provenance: ProvenanceEntry[];
+  /** Ledger of automatic cues (040/050): which stem each became, its preset, origin and anchor sample. Absent in 0.1 plans. */
+  autoCues?: { stem: string; sfx: string; kind: string; source: string; anchorSample: number }[];
 }
 
 export interface RenderPlan {

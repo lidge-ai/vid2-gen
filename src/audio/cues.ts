@@ -11,7 +11,8 @@ export interface AutoCueInput {
   /** Stage animation events (040) on the sample clock, with the stage render that produced them. */
   stageEvents?: { atSample: number; kind: string; source: string }[];
 }
-export interface PlannedCue { sfx: SfxName; atSample: number; gain: number; anchorSample: number }
+/** kind/source identify where an automatic cue came from (transition, drop, capture, or a stage event of one stage render). */
+export interface PlannedCue { sfx: SfxName; atSample: number; gain: number; anchorSample: number; kind?: string; source?: string }
 
 /** Returns the SFX start on the 48 kHz sample clock; negative starts are left for the mixer to trim. */
 export function anchorStart(cutSample: number, preset: CueAnchor): number {
@@ -28,7 +29,7 @@ function planned(sfx: SfxName, anchorSample: number): PlannedCue {
 
 /** Stage event → SFX preset and extra gain (040 mapping). Tokens stay silent: word builds are carried by the music. */
 const STAGE_SFX: Record<string, { sfx: SfxName; gain: number } | undefined> = {
-  glyph: { sfx: "type", gain: 0.5 }, icon: { sfx: "pop", gain: 1 }, click: { sfx: "click", gain: 1 }, grow: { sfx: "riser", gain: 1 },
+  glyph: { sfx: "type", gain: 1 }, icon: { sfx: "pop", gain: 1 }, click: { sfx: "click", gain: 1 }, grow: { sfx: "riser", gain: 1 },
   state: { sfx: "swoosh-up", gain: 0.8 }, tick: { sfx: "click", gain: 0.5 }, token: undefined,
 };
 const MIN_GAP = Math.round(0.055 * AUDIO_RATE);
@@ -48,7 +49,7 @@ export function stageCues(events: NonNullable<AutoCueInput["stageEvents"]>): Pla
       if (last && e.atSample - last.anchorSample < MIN_GAP) continue;
       if (kept.filter((c) => e.atSample - c.anchorSample < AUDIO_RATE).length >= PER_SECOND) continue;
       const cue = planned(map.sfx, e.atSample);
-      kept.push({ ...cue, gain: cue.gain * map.gain });
+      kept.push({ ...cue, gain: cue.gain * map.gain, kind: e.kind, source: e.source });
     }
     out.push(...kept);
   }

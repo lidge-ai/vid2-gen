@@ -10,6 +10,8 @@ import { indexTracks, nodeAt } from "../tracks.ts";
 import { iconPaths } from "../icons/lucide.ts";
 import { SpecBuilder } from "./builder.ts";
 import { buildBars } from "./bars.ts";
+import { onFill } from "./bars.ts";
+import { settledTextBoxes } from "../settle.ts";
 import { buildChips } from "./chips.ts";
 import { buildField } from "./field.ts";
 import type { FieldConfig } from "./field.ts";
@@ -77,6 +79,21 @@ void test("bars: highlighted bar reaches value/max × width, numbers count up, b
   const w1early = node(s, "bar:1", Math.round(0.3 * FPS));
   assert.ok(w1early.kind === "rect" && w1early.width === 0, "second bar has not started at 0.3 s");
   assert.ok(s.events.some((e) => e.kind === "grow"));
+});
+
+void test("text on a highlighted bar picks ink on light accents and white on dark ones", () => {
+  assert.equal(onFill("#5AC8FA").text, "#0B0B0F");
+  assert.equal(onFill("#1C3A8A").text, "#FFFFFF");
+});
+
+void test("QA text boxes wait until colour animation (reading highlight) finishes", () => {
+  const s = spec((b) => {
+    b.add({ key: "t", kind: "text", text: "read me", font, size: 40, color: "#1C1C1E", letterSpacing: 0, x: 400, y: 200, anchorX: 0.5, anchorY: 0.5,
+      scale: 1, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1, blur: 0, z: 0 });
+    b.key("t", "color", [{ t: 0, v: "#C7C7CC" }, { t: 1.5, v: "#C7C7CC" }, { t: 1.64, v: "#1C1C1E", ease: "linear" }]);
+  });
+  const [box] = settledTextBoxes(s);
+  assert.ok(box && box.frame >= Math.round(1.64 * FPS) && box.color.slice(0, 7).toLowerCase() === "#1c1c1e", JSON.stringify(box));
 });
 
 void test("ticker: the active row at step k is item k; rows above fade out", () => {

@@ -11,6 +11,13 @@ export interface BarsConfig {
   size: number; fontPath: string; style: ComponentStyle; barColor: string;
 }
 
+/** Ink or white for text sitting on a filled bar, whichever contrasts more with the fill (WCAG relative luminance). */
+export function onFill(fill: string): { text: string; note: string } {
+  const channel = (i: number) => { const v = Number.parseInt(fill.slice(1 + i * 2, 3 + i * 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const lum = 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
+  return (1.05) / (lum + 0.05) >= (lum + 0.05) / 0.05 ? { text: "#FFFFFF", note: "#FFFFFFB3" } : { text: "#0B0B0F", note: "#0B0B0FB3" };
+}
+
 function row(b: SpecBuilder, c: BarsConfig, i: number): void {
   const item = c.items[i]!;
   const cy = c.y + i * (c.rowHeight + c.gap) + c.rowHeight / 2;
@@ -24,12 +31,12 @@ function row(b: SpecBuilder, c: BarsConfig, i: number): void {
   b.key(`bar:${i}`, "width", [{ t: t0, v: 0 }, { t: t0 + c.grow, v: full, ease: "out" }]);
   const label = `bar:${i}:label`;
   b.add({ ...NODE_BASE, kind: "text", key: label, x: c.x + c.rowHeight * 0.45, y: cy, anchorX: 0, text: item.label, font: c.fontPath, size: c.size,
-    color: hi ? "#FFFFFF" : c.style.text, letterSpacing: 0, opacity: 0 });
+    color: hi ? onFill(c.style.accent).text : c.style.text, letterSpacing: 0, opacity: 0 });
   b.key(label, "opacity", [{ t: t0 + c.grow * 0.25, v: 0 }, { t: t0 + c.grow * 0.6, v: 1, ease: "out" }]);
   if (item.note) {
     const nx = c.x + c.rowHeight * 0.45 + measureText(c.fontPath, item.label, c.size, 0).width + c.size * 0.45;
     b.add({ ...NODE_BASE, kind: "text", key: `${label}:note`, x: nx, y: cy, anchorX: 0, text: item.note, font: c.fontPath, size: c.size * 0.9,
-      color: hi ? "#FFFFFFB3" : c.style.muted, letterSpacing: 0, opacity: 0 });
+      color: hi ? onFill(c.style.accent).note : c.style.muted, letterSpacing: 0, opacity: 0 });
     b.key(`${label}:note`, "opacity", [{ t: t0 + c.grow * 0.4, v: 0 }, { t: t0 + c.grow * 0.8, v: 1, ease: "out" }]);
   }
   value(b, c, i, cy, t0, hi);
