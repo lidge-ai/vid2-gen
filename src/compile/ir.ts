@@ -187,6 +187,8 @@ export interface RenderPlan {
   stageRenders: StageRender[];
   workDir: string;
   tool: { ffmpeg: string; ffprobe: string; version: string; major: number; minor: number };
+  /** Plan-time warnings (W_GENERATED_CLIP_HOLD, 041); absent in 0.2 plans and read as []. Copied into <out>.render.json. */
+  warnings?: string[];
 }
 
 /** Spare frames rendered after each non-final segment so xfade never reads past the end of A (020 joins). */

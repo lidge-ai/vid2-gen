@@ -19,9 +19,11 @@ export interface ProviderCapabilities {
 /** Canonical, defaulted options (the adapter's normalize()); these and the seed bytes form the request hash. */
 export interface ImageOptions { size: string; quality: "high" | "medium" | "low"; background: "opaque" | "transparent" | "chroma-green"; model: string }
 export interface VideoOptions { durationS: number; resolution: "480p" | "720p" | "1080p"; aspectRatio: string; model: string; seedImage?: string;
+  /** Absolute reference image paths in order (041); mutually exclusive with seedImage; hashed as referenceImagesSha. */
+  referenceImages?: string[];
   /** Provider wait limit; not part of the request identity. */
   timeoutS?: number }
-export interface GenerateRequest { kind: AssetKind; prompt: string; options: ImageOptions | VideoOptions; seedImageSha?: string }
+export interface GenerateRequest { kind: AssetKind; prompt: string; options: ImageOptions | VideoOptions; seedImageSha?: string; referenceImagesSha?: string[] }
 export interface MaterializedAsset {
   path: string; kind: AssetKind; width?: number; height?: number; durationS?: number; sha256: string;
   provenance: { provider: string; requestId?: string; model?: string; revisedPrompt?: string; params: Record<string, unknown>; createdAt: string };
