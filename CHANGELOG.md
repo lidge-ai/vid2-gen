@@ -10,7 +10,8 @@ version. Help never runs a command and never fails on a bad flag.
 **Subcommands are real commands.** `audio`, `assets`, `capture` and `skill` have one spec per subcommand, each with its own options.
 Options are now strict per subcommand, so `vid2 audio beats --preset x` is an input error instead of being ignored. A subcommand must
 directly follow its parent (`vid2 audio beats x.wav`); `vid2 audio --json beats` explains that. Typos get a suggestion
-(`vid2 skill instal` → `install`).
+(`vid2 skill instal` → `install`). Extra positional arguments are refused (`vid2 audio beats a.wav b.wav` used to ignore `b.wav`),
+and the command word must come before `--`.
 
 **JSON contract changes.** Per-command help JSON (`vid2 <cmd> --help --json`, `vid2 help <cmd> --json`) now carries the full help
 text in `data.usage`; the one-line synopsis moved to `data.synopsis`. Help JSON adds `group`, `description`, `examples`,

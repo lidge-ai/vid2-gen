@@ -15,6 +15,8 @@ parents; each subcommand has its own options and `run`. A subcommand must direct
   edit distance 2. A subcommand word after an option (`vid2 audio --json beats`) fails with "beats must directly follow vid2 audio".
 - Options are strict per command: a subcommand accepts its own options, its parent's options and the global `--json` and `-h/--help`.
   `-v/--version` is accepted only before a command word.
+- Positional arguments are counted: extra words fail `E_INPUT` instead of being ignored, and so do extra words after
+  `vid2 help <command> [subcommand]`. The command word must come before `--`.
 
 `-h`/`--help` anywhere, and `vid2 help <command> [subcommand]`, answer with help for the deepest spec before options are parsed, so
 help never runs a command and never fails on a bad flag. Text help shows the synopsis, description, subcommands, options with value

@@ -57,8 +57,9 @@ export function locate(argv: string[], registry: Map<string, CommandSpec>, opts:
   const help = opts.help === true || head.some((a) => a === "-h" || a === "--help");
   const first = head.findIndex((a) => !isFlag(a));
   if (first < 0) {
-    if (end >= 0 && end + 1 < argv.length) throw new Vid2Error("E_INPUT", "put the command before --", {
-      details: { argv }, fix: `vid2 ${argv[end + 1]} ... -- ...` });
+    const after = argv[end + 1];
+    if (!help && end >= 0 && after !== undefined && !isFlag(after)) throw new Vid2Error("E_INPUT", "put the command before --", {
+      details: { command: after }, fix: `vid2 ${after} ... -- ...` });
     const version = !help && head.some((a) => a === "-v" || a === "--version");
     return { spec: registry.get(version ? "version" : "help")!, path: [], parents: [], rest: argv, help, version };
   }
