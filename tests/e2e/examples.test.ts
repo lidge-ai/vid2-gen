@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, readFileSync, rmSync, statSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { run } from "../../src/shared/exec.ts";
 import { requireFfmpeg, requirePlaywright, tempDir } from "../helpers.ts";
@@ -8,6 +9,8 @@ import { requireFfmpeg, requirePlaywright, tempDir } from "../helpers.ts";
 const root = resolve(import.meta.dirname, "../..");
 const example = join(root, "examples/vid2-launch");
 const cli = join(root, "src/cli/index.ts");
+/** The developer's example workspaces (examples/README.md); the test runner's isolated VID2_HOME does not contain them. */
+const workspaces = process.env["VID2_EXAMPLE_WORKSPACES"] ?? join(homedir(), ".vid2", "examples");
 
 async function vid2(cwd: string, args: string[]) {
   const r = await run(process.execPath, [cli, ...args, "--json"], { cwd });
@@ -29,11 +32,8 @@ export function webpAnimation(buf: Buffer): { frames: number; durationMs: number
   return { frames, durationMs, width, height };
 }
 
-void test("vid2-launch example validates and its README assets meet the budget", async (t) => {
+void test("README assets meet the budget", async (t) => {
   if (!requireFfmpeg(t)) return;
-  const v = await vid2(example, ["validate", "timeline.stills.json"]);
-  assert.equal(v.ok, true);
-  assert.equal((v.data["summary"] as { totalFrames: number }).totalFrames, 900);
   const poster = await run("ffprobe", ["-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0", join(root, "assets/readme/poster.png")]);
   assert.equal(poster.stdout.toString("utf8").trim(), "1280,720");
   const webp = join(root, "assets/readme/preview.webp");
@@ -42,6 +42,42 @@ void test("vid2-launch example validates and its README assets meet the budget",
   assert.deepEqual([anim.width, anim.height], [1280, 720]);
   assert.ok(anim.frames > 30, `frames ${anim.frames}`);
   assert.ok(Math.abs(anim.durationMs - 10000) <= 500, `duration ${anim.durationMs}`);
+});
+
+void test("committed example timelines match the schema", async () => {
+  const { TimelineSchema } = await import("../../src/timeline/schema.ts");
+  const parse = (path: string) => TimelineSchema.parse(JSON.parse(readFileSync(join(root, "examples", path), "utf8")));
+  assert.equal(parse("ima2-launch/timeline.json").scenes.length, 14);
+  for (const path of ["vid2-launch/timeline.stills.json", "generated-video/timeline.json", "generated-video/timeline.offline.json", "hello.json"]) {
+    assert.ok(parse(path).scenes.length > 0, path);
+  }
+});
+
+void test("examples keep media, captures and renders out of git", async () => {
+  const listed = await run("git", ["ls-files", "examples"], { cwd: root });
+  if (listed.code !== 0) return; // a source tarball without git history has nothing to check
+  const media = /\.(mp4|mov|mkv|webm|png|jpe?g|webp|gif|wav|mp3|m4a|aac|flac|ttf|otf)$|(^|\/)(media|out|\.work)\/|\.vid2cap\//;
+  const offenders = listed.stdout.toString("utf8").split("\n").filter((path) => media.test(path));
+  assert.deepEqual(offenders, []);
+  const ignore = readFileSync(join(root, ".gitignore"), "utf8");
+  for (const line of ["examples/*/media/", "examples/*/out/", "examples/*/.work/", "examples/*/*.vid2cap/"]) assert.ok(ignore.includes(line), line);
+});
+
+void test("workspace.mjs copies sources, keeps workspace media and rejects unknown names", async () => {
+  const home = tempDir("vid2-example-ws-");
+  const env = { ...process.env, VID2_HOME: home };
+  const media = join(home, "examples/vid2-launch/media/hero.jpg");
+  mkdirSync(join(home, "examples/vid2-launch/media"), { recursive: true });
+  writeFileSync(media, "kept");
+  writeFileSync(join(home, "examples/vid2-launch/README.md"), "stale");
+  const synced = await run(process.execPath, [join(root, "examples/workspace.mjs"), "vid2-launch"], { env });
+  assert.equal(synced.code, 0, synced.stderr);
+  assert.equal(synced.stdout.toString("utf8").trim(), join(home, "examples/vid2-launch"));
+  assert.equal(readFileSync(media, "utf8"), "kept");
+  assert.equal(readFileSync(join(home, "examples/vid2-launch/README.md"), "utf8"), readFileSync(join(example, "README.md"), "utf8"));
+  assert.ok(existsSync(join(home, "examples/vid2-launch/timeline.stills.json")));
+  const unknown = await run(process.execPath, [join(root, "examples/workspace.mjs"), "no-such-example"], { env });
+  assert.notEqual(unknown.code, 0);
 });
 
 void test("the app capture reproduces a labelled Publish click with a visible change", async (t) => {
@@ -61,12 +97,16 @@ void test("the app capture reproduces a labelled Publish click with a visible ch
   assert.ok(diff / before.length > 0.2, `visible change after the click (${(diff / before.length).toFixed(3)})`);
 });
 
-// Two full 30 s proxy renders: minutes on shared CI runners, so it runs locally and in release receipts (VID2_EXAMPLE_TEST=1).
+// Needs the vid2-launch workspace (captures, stills) and two full 30 s proxy renders, so it runs locally and in release receipts (VID2_EXAMPLE_TEST=1).
 void test("two-pass handoff: pass-1 QA stills replace the placeholders and pass 2 needs none", { timeout: 900_000 }, async (t) => {
   if (process.env["VID2_EXAMPLE_TEST"] !== "1") { t.skip("set VID2_EXAMPLE_TEST=1 to run the full two-pass example render"); return; }
   if (!requireFfmpeg(t)) return;
   const dir = join(tempDir("vid2-example-2pass-"), "vid2-launch");
-  cpSync(example, dir, { recursive: true, filter: (src) => !src.includes(".work") && !/[\\/](raw|seq)([\\/]|$)/.test(src) });
+  cpSync(join(workspaces, "vid2-launch"), dir, { recursive: true, filter: (src) => !src.includes(".work") && !/[\\/](raw|seq)([\\/]|$)/.test(src) });
+  cpSync(example, dir, { recursive: true });
+  const validated = await vid2(dir, ["validate", "timeline.stills.json"]);
+  assert.equal(validated.ok, true, JSON.stringify(validated));
+  assert.equal((validated.data["summary"] as { totalFrames: number }).totalFrames, 900);
   for (const f of ["qa-seams.png", "qa-waveform.png", "qa-spectrogram.png"]) rmSync(join(dir, "media", f));
   const pass1 = await vid2(dir, ["render", "timeline.stills.json", "--profile", "proxy", "--placeholders", "-o", "pass1.mp4"]);
   assert.equal(pass1.ok, true, JSON.stringify(pass1));
@@ -79,15 +119,6 @@ void test("two-pass handoff: pass-1 QA stills replace the placeholders and pass 
   assert.equal(pass2.ok, true, JSON.stringify(pass2));
   assert.equal((pass2.warnings ?? []).some((w) => w.startsWith("W_PLACEHOLDER")), false);
   assert.equal(pass2.data["frames"], 900);
-});
-
-void test("ima2-launch timeline matches the schema and keeps its capture and renders out of git", async () => {
-  const { TimelineSchema } = await import("../../src/timeline/schema.ts");
-  const t = TimelineSchema.parse(JSON.parse(readFileSync(join(root, "examples/ima2-launch/timeline.json"), "utf8")));
-  assert.equal(t.scenes.length, 14);
-  const ignore = readFileSync(join(root, ".gitignore"), "utf8");
-  assert.match(ignore, /examples\/ima2-launch\/\*\.vid2cap\//);
-  assert.ok(statSync(join(root, "examples/ima2-launch/media/ima2-icon.png")).size < 200 * 1024);
 });
 
 void test("generated-video offline example holds a five-second clip once across a seven-second layer", { timeout: 60_000 }, async (t) => {
