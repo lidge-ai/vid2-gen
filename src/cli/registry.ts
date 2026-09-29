@@ -24,21 +24,48 @@ export interface CommandOption {
   short?: string;
   multiple?: boolean;
   description: string;
+  /** Placeholder shown after the flag in help, e.g. "<file>" or "<proxy|final>". */
+  value?: string;
+  /** Default shown in help as "Default: ...". */
+  default?: string;
+}
+
+/** Top-level help sections, in display order (src/cli/globals.ts GROUPS). */
+export type CommandGroup = "author" | "render" | "media" | "review" | "agent";
+
+export interface RunContext {
+  args: string[];
+  values: Record<string, unknown>;
+  json: boolean;
+  cwd: string;
+  stderr: NodeJS.WritableStream;
 }
 
 export interface CommandSpec {
+  /** Word typed on the command line: "render" or, for a subcommand, "beats". */
   name: string;
   summary: string;
+  /** One-line synopsis, e.g. "vid2 audio beats <file> [--json]". */
   usage: string;
+  group?: CommandGroup;
+  description?: string;
+  examples?: string[];
+  /** Own options; on a parent command these are shared by every subcommand. */
   options: Record<string, CommandOption>;
-  run(ctx: { args: string[]; values: Record<string, unknown>; json: boolean; cwd: string; stderr: NodeJS.WritableStream }): Promise<CommandResult>;
+  subcommands?: CommandSpec[];
+  /** Subcommand run when the parent is called with no positional word ("list" for skill). */
+  defaultSubcommand?: string;
+  run(ctx: RunContext): Promise<CommandResult>;
 }
 
 export const commands = new Map<string, CommandSpec>();
 
 export function register(spec: CommandSpec): void {
   if (commands.has(spec.name)) throw new Error(`duplicate command: ${spec.name}`);
+  const subs = (spec.subcommands ?? []).map((sub) => sub.name);
+  if (new Set(subs).size !== subs.length) throw new Error(`duplicate subcommand under ${spec.name}`);
+  if (spec.defaultSubcommand && !subs.includes(spec.defaultSubcommand)) throw new Error(`unknown default subcommand for ${spec.name}`);
   commands.set(spec.name, spec);
 }
 
-for (const spec of [doctor, schema, validate, resolve, compile, render, capture, audio, assets, preview, qa, analyze, review, probe, init, skill, capabilities, version, help]) register(spec);
+for (const spec of [init, schema, validate, resolve, compile, render, preview, capture, audio, assets, probe, qa, analyze, review, doctor, capabilities, skill, version, help]) register(spec);

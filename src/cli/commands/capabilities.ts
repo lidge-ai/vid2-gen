@@ -7,7 +7,8 @@ import { ICONS } from "../../stage/icons/lucide.ts";
 import type { CommandSpec } from "../registry.ts";
 
 export const capabilities: CommandSpec = {
-  name: "capabilities",
+  name: "capabilities", group: "agent",
+  examples: ["vid2 capabilities --json"],
   summary: "Everything an agent needs to plan: commands, ffmpeg, text backend, providers, schemas",
   usage: "vid2 capabilities [--json]",
   options: {},
@@ -20,7 +21,8 @@ export const capabilities: CommandSpec = {
       try { return await p; } catch (e) { return { available: false, reason: e instanceof Error ? e.message : String(e) }; }
     };
     return { command: "capabilities", data: {
-      commands: [...commands.values()].map((c) => ({ name: c.name, summary: c.summary, usage: c.usage })),
+      commands: [...commands.values()].map((c) => ({ name: c.name, summary: c.summary, usage: c.usage,
+        ...(c.subcommands ? { subcommands: c.subcommands.map((s) => ({ name: s.name, path: `${c.name} ${s.name}`, summary: s.summary, usage: s.usage })) } : {}) })),
       ffmpeg: ff ? { version: ff.version, libass: ff.libs.ass, textBackend: ff.libs.ass ? "ass" : "raster" } : null,
       ok: doctor.ok, warnings: doctor.warnings,
       providers: {
