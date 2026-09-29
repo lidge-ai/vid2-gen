@@ -3,7 +3,7 @@
 // script, e.g. "bun scripts/runtime-smoke.mjs". With --compare-node it renders the same timeline with node and requires identical frames.
 // Needs ffmpeg and a built dist/ (npm run build). Prints one JSON line; exits 1 on any failure.
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,7 +18,8 @@ const timeline = {
   version: 1, output: { width: 640, height: 360, fps: 30 },
   scenes: [
     { id: "shapes", duration: "1s", background: "#0B0D12", transition: { type: "fade", duration: "0.3s" },
-      layers: [{ type: "shape", shape: "rect", x: 170, y: 130, width: 300, height: 100, color: "#3355FF", radius: 24 }] },
+      layers: [{ type: "shape", shape: "rect", x: 170, y: 130, width: 300, height: 100, color: "#3355FF", radius: 24 },
+        { type: "text", text: "vid2", size: 64, weight: "black", animation: "slam" }] },
     { id: "stage", duration: "1.2s", background: "#F5F5F2",
       layers: [{ type: "stage", nodes: [pill("a", 200, "#D97757"), pill("b", 440, "#23386A")],
         tracks: [
@@ -55,5 +56,7 @@ try {
   console.log(JSON.stringify(result));
 } catch (error) {
   console.log(JSON.stringify({ ok: false, runtime, error: String(error instanceof Error ? error.message : error) }));
-  process.exit(1);
+  process.exitCode = 1;
+} finally {
+  rmSync(dir, { recursive: true, force: true });
 }
