@@ -28,9 +28,9 @@ vid2 render timeline.json -o .work/ima2-launch.mp4
 vid2 qa .work/ima2-launch.mp4 --timeline timeline.json --expect-audio --out .work/qa
 ```
 
-In a repository checkout, `vid2 compile timeline.json -o .work/film.plan.json` followed by
-`node check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4` checks cue anchors, onsets and typing cadence; the script imports vid2's
-source, so it is not part of the npm package.
+With a vid2-gen repository checkout, run `vid2 compile timeline.json -o .work/film.plan.json` and then
+`node <checkout>/examples/ima2-launch/check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4` from the workspace to check cue anchors,
+onsets and typing cadence. The script imports vid2's source, so it runs only from the checkout and is not part of the npm package.
 
 Without ima2-gen, `vid2 render timeline.json --placeholders` renders the generated sources as labelled placeholders (the capture is still
 needed; record any app with the same steps file).

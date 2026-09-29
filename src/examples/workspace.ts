@@ -1,6 +1,6 @@
 /** Example workspaces: sources copied from the package, media and renders kept in $VID2_HOME/examples/<name> (030). */
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { Vid2Error } from "../shared/errors.ts";
 import { vid2Home } from "../shared/paths.ts";
 import { examplesRoot, listExamples, unknownExample } from "./catalog.ts";
@@ -36,16 +36,28 @@ function isWorkspaceOf(path: string, name: string): boolean {
   catch { return false; }
 }
 
-/** Refuse a destination inside the packaged source, a file, or a non-empty folder that is not this example's workspace (unless forced). */
+/** Real path of p, or of its nearest existing parent joined with the rest, so symlinks cannot hide where a copy lands. */
+function realish(p: string): string {
+  let head = p;
+  const tail: string[] = [];
+  while (!existsSync(head) && dirname(head) !== head) { tail.unshift(basename(head)); head = dirname(head); }
+  return join(realpathSync(head), ...tail);
+}
+
+/**
+ * Refuse a destination inside the packaged source, a file, or (for --dir) a non-empty folder that is not this example's workspace
+ * unless forced. The example's own default workspace is always accepted; existing files there are kept anyway.
+ */
 function guardDestination(path: string, source: string, name: string, force: boolean): void {
-  const inside = relative(source, path);
+  const inside = relative(realish(source), realish(path));
   if (inside === "" || (!inside.startsWith("..") && !isAbsolute(inside))) throw new Vid2Error("E_INPUT",
     `the destination is inside the example's packaged source: ${path}`, { fix: `omit --dir to use ${workspaceFor(name)}` });
   if (!existsSync(path)) return;
   if (!statSync(path).isDirectory()) throw new Vid2Error("E_INPUT", `the destination is a file: ${path}`, { fix: "choose a directory" });
-  if (force || isWorkspaceOf(path, name)) return;
+  if (force || resolve(path) === resolve(workspaceFor(name)) || isWorkspaceOf(path, name)) return;
   if (readdirSync(path).some((entry) => entry !== ".DS_Store")) throw new Vid2Error("E_INPUT",
-    `the destination is not empty and is not a ${name} workspace: ${path}`, { fix: "choose an empty directory, or pass --force to copy into it" });
+    `the destination is not empty and is not the ${name} workspace: ${path}`,
+    { fix: "choose an empty directory, or pass --force to copy into it (--force overwrites files with the same names)" });
 }
 
 export interface SyncResult {

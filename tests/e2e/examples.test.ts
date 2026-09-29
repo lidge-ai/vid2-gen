@@ -234,7 +234,7 @@ void test("syncWorkspace refuses a file, the packaged source and a foreign non-e
   mkdirSync(project);
   writeFileSync(join(project, "timeline.json"), "mine");
   for (const [dest, pattern] of [[file, /is a file/], [source, /inside the example's packaged source/], [join(source, "sub"), /inside/],
-    [project, /not empty and is not a demo workspace/]] as const) {
+    [project, /not empty and is not the demo workspace/]] as const) {
     assert.throws(() => syncWorkspace("demo", dest, opts), (e: Error & { code?: string }) => e.code === "E_INPUT" && pattern.test(e.message), dest);
   }
   assert.equal(readFileSync(join(project, "timeline.json"), "utf8"), "mine");
@@ -269,4 +269,15 @@ void test("vid2 example new copies an example and prints its path; ls, show and 
   assert.equal(source.stdout.toString("utf8").trim(), join(root, "examples/vid2-intro"));
   const unknown = await run(process.execPath, [cli, "example", "new", "nope", "--json"], { env });
   assert.equal(unknown.code, 2);
+});
+
+void test("an existing default workspace without example.json is accepted and keeps its files", async () => {
+  const home = tempDir("vid2-example-legacy-");
+  const legacy = join(home, "examples/vid2-intro");
+  mkdirSync(legacy, { recursive: true });
+  writeFileSync(join(legacy, "build-timeline.mjs"), "// edited before 0.5.0");
+  const r = await run(process.execPath, [cli, "example", "new", "vid2-intro", "--json"], { env: { ...process.env, VID2_HOME: home } });
+  assert.equal(r.code, 0, r.stdout.toString("utf8"));
+  assert.equal(readFileSync(join(legacy, "build-timeline.mjs"), "utf8"), "// edited before 0.5.0");
+  assert.ok(existsSync(join(legacy, "example.json")));
 });
