@@ -70,3 +70,13 @@ Installed global copies are not updated unless they already track npm (`npm ls -
   `gh release create v0.5.0 --title "vid2-gen 0.5.0" --notes-file <0.5.0 changelog section>`; record the publish run id and results in a
   follow-up devlog commit on `dev` through a PR.
 - Out of scope: updating globally installed copies (`npm ls -g vid2-gen` is reported only).
+- wp5 audit folds (Goodall, GO-WITH-FIXES, blockers=1) — supersede the text above where they differ:
+  - B1. The release commit also changes `.github/workflows/release.yml`: `NODE_AUTH_TOKEN` is set only in token mode, and an OIDC-only step
+    before `npm publish` removes the `_authToken` line that `actions/setup-node` wrote to the userconfig
+    (`sed -i '/_authToken/d' "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"`), so an empty token cannot stop npm from using OIDC. The tag runs
+    the workflow file of the tagged commit, so this lands through branch 4 before `main` is tagged.
+  - If the tag's publish run fails, keep its log in the outcome record and publish route 2 from the same tag.
+  - Before pushing the tag: `git show v0.5.0:package.json` shows `"version": "0.5.0"`. If the tag is pushed before the variable is set,
+    recover with `gh workflow run release.yml -R lidge-ai/vid2-gen -f tag=v0.5.0`.
+  - `NPM_PUBLISH_MODE` stays `oidc` after a route 1 success on purpose: later releases publish from their `v*` tag.
+  - The "add `./skills/vid2-examples`" line in the release-commit list above is already done (wp4); only the version changes.
