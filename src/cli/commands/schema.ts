@@ -5,7 +5,8 @@ import type { CommandSpec } from "../registry.ts";
 import { stepsJsonSchema } from "../../capture/index.ts";
 
 export const schema: CommandSpec = {
-  name: "schema",
+  name: "schema", group: "author",
+  examples: ["vid2 schema --json > timeline.schema.json","vid2 schema --steps --json"],
   summary: "Print the authored timeline JSON Schema",
   usage: "vid2 schema [--steps] [--json]",
   options: { steps: { type: "boolean", description: "Print the capture steps JSON Schema instead of the timeline schema" } },

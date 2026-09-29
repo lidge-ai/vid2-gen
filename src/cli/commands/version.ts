@@ -3,7 +3,8 @@ import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandSpec } from "../registry.ts";
 
 export const version: CommandSpec = {
-  name: "version",
+  name: "version", group: "agent",
+  examples: ["vid2 version","vid2 -v"],
   summary: "Print the installed vid2 version",
   usage: "vid2 version [--json]",
   options: {},

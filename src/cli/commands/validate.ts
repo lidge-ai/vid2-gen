@@ -8,7 +8,9 @@ import { loadCaptures } from "../../capture/index.ts";
 import { materializeSources } from "../../assets/index.ts";
 
 export const validate: CommandSpec = {
-  name: "validate",
+  name: "validate", group: "author",
+  examples: ["vid2 validate timeline.json","vid2 validate timeline.json --json"],
+  description: "Checks the schema, references between scenes, sources and events, and reports the resolved duration.",
   summary: "Validate a timeline and report its duration",
   usage: "vid2 validate <timeline.json> [--json]",
   options: {},

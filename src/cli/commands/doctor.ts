@@ -4,7 +4,9 @@ import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandSpec } from "../registry.ts";
 
 export const doctor: CommandSpec = {
-  name: "doctor",
+  name: "doctor", group: "agent",
+  examples: ["vid2 doctor","vid2 doctor --hw --json"],
+  description: "Checks ffmpeg, ffprobe, libass and optional capture tools, with a fix for each missing piece.",
   summary: "Check ffmpeg and optional capture tools",
   usage: "vid2 doctor [--deep] [--hw] [--json]",
   options: { deep: { type: "boolean", description: "Run diagnostic canaries" },

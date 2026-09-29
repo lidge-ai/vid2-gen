@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+**Help you can navigate.** Commands are grouped in `vid2 --help`, which also lists global options, environment variables and
+examples. Every command and subcommand answers `--help` with its arguments, options (value names and defaults), inherited and global
+options, and examples; `vid2 help audio beats` prints the same text as `vid2 audio beats --help`. `-v`/`--version` prints the
+version. Help never runs a command and never fails on a bad flag.
+
+**Subcommands are real commands.** `audio`, `assets`, `capture` and `skill` have one spec per subcommand, each with its own options.
+Options are now strict per subcommand, so `vid2 audio beats --preset x` is an input error instead of being ignored. A subcommand must
+directly follow its parent (`vid2 audio beats x.wav`); `vid2 audio --json beats` explains that. Typos get a suggestion
+(`vid2 skill instal` → `install`). Extra positional arguments are refused (`vid2 audio beats a.wav b.wav` used to ignore `b.wav`),
+and the command word must come before `--`.
+
+**JSON contract changes.** Per-command help JSON (`vid2 <cmd> --help --json`, `vid2 help <cmd> --json`) now carries the full help
+text in `data.usage`; the one-line synopsis moved to `data.synopsis`. Help JSON adds `group`, `description`, `examples`,
+`subcommands`, `defaultSubcommand`, `globalOptions` and `environment`, and `vid2 capabilities` lists subcommands. A failure envelope
+reports the full command path (`"command": "audio beats"`). Success `command` values are unchanged.
+
 ## 0.4.0 — 2026-09-29
 
 Hardware encoding you can trust, examples that keep only code in git, and the first npm release.

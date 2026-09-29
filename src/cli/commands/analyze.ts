@@ -18,13 +18,14 @@ function numberOption(values: Record<string, unknown>, key: string, positive: bo
 }
 
 export const analyze: CommandSpec = {
-  name: "analyze", summary: "Analyze shot rhythm, color, motion and audio",
-  usage: "vid2 analyze <video> [--timeline t.json] [--bpm N] [--beat-offset S] [--out dir] [--json]",
+  name: "analyze", group: "review",
+  examples: ["vid2 analyze film.mp4 --timeline timeline.json --bpm 128 --json"], summary: "Analyze shot rhythm, color, motion and audio",
+  usage: "vid2 analyze <video> [--timeline timeline.json] [options] [--json]",
   options: {
-    timeline: { type: "string", description: "Authored timeline for scene boundaries" },
-    bpm: { type: "string", description: "Beat grid tempo" },
-    "beat-offset": { type: "string", description: "Beat grid offset in seconds" },
-    out: { type: "string", short: "o", description: "Analysis artifact directory" },
+    timeline: { type: "string", value: "<timeline.json>", description: "Authored timeline for scene boundaries" },
+    bpm: { type: "string", value: "<bpm>", description: "Beat grid tempo" },
+    "beat-offset": { type: "string", value: "<seconds>", description: "Beat grid offset" },
+    out: { type: "string", short: "o", value: "<dir>", description: "Analysis artifact directory" },
   },
   async run({ args, values, cwd }) {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "analyze needs one video path");

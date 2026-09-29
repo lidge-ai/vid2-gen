@@ -154,6 +154,9 @@ under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step ser
 | `analyze`, `review` | Shot, color, motion and DSP analysis; optional frame review and audio listening |
 | `init`, `skill`, `capabilities` | Templates, packaged agent skills, one-call capability summary (layers, icons, transitions) |
 
+Every command and subcommand answers `--help` with its arguments, options (value names and defaults) and examples, for example
+`vid2 render --help` or `vid2 audio beats --help`; `vid2 help audio beats` prints the same text.
+
 The intended flow is **capture → author one timeline → resolve assets → compile → render → QA**. Rendering uses ffmpeg locally; generated assets remain optional. The [structure guide](structure/INDEX.md) explains module boundaries and the public CLI contract.
 
 ## For coding agents

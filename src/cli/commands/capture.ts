@@ -5,7 +5,8 @@ import { appendMark, captureElectron, captureNative, captureTerminal, captureWeb
 import type { LoadedSession } from "../../capture/index.ts";
 import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandResult } from "../output.ts";
-import type { CommandSpec } from "../registry.ts";
+import type { CommandOption, CommandSpec } from "../registry.ts";
+import { parentCommand } from "../tree.ts";
 
 type Values = Record<string, unknown>;
 const str = (v: Values, k: string): string | undefined => (typeof v[k] === "string" ? (v[k]) : undefined);
@@ -102,50 +103,100 @@ async function inspect(args: string[], cwd: string): Promise<CommandResult> {
   return result;
 }
 
-const SUBCOMMANDS = "web | electron | native | terminal | devices | inspect <session> | mark <session> <label>";
+const FPS: CommandOption = { type: "string", value: "<fps>", description: "Footage frame rate", default: "30" };
+const OUT: CommandOption = { type: "string", short: "o", value: "<name>", description: "Session directory (.vid2cap is appended)" };
+const RECORD_TEXT: CommandOption = { type: "boolean", description: "Store typed text in actions.jsonl (redacted by default)" };
+const STEPS: CommandOption = { type: "string", value: "<steps.json>", description: "Declarative steps (schema: vid2 schema --steps)" };
+const SCRIPT: CommandOption = { type: "string", value: "<module.mjs>", description: "JS module exporting default async (v2) => {}" };
 
-export const capture: CommandSpec = {
-  name: "capture",
-  summary: "Record real product footage with an action log",
-  usage: `vid2 capture <${SUBCOMMANDS}> [options] [--json]`,
+const webSpec: CommandSpec = {
+  name: "web", summary: "Record a web page in Chromium with Playwright, with an action log",
+  usage: "vid2 capture web (--url <url> | --serve <dir>) [--steps s.json | --script s.mjs] [options] [--json]",
   options: {
-    steps: { type: "string", description: "web/electron: declarative steps JSON (vid2 schema --steps)" },
-    script: { type: "string", description: "web/electron: JS module exporting default async (v2) => {}" },
-    url: { type: "string", description: "web: start URL" },
-    serve: { type: "string", description: "web: serve this directory on 127.0.0.1 for the capture" },
-    size: { type: "string", description: "web: viewport, e.g. 1440x900" },
-    scale: { type: "string", description: "web: device scale factor (default 2)" },
-    fps: { type: "string", description: "footage frame rate (default 30)" },
-    out: { type: "string", short: "o", description: "session directory (<name>.vid2cap)" },
-    "record-text": { type: "boolean", description: "store typed text in actions.jsonl (redacted by default)" },
-    headed: { type: "boolean", description: "web: show the browser" },
-    browser: { type: "string", description: "web: chromium | chrome | msedge" },
-    app: { type: "string", description: "electron: app executable or main.js" },
-    display: { type: "string", description: "native: screen number (see capture devices)" },
-    window: { type: "string", description: "native: window title regex" },
-    region: { type: "string", description: "native: x,y,width,height" },
-    duration: { type: "string", description: "native: seconds to record" },
-    "stop-file": { type: "string", description: "native: stop when this file appears" },
-    events: { type: "boolean", description: "native: log global input (needs uiohook-napi installed separately)" },
-    cursor: { type: "string", description: "native: show | hide the OS cursor (default hide)" },
-    tape: { type: "string", description: "terminal: VHS tape" },
-    cast: { type: "string", description: "terminal: asciinema cast" },
+    url: { type: "string", value: "<url>", description: "Start URL" },
+    serve: { type: "string", value: "<dir>", description: "Serve this directory on 127.0.0.1 for the capture" },
+    steps: STEPS, script: SCRIPT,
+    size: { type: "string", value: "<WxH>", description: "Viewport", default: "1440x900" },
+    scale: { type: "string", value: "<n>", description: "Device scale factor", default: "2" },
+    fps: FPS, out: { ...OUT, default: "web" }, "record-text": RECORD_TEXT,
+    headed: { type: "boolean", description: "Show the browser window" },
+    browser: { type: "string", value: "<chromium|chrome|msedge>", description: "Browser channel", default: "chromium" },
   },
-  async run({ args, values, cwd }) {
-    const [sub, ...rest] = args;
-    switch (sub) {
-      case "web": return web(values, cwd);
-      case "electron": return electron(values, cwd);
-      case "native": return native(values, cwd);
-      case "terminal": return terminal(values, cwd);
-      case "devices": return { command: "capture devices", data: { ...(await listDevices()) } };
-      case "inspect": return inspect(rest, cwd);
-      case "mark": {
-        if (rest.length !== 2) throw new Vid2Error("E_INPUT", "capture mark needs <session> <label>");
-        await appendMark(resolve(cwd, rest[0]!), rest[1]!);
-        return { command: "capture mark", data: { session: resolve(cwd, rest[0]!), label: rest[1] } };
-      }
-      default: throw new Vid2Error("E_INPUT", `capture needs a subcommand: ${SUBCOMMANDS}`);
-    }
+  examples: ["vid2 capture web --serve site --steps app.steps.json --size 1280x720 --scale 1.5 --out app"],
+  run({ args, values, cwd }) { none("web", args); return web(values, cwd); },
+};
+
+const electronSpec: CommandSpec = {
+  name: "electron", summary: "Record an Electron app window with an action log",
+  usage: "vid2 capture electron --app <path> [--steps s.json | --script s.mjs] [options] [--json]",
+  options: { app: { type: "string", value: "<path>", description: "App executable or main.js (required)" }, steps: STEPS, script: SCRIPT,
+    fps: FPS, out: { ...OUT, default: "electron" }, "record-text": RECORD_TEXT },
+  examples: ["vid2 capture electron --app ./main.js --steps demo.steps.json --out demo"],
+  run({ args, values, cwd }) { none("electron", args); return electron(values, cwd); },
+};
+
+const nativeSpec: CommandSpec = {
+  name: "native", summary: "Record the screen, a window or a region with the OS recorder",
+  usage: "vid2 capture native [--display N | --window regex | --region x,y,w,h] (--duration S | --stop-file f) [options] [--json]",
+  options: {
+    display: { type: "string", value: "<n>", description: "Screen number (see vid2 capture devices)" },
+    window: { type: "string", value: "<regex>", description: "Window title to crop to" },
+    region: { type: "string", value: "<x,y,w,h>", description: "Screen region in pixels" },
+    duration: { type: "string", value: "<seconds>", description: "Seconds to record" },
+    "stop-file": { type: "string", value: "<file>", description: "Stop when this file appears" },
+    events: { type: "boolean", description: "Log global input (needs uiohook-napi installed separately)" },
+    cursor: { type: "string", value: "<show|hide>", description: "OS cursor in the footage", default: "hide" },
+    fps: FPS, out: { ...OUT, default: "native" },
+  },
+  examples: ["vid2 capture native --display 1 --duration 12 --out screen"],
+  run({ args, values, cwd }) { none("native", args); return native(values, cwd); },
+};
+
+const terminalSpec: CommandSpec = {
+  name: "terminal", summary: "Turn a VHS tape or an asciinema cast into a capture session",
+  usage: "vid2 capture terminal (--tape t.tape | --cast c.cast) [--fps 30] [-o name] [--json]",
+  options: { tape: { type: "string", value: "<file.tape>", description: "VHS tape to record" },
+    cast: { type: "string", value: "<file.cast>", description: "asciinema cast to render" }, fps: FPS,
+    out: { ...OUT, default: "<tape or cast name>" } },
+  examples: ["vid2 capture terminal --tape demo.tape"],
+  run({ args, values, cwd }) { none("terminal", args); return terminal(values, cwd); },
+};
+
+const devicesSpec: CommandSpec = {
+  name: "devices", summary: "List screens and windows the native recorder can see",
+  usage: "vid2 capture devices [--json]", options: {}, examples: ["vid2 capture devices --json"],
+  async run({ args }) { none("devices", args); return { command: "capture devices", data: { ...(await listDevices()) } }; },
+};
+
+const inspectSpec: CommandSpec = {
+  name: "inspect", summary: "Summarize a capture session: footage, size and actions",
+  usage: "vid2 capture inspect <session.vid2cap> [--json]", options: {}, examples: ["vid2 capture inspect app.vid2cap --json"],
+  run({ args, cwd }) {
+    if (args.length !== 1) return Promise.reject(new Vid2Error("E_INPUT", "capture inspect needs one session directory"));
+    return inspect(args, cwd);
   },
 };
+
+const markSpec: CommandSpec = {
+  name: "mark", summary: "Append a named marker to a session's action log",
+  usage: "vid2 capture mark <session.vid2cap> <label> [--json]", options: {}, examples: ['vid2 capture mark app.vid2cap "export done"'],
+  async run({ args, cwd }) {
+    if (args.length !== 2) throw new Vid2Error("E_INPUT", "capture mark needs <session> <label>");
+    await appendMark(resolve(cwd, args[0]!), args[1]!);
+    return { command: "capture mark", data: { session: resolve(cwd, args[0]!), label: args[1] } };
+  },
+};
+
+function none(name: string, args: string[]): void {
+  if (args.length) throw new Vid2Error("E_INPUT", `capture ${name} takes no positional arguments`, { fix: `run vid2 capture ${name} --help` });
+}
+
+export const capture = parentCommand({
+  name: "capture", group: "media",
+  summary: "Record real product footage with an action log",
+  usage: "vid2 capture <web|electron|native|terminal|devices|inspect|mark> [options] [--json]",
+  description: "A session (<name>.vid2cap) holds footage.mp4, frame times and actions.jsonl, so a timeline can cut on a click or a typed field.",
+  options: {},
+  subcommands: [webSpec, electronSpec, nativeSpec, terminalSpec, devicesSpec, inspectSpec, markSpec],
+  examples: ["vid2 capture web --url https://example.com --steps steps.json --out demo", "vid2 capture inspect demo.vid2cap"],
+});
