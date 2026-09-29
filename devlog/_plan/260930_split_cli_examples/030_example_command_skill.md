@@ -162,3 +162,16 @@ These rules supersede the sections above where they differ.
   `vid2 capture web --serve .work/feature-demo/site --steps app.steps.json --size 1280x720 --scale 1.5 --out app`; the `REPO`
   line and the `$REPO/templates/...` path go away in the block and in the table. `vid2 init` ships `templates/feature-demo/site/`
   in the package, so the step works from an npm install. R5 then holds for all six READMEs.
+
+## wp4 P re-verification (2026-09-30, after wp3 D at 9daefb2)
+
+- `example` is built with `parentCommand` from `src/cli/tree.ts` (020 A1); its four subcommands are leaf `CommandSpec`s with
+  `group` on the parent (`author`), a `value` name for every string option and at least one example each, which
+  `src/cli/help.test.ts` test 1 already enforces for every registered path.
+- Adding `example` also updates: `structure/cli-contract.md` parent list, `ROOT_EXAMPLES` in `src/cli/globals.ts` (re-add
+  `vid2 example ls`), README command table (`init`, `example` row) and the CHANGELOG Unreleased section.
+- Skill-count tests: `src/skill/install.test.ts:14,15,46,50` (`installed.length`, `changedCount > 6`, link-mode `changedCount 6`)
+  and `src/skill/manifest.test.ts:15` derive the count from `readdirSync(SKILLS_ROOT)` directories.
+- The existing workspace test (`tests/e2e/examples.test.ts` "workspace.mjs copies sources ...") keeps running against the thin
+  wrapper and still covers destination preservation; A4's fixture-source test is added next to it.
+- No design decision changes, so no architect call; the plan is re-audited by the A reviewer.
