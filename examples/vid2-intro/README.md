@@ -7,7 +7,7 @@ four verbs lit one at a time, a rolling number for the hardware-encode speed-up,
 `build-timeline.mjs` writes `timeline.json`. Every visual is a vid2 stage node.
 
 ```bash
-cd "$(node examples/workspace.mjs vid2-intro)"
+cd "$(vid2 example new vid2-intro)"
 mkdir -p media && npx -y music2-gen render music/vid2-intro.song.json -o media/music.wav
 node build-timeline.mjs                                    # writes timeline.json
 vid2 validate timeline.json

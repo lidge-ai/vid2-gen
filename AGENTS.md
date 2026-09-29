@@ -10,6 +10,7 @@ vid2-gen is a local ffmpeg-powered video CLI for coding agents. The 0.1 foundati
 | `src/timeline/` | Authored schema, frame resolution, relational validation |
 | `src/probe/` | ffmpeg and optional-tool discovery |
 | `src/cli/` | Command registry, parsing, JSON and text output |
+| `src/examples/` | Example manifests, catalog and workspace sync behind `vid2 example` |
 | `bin/` | Installed executable |
 | `scripts/`, `tests/` | Build helpers and end-to-end contracts |
 | `structure/` | Current architecture and public behavior |

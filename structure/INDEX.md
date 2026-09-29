@@ -15,5 +15,6 @@ Current implementation contracts live here. Read the owning document before chan
 11. [QA and preview](qa.md) — checks, severities, preview fidelity, placeholders.
 12. [Skills](skills.md) — packaged agent skills and install.
 13. [Stage](stage.md) — pure-JS motion graphics layers, stage clips, cache and validation.
+14. [Examples](examples.md) — example manifests, workspaces, `vid2 example` and packaging.
 
 The [completed 0.1 roadmap](../devlog/_fin/260927_vid2_roadmap/000_plan.md) and the [0.2 kinetic stage unit](../devlog/_fin/260928_kinetic_stage/000_plan.md) record how each area was planned, audited and verified; these documents describe the current implementation.

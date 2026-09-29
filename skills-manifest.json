@@ -1,10 +1,10 @@
 {
   "vid2": {
     "files": {
-      "SKILL.md": "f68abc00d21b4d89ed7fe249ece7c91c8911df373650b7f628ad6a84746e9287",
+      "SKILL.md": "9879e849911fe161c06185ec546956e2554b8c31f5f5343350c050da17b5f22d",
       "agents/openai.yaml": "e7e7e268a9295e740beeecd2b2044b8f7a2c76c3d152cdc1de5b985822bdbd9e"
     },
-    "sha256": "5f0207d2189b937117ee40609b863420fb9c84e48b3acf9227b05d41a577aca1"
+    "sha256": "64b8fba817ff58f28f6f241e999a828d8e07379a328756766ba993b283ccc7f2"
   },
   "vid2-audio": {
     "files": {
@@ -41,6 +41,12 @@
       "references/typography.md": "83c4817821ff5651cce0f8c14569105411eb1e73ac00c8f0070b5b140ea97867"
     },
     "sha256": "ac501cdc878f3641d20fe0bed0b0beb0984f91be28efaa2c608d9b69a7057819"
+  },
+  "vid2-examples": {
+    "files": {
+      "SKILL.md": "94f5ba8e8be8bc8638f0ba1b24f1bde5213d651948c789a5afd412570fe44f8b"
+    },
+    "sha256": "b14467f8d9efa5a979f1d7080fe2fa8d2eb67e176045c1f4376459ebd8f6f311"
   },
   "vid2-timeline": {
     "files": {

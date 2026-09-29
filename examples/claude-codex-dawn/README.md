@@ -11,7 +11,7 @@ supply.
 ## Build and render
 
 ```bash
-cd "$(node examples/workspace.mjs claude-codex-dawn)"
+cd "$(vid2 example new claude-codex-dawn)"
 CLAUDE_SVG=/path/to/claude-spark.svg CODEX_PNG=/path/to/codex-icon.png FONT_DIR=/path/to/kopubworld-fonts node prepare-assets.mjs
 node music/gen-song.mjs music/dawn.song.json
 music2 render music/dawn.song.json -o media/music.wav
