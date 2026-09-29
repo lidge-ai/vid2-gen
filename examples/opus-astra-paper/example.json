@@ -1,0 +1,76 @@
+{
+  "name": "opus-astra-paper",
+  "title": "Opus & Astra — a paper-cutout short",
+  "summary": "A 26-second paper-cutout short about two AI models getting along, built only from JS stage nodes with a music-box cue.",
+  "durationS": 26,
+  "size": "1920x1080",
+  "techniques": [
+    "stage nodes",
+    "spring pops and settles",
+    "squash and stretch",
+    "blinking eyes and floating hearts",
+    "procedural paper texture",
+    "bar-aligned scenes (100 BPM)",
+    "seeded randomness for a warm cache"
+  ],
+  "goodFor": [
+    "paper cutout or craft-style short",
+    "two characters with a small story",
+    "mascot or logo characters without images",
+    "cute or friendly brand moment"
+  ],
+  "needs": [
+    {
+      "tool": "ffmpeg"
+    },
+    {
+      "tool": "music2-gen",
+      "optional": true,
+      "note": "renders the cue; without it drop the music source and audio block from build-timeline.mjs"
+    }
+  ],
+  "edit": [
+    {
+      "file": "build-timeline.mjs",
+      "what": "characters (colours, faces), scenes, captions and timings"
+    },
+    {
+      "file": "music/gen-song.mjs",
+      "what": "the cue"
+    },
+    {
+      "file": "make-paper.mjs",
+      "what": "paper colour and grain"
+    }
+  ],
+  "steps": [
+    {
+      "run": "node make-paper.mjs media/paper.png"
+    },
+    {
+      "run": "node music/gen-song.mjs music/opus-astra.song.json"
+    },
+    {
+      "run": "music2 render music/opus-astra.song.json -o media/music.wav"
+    },
+    {
+      "run": "node build-timeline.mjs"
+    },
+    {
+      "run": "vid2 validate timeline.json"
+    },
+    {
+      "run": "vid2 preview timeline.json --at 1s,5s,12s,22s --out out/preview"
+    },
+    {
+      "run": "vid2 render timeline.json --profile proxy -o out/proxy.mp4"
+    },
+    {
+      "run": "vid2 render timeline.json -o out/opus-astra-paper.mp4"
+    },
+    {
+      "run": "vid2 qa out/opus-astra-paper.mp4 --timeline timeline.json --expect-audio --out out/qa"
+    }
+  ],
+  "output": "out/opus-astra-paper.mp4"
+}

@@ -1,0 +1,86 @@
+{
+  "name": "ima2-launch",
+  "title": "ima2-launch — a 50-second launch film",
+  "summary": "A launch film for ima2-gen: kinetic type, rebuilt UI components, generated images, a real web capture and a 128 BPM cue with the drop on the brand reveal.",
+  "durationS": 50,
+  "size": "1920x1080",
+  "techniques": [
+    "kinetic typography",
+    "rebuilt UI (field, bars, ticker, chips)",
+    "stage scatter",
+    "zoomfrom and iris transitions",
+    "generated images through ima2-gen",
+    "real web capture",
+    "cuts synced to bars (128 BPM)",
+    "sync check against the compiled plan (repository checkout only)"
+  ],
+  "goodFor": [
+    "product or app launch film",
+    "fast, beat-driven promo",
+    "showing a real web UI next to generated visuals"
+  ],
+  "needs": [
+    {
+      "tool": "ffmpeg"
+    },
+    {
+      "tool": "a square PNG of your app icon at media/ima2-icon.png",
+      "note": "not bundled"
+    },
+    {
+      "tool": "ima2-gen",
+      "note": "running (ima2 serve) and signed in; without it render with --placeholders"
+    },
+    {
+      "tool": "Playwright Chromium",
+      "note": "for the web capture"
+    },
+    {
+      "tool": "music2-gen",
+      "optional": true,
+      "note": "renders the cue"
+    }
+  ],
+  "edit": [
+    {
+      "file": "timeline.json",
+      "what": "scenes, copy, UI components and generated-source prompts"
+    },
+    {
+      "file": "ui.steps.json",
+      "what": "what the capture clicks and types"
+    },
+    {
+      "file": "music/gen-song.mjs",
+      "what": "the cue"
+    },
+    {
+      "file": "BRIEF.md",
+      "what": "the shot list"
+    }
+  ],
+  "steps": [
+    {
+      "run": "node music/gen-song.mjs music/ima2-launch.song.json"
+    },
+    {
+      "run": "music2 render music/ima2-launch.song.json -o media/music.wav"
+    },
+    {
+      "run": "vid2 capture web --url http://127.0.0.1:3333 --steps ui.steps.json --size 1440x900 --scale 1.5 --out ui"
+    },
+    {
+      "run": "vid2 assets resolve timeline.json"
+    },
+    {
+      "run": "vid2 validate timeline.json"
+    },
+    {
+      "run": "vid2 render timeline.json -o .work/ima2-launch.mp4"
+    },
+    {
+      "run": "vid2 qa .work/ima2-launch.mp4 --timeline timeline.json --expect-audio --out .work/qa"
+    }
+  ],
+  "output": ".work/ima2-launch.mp4"
+}

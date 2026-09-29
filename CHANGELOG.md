@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.5.0 — 2026-09-30
+
+Help you can navigate, the example films on demand, and a repository of its own.
+
+**Examples on demand.** The six example films now ship in the npm package as code and steps, each with an `example.json` manifest.
+`vid2 example ls` lists them, `vid2 example show <name>` prints what one needs, which files to edit and its exact steps, and
+`cd "$(vid2 example new <name>)"` copies it into `$VID2_HOME/examples/<name>`; re-running keeps your edits and media, and `--force`
+refreshes the sources. The new
+`vid2-examples` skill maps a request (paper cutout, puppet story, launch film, keynote-style intro, capture-led demo, generated clip,
+changelog, social vertical) to the closest example or template and the fastest route to a render. `vid2-intro`, a quiet keynote-style
+film about vid2 itself, joins the examples, and `vid2-launch` no longer needs a repository checkout for its app capture.
+
+**Help you can navigate.** Commands are grouped in `vid2 --help`, which also lists global options, environment variables and
+examples. Every command and subcommand answers `--help` with its arguments, options (value names and defaults), inherited and global
+options, and examples; `vid2 help audio beats` prints the same text as `vid2 audio beats --help`. `-v`/`--version` prints the
+version. Help never runs a command and never fails on a bad flag.
+
+**Subcommands are real commands.** `audio`, `assets`, `capture` and `skill` have one spec per subcommand, each with its own options.
+Options are now strict per subcommand, so `vid2 audio beats --preset x` is an input error instead of being ignored. A subcommand must
+directly follow its parent (`vid2 audio beats x.wav`); `vid2 audio --json beats` explains that. Typos get a suggestion
+(`vid2 skill instal` → `install`). Extra positional arguments are refused (`vid2 audio beats a.wav b.wav` used to ignore `b.wav`),
+and the command word must come before `--`.
+
+**JSON contract changes.** Per-command help JSON (`vid2 <cmd> --help --json`, `vid2 help <cmd> --json`) now carries the full help
+text in `data.usage`; the one-line synopsis moved to `data.synopsis`. Help JSON adds `group`, `description`, `examples`,
+`subcommands`, `defaultSubcommand`, `globalOptions` and `environment`, and `vid2 capabilities` lists subcommands. A failure envelope
+reports the full command path (`"command": "audio beats"`). Success `command` values are unchanged.
+
+**Repository and release.** Development moved out of a shared checkout into vid2-gen's own git repository; nothing changes for users.
+Releases now publish from the `v*` tag through npm Trusted Publishing (`release.yml`, OIDC, with provenance) instead of a local token.
+
 ## 0.4.0 — 2026-09-29
 
 Hardware encoding you can trust, examples that keep only code in git, and the first npm release.

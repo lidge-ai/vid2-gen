@@ -1,0 +1,83 @@
+{
+  "name": "vid2-launch",
+  "title": "vid2-launch — the launch video, made with vid2",
+  "summary": "A 30-second launch video: two real web captures, three generated stills, synthesized audio and a scene of QA evidence from a first render pass.",
+  "durationS": 30,
+  "techniques": [
+    "two web captures (a code page and an app)",
+    "generated stills",
+    "synthesized audio",
+    "two-pass render: QA evidence of pass 1 shown in pass 2",
+    "placeholders for missing stills"
+  ],
+  "goodFor": [
+    "launch video for a developer tool or web app",
+    "demo built from real captures",
+    "showing the product's own output inside the film"
+  ],
+  "needs": [
+    {
+      "tool": "ffmpeg"
+    },
+    {
+      "tool": "Playwright Chromium",
+      "note": "for the two captures"
+    },
+    {
+      "tool": "ima2-gen",
+      "optional": true,
+      "note": "for media/hero.jpg, still-a.jpg and still-b.jpg; until they exist the renders use --placeholders"
+    }
+  ],
+  "edit": [
+    {
+      "file": "timeline.stills.json",
+      "what": "scenes, copy and which captures and stills appear"
+    },
+    {
+      "file": "app.steps.json",
+      "what": "the app capture's clicks"
+    },
+    {
+      "file": "code-page/index.html",
+      "what": "the code page that gets captured"
+    }
+  ],
+  "steps": [
+    {
+      "run": "vid2 init feature-demo .work/feature-demo --force"
+    },
+    {
+      "run": "vid2 capture web --serve code-page --steps code-page.steps.json --size 1280x720 --scale 1.5 --out code"
+    },
+    {
+      "run": "vid2 capture web --serve .work/feature-demo/site --steps app.steps.json --size 1280x720 --scale 1.5 --out app"
+    },
+    {
+      "run": "vid2 validate timeline.stills.json"
+    },
+    {
+      "run": "vid2 render timeline.stills.json --profile proxy --placeholders -o .work/pass1.mp4"
+    },
+    {
+      "run": "vid2 qa .work/pass1.mp4 --timeline timeline.stills.json --out .work/pass1.qa"
+    },
+    {
+      "run": "node make-qa-media.mjs .work/pass1.qa media"
+    },
+    {
+      "run": "vid2 preview timeline.stills.json --at 1s,7.5s,15s,27s --placeholders"
+    },
+    {
+      "run": "vid2 render timeline.stills.json --profile proxy --placeholders -o .work/proxy.mp4"
+    },
+    {
+      "run": "vid2 qa .work/proxy.mp4 --timeline timeline.stills.json"
+    },
+    {
+      "run": "vid2 render timeline.stills.json --placeholders -o .work/vid2-launch.mp4"
+    }
+  ],
+  "output": ".work/vid2-launch.mp4",
+  "size": "1920x1080"
+}

@@ -24,9 +24,11 @@ export async function initTemplate(name: string, dir: string, force = false): Pr
 }
 
 export const init: CommandSpec = {
-  name: "init",
+  name: "init", group: "author",
+  examples: ["vid2 init --list","vid2 init launch-teaser my-video","vid2 init feature-demo demo --force"],
   summary: "Copy a ready-to-edit video timeline template",
-  usage: "vid2 init <launch-teaser|feature-demo|changelog|social-vertical> [dir] [--force] [--json] | vid2 init --list",
+  usage: "vid2 init <template> [dir] [--force] [--json] | vid2 init --list",
+  description: `Templates: ${NAMES.join(", ")}. The directory defaults to the template name.`,
   options: {
     list: { type: "boolean", description: "List available templates" },
     force: { type: "boolean", description: "Copy into a non-empty destination and replace conflicting files" },

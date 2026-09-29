@@ -4,7 +4,8 @@ import { Vid2Error } from "../../shared/index.ts";
 import type { CommandSpec } from "../registry.ts";
 
 export const probe: CommandSpec = {
-  name: "probe",
+  name: "probe", group: "media",
+  examples: ["vid2 probe media/clip.mp4 --json"],
   summary: "Inspect dimensions, streams and timing of a media file",
   usage: "vid2 probe <media> [--json]",
   options: {},

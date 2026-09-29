@@ -8,7 +8,8 @@ import { materializeSources } from "../../assets/resolve.ts";
 import type { SourceAssetStatus } from "../../assets/resolve.ts";
 import type { AssetKind, VideoOptions } from "../../assets/provider.ts";
 import type { CommandResult } from "../output.ts";
-import type { CommandSpec } from "../registry.ts";
+import type { CommandOption, CommandSpec } from "../registry.ts";
+import { parentCommand } from "../tree.ts";
 import { loadTimeline } from "./timeline-file.ts";
 
 type Values = Record<string, unknown>;
@@ -111,31 +112,60 @@ async function providers(): Promise<CommandResult> {
   return { command: "assets providers", data: capabilities };
 }
 
-export const assets: CommandSpec = {
-  name: "assets",
-  summary: "Generate and cache image/video assets from local files or ima2",
-  usage: "vid2 assets <resolve <timeline> | gen <provider> <image|video> <prompt> [options] | providers> [--json]",
-  options: {
-    size: { type: "string", description: "image size WxH" }, quality: { type: "string", description: "image quality" },
-    background: { type: "string", description: "opaque, transparent or chroma-green" },
-    model: { type: "string", description: "provider model" }, duration: { type: "string", description: "video seconds" },
-    resolution: { type: "string", description: "480p, 720p or 1080p" },
-    "aspect-ratio": { type: "string", description: "video aspect ratio" },
-    "seed-image": { type: "string", description: "video seed image path" },
-    ref: { type: "string", multiple: true, description: "video reference image path (repeatable)" },
-    out: { type: "string", short: "o", description: "output file path" },
-  },
-  async run({ args, values, cwd }) {
-    const [sub, ...rest] = args;
-    if (sub === "resolve") {
-      if (rest.length !== 1) throw new Vid2Error("E_INPUT", "assets resolve needs one timeline path");
-      return resolveTimelineAssets(rest[0], cwd);
-    }
-    if (sub === "gen") {
-      if (rest.length !== 3) throw new Vid2Error("E_INPUT", "assets gen needs provider, kind and prompt");
-      return generateOne(rest, values, cwd);
-    }
-    if (sub === "providers" && rest.length === 0) return providers();
-    throw new Vid2Error("E_INPUT", "assets needs resolve, gen or providers");
+const ASSETS_GEN_OPTIONS: Record<string, CommandOption> = {
+  size: { type: "string", value: "<WxH>", description: "Image size, e.g. 1536x1024" },
+  quality: { type: "string", value: "<quality>", description: "Image quality, passed to the provider" },
+  background: { type: "string", value: "<opaque|transparent|chroma-green>", description: "Image background" },
+  model: { type: "string", value: "<id>", description: "Provider model id" },
+  duration: { type: "string", value: "<seconds>", description: "Video length, whole seconds 1-15" },
+  resolution: { type: "string", value: "<480p|720p|1080p>", description: "Video resolution" },
+  "aspect-ratio": { type: "string", value: "<ratio>", description: "Video aspect ratio: 16:9, 9:16, 1:1, 4:3, 3:4, 3:2, 2:3 or auto" },
+  "seed-image": { type: "string", value: "<file>", description: "Video: first-frame image (not with --ref)" },
+  ref: { type: "string", multiple: true, value: "<file>", description: "Video: reference image, in order" },
+  out: { type: "string", short: "o", value: "<file>", description: "Also copy the cached asset to this path" },
+};
+
+const resolveSpec: CommandSpec = {
+  name: "resolve", summary: "Generate or reuse every generated source a timeline declares",
+  usage: "vid2 assets resolve <timeline.json> [--json]", options: {},
+  description: "Cached results are reused by request hash; only uncached sources call a provider.",
+  examples: ["vid2 assets resolve timeline.json --json"],
+  run({ args, cwd }) {
+    if (args.length !== 1) return Promise.reject(new Vid2Error("E_INPUT", "assets resolve needs one timeline path"));
+    return resolveTimelineAssets(args[0], cwd);
   },
 };
+
+const genSpec: CommandSpec = {
+  name: "gen", summary: "Generate one image or video asset and cache it",
+  usage: "vid2 assets gen <provider> <image|video> <prompt> [options] [--json]",
+  description: `Providers: ${ASSET_PROVIDER_IDS.join(", ")}. With provider "file" the prompt is a local path to import.`,
+  options: ASSETS_GEN_OPTIONS,
+  examples: [
+    'vid2 assets gen ima2 image "a paper city at dawn" --size 1536x1024 -o media/hero.png',
+    'vid2 assets gen ima2 video "slow push-in on the city" --duration 5 --seed-image media/hero.png',
+  ],
+  run({ args, values, cwd }) {
+    if (args.length !== 3) return Promise.reject(new Vid2Error("E_INPUT", "assets gen needs provider, kind and prompt"));
+    return generateOne(args, values, cwd);
+  },
+};
+
+const providersSpec: CommandSpec = {
+  name: "providers", summary: "Show asset provider readiness (ima2 and local files)",
+  usage: "vid2 assets providers [--json]", options: {}, examples: ["vid2 assets providers --json"],
+  run({ args }) {
+    if (args.length) return Promise.reject(new Vid2Error("E_INPUT", "assets providers takes no arguments"));
+    return providers();
+  },
+};
+
+export const assets = parentCommand({
+  name: "assets", group: "media",
+  summary: "Generate and cache image/video assets from local files or ima2",
+  usage: "vid2 assets <resolve|gen|providers> [options] [--json]",
+  description: "vid2 render never calls a provider by itself; resolve or gen assets first, or render with --placeholders.",
+  options: {},
+  subcommands: [resolveSpec, genSpec, providersSpec],
+  examples: ["vid2 assets resolve timeline.json", "vid2 assets providers"],
+});

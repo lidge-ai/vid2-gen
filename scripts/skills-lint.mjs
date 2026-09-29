@@ -36,6 +36,10 @@ for (const entry of skillDirs) {
     for (const match of content.matchAll(/`vid2\s+([a-z][\w-]*)\b/g)) {
       if (!known.has(match[1])) failures.push(`${relative(root, path)}: unregistered command ${match[1]}`);
     }
+    for (const match of content.matchAll(/`vid2\s+([a-z][\w-]*)\s+([a-z][\w-]*)/g)) {
+      const subs = commands.get(match[1])?.subcommands?.map((sub) => sub.name);
+      if (subs && !subs.includes(match[2])) failures.push(`${relative(root, path)}: vid2 ${match[1]} has no subcommand ${match[2]}`);
+    }
     if (/`!/.test(content)) failures.push(`${relative(root, path)}: inline backtick-bang pattern`);
   }
 }

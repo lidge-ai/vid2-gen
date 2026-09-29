@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,4 +54,56 @@ test("packed install runs outside the checkout", { skip: process.env["VID2_PACK_
   const demo = join(root, "demo");
   assert.equal(run(["init", "feature-demo", demo, "--json"]).ok, true);
   assert.equal(run(["validate", join(demo, "timeline.json"), "--json"]).ok, true);
+
+  // 030 package contract: the installed CLI lists the example films and copies one into a workspace.
+  const examples = run(["example", "ls", "--json"]);
+  assert.equal(examples.ok, true);
+  assert.ok((examples.data["examples"] as unknown[]).length >= 6);
+  const intro = join(root, "intro");
+  const copied = run(["example", "new", "vid2-intro", "--dir", intro, "--json"]);
+  assert.equal(copied.ok, true);
+  assert.ok(readFileSync(join(intro, "build-timeline.mjs"), "utf8").length > 0);
+});
+
+/** npm on Windows is npm.cmd, which spawnSync can only start through a shell. */
+function npm(args: string[], cwd: string): string {
+  const result = spawnSync("npm", args, { cwd, encoding: "utf8", maxBuffer: 16 * 1024 * 1024, shell: process.platform === "win32" });
+  assert.equal(result.status, 0, `npm ${args.join(" ")} failed:\n${result.stderr}`);
+  return result.stdout;
+}
+
+function packedPaths(cwd: string): string[] {
+  const out = npm(["pack", "--dry-run", "--json", "--ignore-scripts"], cwd);
+  return (JSON.parse(out.slice(out.indexOf("["))) as { files: { path: string }[] }[])[0]!.files.map((f) => f.path.replace(/\\/g, "/"));
+}
+
+// 030 R6/A5/A6: example sources ship, workspace media and the repo-only helper never do. Runs in a temp copy so the checkout is untouched.
+test("the package ships example sources and no workspace media", () => {
+  const dir = mkdtempSync(join(tmpdir(), "vid2-pack-examples-"));
+  cpSync(join(repo, "package.json"), join(dir, "package.json"));
+  cpSync(join(repo, "examples"), join(dir, "examples"), { recursive: true });
+  // ima2-launch has no .gitignore of its own, so only package.json's "files" negations can keep these out.
+  const seeded = ["media/probe.bin", "out/x.mp4", ".work/y", "take.vid2cap/footage.mp4"].map((p) => `examples/ima2-launch/${p}`);
+  for (const path of seeded) { mkdirSync(join(dir, path, ".."), { recursive: true }); writeFileSync(join(dir, path), "x"); }
+  const packed = packedPaths(dir);
+  for (const path of seeded) assert.equal(packed.includes(path), false, path);
+  assert.equal(packed.includes("examples/workspace.mjs"), false);
+  assert.equal(packed.includes("examples/ima2-launch/check-sync.mjs"), false);
+  const manifests = readdirSync(join(repo, "examples"), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(repo, "examples", d.name, "example.json"))).map((d) => `examples/${d.name}/example.json`);
+  for (const manifest of manifests) assert.ok(packed.includes(manifest), manifest);
+  const bytes = packed.filter((p) => p.startsWith("examples/")).reduce((sum, p) => sum + statSync(join(dir, p)).size, 0);
+  assert.ok(bytes <= 600 * 1024, `example sources are ${bytes} bytes`);
+});
+
+test("every tracked example file except nested .gitignore files and workspace.mjs is packed", () => {
+  const listed = spawnSync("git", ["ls-files", "examples"], { cwd: repo, encoding: "utf8" });
+  if (listed.status !== 0) return; // a source tarball without git history has nothing to compare
+  const repoOnly = new Set(["examples/workspace.mjs", "examples/ima2-launch/check-sync.mjs"]);
+  const tracked = listed.stdout.split("\n").filter((p) => p && !p.endsWith("/.gitignore") && !repoOnly.has(p));
+  const packed = new Set(packedPaths(repo).filter((p) => p.startsWith("examples/")));
+  for (const path of tracked) assert.ok(packed.has(path), path);
+  for (const path of [...packed].filter((p) => /\.(mjs|js)$/.test(p))) {
+    assert.doesNotMatch(readFileSync(join(repo, path), "utf8"), /from ["']\.\.\/\.\.\/src\//, `${path} must not import the repository source`);
+  }
 });

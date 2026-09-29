@@ -39,6 +39,14 @@ jobs:
       - run: npm test
         env:
           VID2_REQUIRE_FFMPEG: '1'
-      - run: npm publish --provenance --access public
+      - name: Publish with NPM_TOKEN
+        if: vars.NPM_PUBLISH_MODE == 'token'
+        run: npm publish --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ vars.NPM_PUBLISH_MODE == 'token' && secrets.NPM_TOKEN || '' }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # setup-node writes an _authToken line that expands to an empty token here; drop it so npm uses the OIDC trusted publisher.
+      - name: Publish with Trusted Publishing (OIDC)
+        if: vars.NPM_PUBLISH_MODE == 'oidc'
+        run: |
+          sed -i '/_authToken/d' "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          npm publish --provenance --access public

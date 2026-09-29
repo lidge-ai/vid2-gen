@@ -140,3 +140,144 @@ void test("generated-video offline example holds a five-second clip once across 
   const manifest = JSON.parse(readFileSync(join(dir, "offline.mp4.render.json"), "utf8")) as { warnings: string[] };
   assert.deepEqual(manifest.warnings.filter((w) => w.startsWith("W_GENERATED_CLIP_HOLD")), holds);
 });
+
+// 030: every example ships a manifest whose steps are the README's commands, and vid2 example copies it into a workspace.
+const EXAMPLES = ["claude-codex-dawn", "generated-video", "ima2-launch", "opus-astra-paper", "vid2-intro", "vid2-launch"];
+
+function readmeLines(name: string): string[] {
+  const readme = readFileSync(join(root, "examples", name, "README.md"), "utf8");
+  return [...readme.matchAll(/```bash\n([\s\S]*?)```/g)].flatMap((m) => m[1]!.split("\n"))
+    .map((line) => line.replace(/\s+#\s.*$/, "").trim()).filter(Boolean);
+}
+
+void test("every example folder has a manifest whose steps are its README commands, in order", async () => {
+  const { listExamples, loadExample } = await import("../../src/examples/index.ts");
+  assert.deepEqual(listExamples(), EXAMPLES);
+  const tracked = await run("git", ["ls-files", "examples"], { cwd: root });
+  if (tracked.code === 0) {
+    const folders = [...new Set(tracked.stdout.toString("utf8").split("\n").filter((p) => p.split("/").length > 2).map((p) => p.split("/")[1]!))].sort();
+    assert.deepEqual(folders, EXAMPLES, "every tracked example folder has an example.json");
+  }
+  for (const name of EXAMPLES) {
+    const { manifest } = loadExample(name);
+    assert.equal(manifest.name, name);
+    const lines = readmeLines(name);
+    assert.equal(lines[0], `cd "$(vid2 example new ${name})"`, `${name}: build block starts in the workspace`);
+    assert.deepEqual(manifest.steps.map((s) => s.run), lines.filter((line) => !line.startsWith("cd ")), `${name}: steps match the README`);
+  }
+});
+
+void test("every vid2 step in a manifest is a real command with real options", async () => {
+  const { loadExample } = await import("../../src/examples/index.ts");
+  const { commands } = await import("../../src/cli/registry.ts");
+  const { resolveCommand, optionsFor } = await import("../../src/cli/tree.ts");
+  const { parseOptions } = await import("../../src/cli/args.ts");
+  for (const name of EXAMPLES) {
+    for (const { run: step } of loadExample(name).manifest.steps.filter((s) => s.run.startsWith("vid2 "))) {
+      const argv = step.split(/\s+/).slice(1);
+      const node = resolveCommand(argv, commands);
+      assert.doesNotThrow(() => parseOptions(node.rest, optionsFor(node), node.path.join(" ")), `${name}: ${step}`);
+    }
+  }
+});
+
+void test("the example index and the vid2-examples skill mention every example", () => {
+  const index = readFileSync(join(root, "examples/README.md"), "utf8");
+  const skill = readFileSync(join(root, "skills/vid2-examples/SKILL.md"), "utf8");
+  for (const name of EXAMPLES) {
+    assert.ok(index.includes(`[${name}](${name}/README.md)`), `examples/README.md row for ${name}`);
+    assert.ok(skill.includes(`\`${name}\``), `skill row for ${name}`);
+  }
+});
+
+void test("syncWorkspace copies sources only and keeps workspace media", async () => {
+  const { syncWorkspace } = await import("../../src/examples/index.ts");
+  const base = tempDir("vid2-example-sync-");
+  const source = join(base, "src/demo");
+  for (const file of ["media/a.png", "out/b.mp4", ".work/c", "x.vid2cap/d", "music/.DS_Store", ".DS_Store"]) {
+    mkdirSync(join(source, file, ".."), { recursive: true });
+    writeFileSync(join(source, file), "workspace-only");
+  }
+  writeFileSync(join(source, "README.md"), "readme");
+  writeFileSync(join(source, "example.json"), JSON.stringify({ name: "demo" }));
+  mkdirSync(join(source, "music"), { recursive: true });
+  writeFileSync(join(source, "music/song.json"), "{}");
+  const dest = join(base, "ws");
+  const opts = { sourceRoot: join(base, "src") };
+  const synced = syncWorkspace("demo", dest, opts);
+  assert.deepEqual(synced.files, ["README.md", "example.json", "music/song.json"]);
+  assert.deepEqual(synced.copied, synced.files);
+  for (const file of ["media/a.png", "out/b.mp4", ".work/c", "x.vid2cap/d", "music/.DS_Store", ".DS_Store"]) assert.equal(existsSync(join(dest, file)), false, file);
+  mkdirSync(join(dest, "media"), { recursive: true });
+  writeFileSync(join(dest, "media/keep.png"), "kept");
+  writeFileSync(join(dest, "README.md"), "my edit");
+  const again = syncWorkspace("demo", dest, opts);
+  assert.deepEqual(again.skipped, synced.files, "a re-run keeps every existing file");
+  assert.equal(readFileSync(join(dest, "README.md"), "utf8"), "my edit");
+  assert.equal(readFileSync(join(dest, "media/keep.png"), "utf8"), "kept");
+  const forced = syncWorkspace("demo", dest, { ...opts, force: true });
+  assert.deepEqual(forced.copied, synced.files);
+  assert.equal(readFileSync(join(dest, "README.md"), "utf8"), "readme");
+  assert.equal(readFileSync(join(dest, "media/keep.png"), "utf8"), "kept", "force never touches media");
+});
+
+void test("syncWorkspace refuses a file, the packaged source and a foreign non-empty folder", async () => {
+  const { syncWorkspace } = await import("../../src/examples/index.ts");
+  const base = tempDir("vid2-example-guard-");
+  const source = join(base, "src/demo");
+  mkdirSync(source, { recursive: true });
+  writeFileSync(join(source, "example.json"), JSON.stringify({ name: "demo" }));
+  const opts = { sourceRoot: join(base, "src") };
+  const file = join(base, "file.txt");
+  writeFileSync(file, "x");
+  const project = join(base, "project");
+  mkdirSync(project);
+  writeFileSync(join(project, "timeline.json"), "mine");
+  for (const [dest, pattern] of [[file, /is a file/], [source, /inside the example's packaged source/], [join(source, "sub"), /inside/],
+    [project, /not empty and is not the demo workspace/]] as const) {
+    assert.throws(() => syncWorkspace("demo", dest, opts), (e: Error & { code?: string }) => e.code === "E_INPUT" && pattern.test(e.message), dest);
+  }
+  assert.equal(readFileSync(join(project, "timeline.json"), "utf8"), "mine");
+  assert.equal(syncWorkspace("demo", project, { ...opts, force: true }).copied.length, 1);
+});
+
+void test("vid2 example new copies an example and prints its path; ls, show and path answer", async () => {
+  const home = tempDir("vid2-example-cli-");
+  const env = { ...process.env, VID2_HOME: home };
+  const created = await run(process.execPath, [cli, "example", "new", "vid2-intro"], { env });
+  assert.equal(created.code, 0, created.stderr);
+  const path = created.stdout.toString("utf8").trim();
+  assert.equal(path, join(home, "examples/vid2-intro"));
+  assert.ok(existsSync(join(path, "build-timeline.mjs")));
+  writeFileSync(join(path, "build-timeline.mjs"), "// my edit");
+  const rerun = await run(process.execPath, [cli, "example", "new", "vid2-intro"], { env });
+  assert.equal(rerun.code, 0, rerun.stderr);
+  assert.match(rerun.stderr, /kept \d+ existing file/);
+  assert.equal(readFileSync(join(path, "build-timeline.mjs"), "utf8"), "// my edit", "a re-run keeps edits");
+  const refused = await run(process.execPath, [cli, "example", "new", "opus-astra-paper", "--dir", path, "--json"], { env });
+  assert.equal(refused.code, 2, "another example's workspace is not overwritten");
+  const dir = join(home, "elsewhere");
+  const json = await run(process.execPath, [cli, "example", "new", "opus-astra-paper", "--dir", dir, "--json"], { env });
+  const body = JSON.parse(json.stdout.toString("utf8")) as { ok: boolean; data: { path: string; files: string[] } };
+  assert.equal(body.data.path, dir);
+  assert.ok(body.data.files.includes("example.json"));
+  const listed = JSON.parse((await run(process.execPath, [cli, "example", "ls", "--json"], { env })).stdout.toString("utf8")) as { data: { examples: { name: string; ready: boolean }[] } };
+  assert.deepEqual(listed.data.examples.filter((e) => e.ready).map((e) => e.name), ["vid2-intro"]);
+  const shown = await run(process.execPath, [cli, "example", "show", "vid2-launch", "--json"], { env });
+  assert.equal((JSON.parse(shown.stdout.toString("utf8")) as { data: { output: string } }).data.output, ".work/vid2-launch.mp4");
+  const source = await run(process.execPath, [cli, "example", "path", "vid2-intro", "--source"], { env });
+  assert.equal(source.stdout.toString("utf8").trim(), join(root, "examples/vid2-intro"));
+  const unknown = await run(process.execPath, [cli, "example", "new", "nope", "--json"], { env });
+  assert.equal(unknown.code, 2);
+});
+
+void test("an existing default workspace without example.json is accepted and keeps its files", async () => {
+  const home = tempDir("vid2-example-legacy-");
+  const legacy = join(home, "examples/vid2-intro");
+  mkdirSync(legacy, { recursive: true });
+  writeFileSync(join(legacy, "build-timeline.mjs"), "// edited before 0.5.0");
+  const r = await run(process.execPath, [cli, "example", "new", "vid2-intro", "--json"], { env: { ...process.env, VID2_HOME: home } });
+  assert.equal(r.code, 0, r.stdout.toString("utf8"));
+  assert.equal(readFileSync(join(legacy, "build-timeline.mjs"), "utf8"), "// edited before 0.5.0");
+  assert.ok(existsSync(join(legacy, "example.json")));
+});

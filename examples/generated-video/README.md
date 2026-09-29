@@ -2,9 +2,10 @@
 
 `timeline.json` requests a five-second Grok clip through ima2-gen and reads it for a seven-second scene. The final two seconds hold the clip's last frame. The render JSON and `<out>.render.json` report one `W_GENERATED_CLIP_HOLD` warning for `grok_clip boat_hold`.
 
-From this directory, with a ready Grok video lane in ima2-gen:
+In its workspace, with a ready Grok video lane in ima2-gen:
 
 ```bash
+cd "$(vid2 example new generated-video)"
 vid2 assets providers --json
 vid2 validate timeline.json --json
 vid2 assets resolve timeline.json --json

@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "title": "Quiet Reveal",
+  "bpm": 80,
+  "meter": {
+    "numerator": 4,
+    "denominator": 4
+  },
+  "key": "C major",
+  "seed": 2960,
+  "sampleRate": 44100,
+  "tailSeconds": 4,
+  "master": {
+    "ceilingDb": -1,
+    "targetLufs": -18
+  },
+  "fx": {
+    "reverb": {
+      "type": "hall",
+      "decaySeconds": 4.2,
+      "preDelayMs": 40,
+      "lowCutHz": 220,
+      "mix": 1
+    }
+  },
+  "tracks": [
+    {
+      "id": "chords",
+      "kind": "notes",
+      "instrument": "lib:grand-piano",
+      "velocity": 0.5,
+      "gain": -13,
+      "sends": {
+        "reverb": 0.3
+      },
+      "pattern": "<[c3,g3,b3,e4] [a2,e3,g3,b3] [f2,c3,e3,a3] [g2,d3,e3,b3]>"
+    },
+    {
+      "id": "melody",
+      "kind": "notes",
+      "instrument": "lib:grand-piano",
+      "velocity": 0.42,
+      "gain": -17,
+      "sends": {
+        "reverb": 0.45
+      },
+      "pattern": "<[~ ~ e5 ~ ~ ~ g5 ~] [~ ~ c5 ~ e5 ~ ~ ~] [~ ~ a4 ~ c5 ~ ~ ~] [~ d5 ~ ~ b4 ~ ~ ~]>"
+    },
+    {
+      "id": "bed",
+      "kind": "notes",
+      "instrument": "lib:strings",
+      "gain": -24,
+      "sends": {
+        "reverb": 0.5
+      },
+      "pattern": "<[c3,g3,e4] [a2,e3,c4] [f2,c3,a3] [g2,d3,b3]>"
+    }
+  ],
+  "sections": [
+    {
+      "id": "open",
+      "bars": 2,
+      "role": "intro",
+      "patterns": {
+        "melody": null,
+        "bed": null
+      }
+    },
+    {
+      "id": "main",
+      "bars": 6,
+      "role": "hook",
+      "patterns": {}
+    },
+    {
+      "id": "close",
+      "bars": 4,
+      "role": "outro",
+      "patterns": {
+        "melody": null
+      }
+    }
+  ],
+  "arrangement": [
+    {
+      "section": "open"
+    },
+    {
+      "section": "main"
+    },
+    {
+      "section": "close"
+    }
+  ]
+}

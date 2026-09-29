@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { loadSkillManifest, PACKAGE_ROOT, sha256, SKILLS_ROOT } from "./manifest.ts";
@@ -12,7 +12,7 @@ void test("manifest is deterministic and records packaged file hashes", () => {
   assert.equal(run.status, 0, run.stderr);
   assert.equal(readFileSync(path, "utf8"), before);
   const manifest = loadSkillManifest();
-  assert.equal(Object.keys(manifest).length, 6);
+  assert.equal(Object.keys(manifest).length, readdirSync(SKILLS_ROOT, { withFileTypes: true }).filter((d) => d.isDirectory()).length);
   for (const [name, entry] of Object.entries(manifest)) {
     for (const [file, digest] of Object.entries(entry.files)) {
       assert.equal(sha256(readFileSync(join(SKILLS_ROOT, name, file))), digest);

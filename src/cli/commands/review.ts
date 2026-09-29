@@ -17,16 +17,18 @@ function numberOption(values: Record<string, unknown>, name: string, max?: numbe
 }
 
 export const review: CommandSpec = {
-  name: "review", summary: "Analyze and review a rendered video with optional model listening",
-  usage: "vid2 review <video> [--timeline t.json] [--bpm N] [--out dir] [--base-url URL] [--model ID] [--listen] [--listen-excerpt S] [--json]",
+  name: "review", group: "review",
+  examples: ["vid2 review film.mp4 --timeline timeline.json --json","vid2 review film.mp4 --listen --listen-excerpt 20"],
+  description: "Runs analyze, then asks an image model (and optionally a listener) to score the film against a rubric.", summary: "Analyze and review a rendered video with optional model listening",
+  usage: "vid2 review <video> [--timeline timeline.json] [options] [--json]",
   options: {
-    timeline: { type: "string", description: "Authored timeline for scene boundaries" },
-    bpm: { type: "string", description: "Beat grid tempo" },
-    out: { type: "string", short: "o", description: "Review evidence directory" },
-    "base-url": { type: "string", description: "Bare HTTP(S) host for Chat Completions" },
-    model: { type: "string", description: "Image review model ID" },
+    timeline: { type: "string", value: "<timeline.json>", description: "Authored timeline for scene boundaries" },
+    bpm: { type: "string", value: "<bpm>", description: "Beat grid tempo" },
+    out: { type: "string", short: "o", value: "<dir>", description: "Review evidence directory", default: "<video>.review" },
+    "base-url": { type: "string", value: "<url>", description: "Bare HTTP(S) host for Chat Completions", default: "VID2_REVIEW_BASE_URL" },
+    model: { type: "string", value: "<id>", description: "Image review model ID", default: "VID2_REVIEW_MODEL" },
     listen: { type: "boolean", description: "Ask a configured audio model to hear an excerpt" },
-    "listen-excerpt": { type: "string", description: "Excerpt seconds, 1–120 (default 30)" },
+    "listen-excerpt": { type: "string", value: "<seconds>", description: "Excerpt length, 1-120", default: "30" },
   },
   async run({ args, values, cwd }) {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "review needs one video path");

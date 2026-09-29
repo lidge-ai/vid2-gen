@@ -1,12 +1,13 @@
 {
   "name": "vid2",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "skills": [
     "./skills/vid2",
     "./skills/vid2-timeline",
     "./skills/vid2-direction",
     "./skills/vid2-capture",
     "./skills/vid2-audio",
-    "./skills/vid2-cli"
+    "./skills/vid2-cli",
+    "./skills/vid2-examples"
   ]
 }

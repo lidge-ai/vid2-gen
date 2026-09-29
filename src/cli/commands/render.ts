@@ -12,18 +12,20 @@ function jobs(value: unknown): number | undefined {
 }
 
 export const render: CommandSpec = {
-  name: "render",
+  name: "render", group: "render",
+  examples: ["vid2 render timeline.json --profile proxy -o proxy.mp4","vid2 render timeline.json -o final.mp4 --hw","vid2 render timeline.json --hw-accel required --hw-encoder videotoolbox -o final.mp4","vid2 render timeline.json --segments intro --placeholders"],
+  description: "Scenes render as cached segments in parallel, then one final encode. --hw only changes that final encode.",
   summary: "Render a timeline (or compiled plan) to a video file",
-  usage: "vid2 render <timeline.json|x.plan.json> [-o out.mp4] [--profile proxy|final] [--segments id]... [--no-cache] [--hw-accel disable|if-possible|required] [--hw-encoder videotoolbox|nvenc|qsv|amf|vaapi] [--jobs N] [--json]",
+  usage: "vid2 render <timeline.json|x.plan.json> [options] [--json]",
   options: {
-    out: { type: "string", short: "o", description: "Output video path (default: <timeline>.mp4)" },
-    profile: { type: "string", description: "proxy (half size, fast) or final (default)" },
-    segments: { type: "string", multiple: true, description: "Force re-render of these scene or segment ids" },
+    out: { type: "string", short: "o", value: "<file.mp4>", description: "Output video path", default: "<timeline>.mp4" },
+    profile: { type: "string", value: "<proxy|final>", description: "proxy renders at half size, fast", default: "final" },
+    segments: { type: "string", multiple: true, value: "<id>", description: "Force re-render of these scene or segment ids" },
     "no-cache": { type: "boolean", description: "Ignore and do not write the segment cache" },
     hw: { type: "boolean", description: "Shorthand for --hw-accel if-possible" },
-    "hw-accel": { type: "string", description: "Final encode: disable (default), if-possible (probe, fall back to software) or required (fail without one)" },
-    "hw-encoder": { type: "string", description: "Limit hardware encoding to one family: videotoolbox, nvenc, qsv, amf or vaapi" },
-    jobs: { type: "string", description: "Parallel segment renders (default: half the CPUs)" },
+    "hw-accel": { type: "string", value: "<disable|if-possible|required>", description: "Final encode on a hardware encoder: if-possible falls back to software, required exits 3", default: "disable" },
+    "hw-encoder": { type: "string", value: "<videotoolbox|nvenc|qsv|amf|vaapi>", description: "Limit hardware encoding to one family" },
+    jobs: { type: "string", value: "<n>", description: "Parallel segment renders", default: "half the CPUs" },
     placeholders: { type: "boolean", description: "Stand in stripe images for missing media and uncached generated sources (no provider calls)" },
     generate: { type: "boolean", description: "Call asset providers (ima2) for generated sources that are not cached yet" },
   },
