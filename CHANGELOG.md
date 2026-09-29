@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 — 2026-09-29
+
+Hardware encoding you can trust, examples that keep only code in git, and the first npm release.
+
+**Hardware encoding.** `vid2 render --hw-accel disable|if-possible|required` (`--hw` is shorthand for `if-possible`) and `--hw-encoder videotoolbox|nvenc|qsv|amf|vaapi` choose the final encoder before any segment renders. An encoder counts only after a five-frame trial encode passes, so a compiled-in NVENC without a GPU no longer fails mid-render. H.264 and HEVC are supported in every family, ProRes through VideoToolbox, and VAAPI gets its device and `hwupload`. `if-possible` falls back to software with a warning. `required` exits 3 with the failed probes. Render JSON and `<out>.render.json` report `encoder: { name, hardware }`, and `vid2 doctor --hw` shows which encoders pass. VideoToolbox quality was raised from `q:v 65` to `q:v 70` (HEVC `q:v 74`) after measurement: on a grain-heavy 1080p film the old setting scored VMAF 96.6 at an 11× smaller file, while the new one scores 97.4 against 97.5 for software `x264 -preset slow -crf 18`. That film now renders in 34 s with `--hw-accel required` instead of 70 s.
+
+**Examples.** Examples keep their code and how-to in git. Media, captures, generated timelines and renders live in `$VID2_HOME/examples/<name>`, and `node examples/workspace.mjs <name>` copies the sources there. `examples/README.md` indexes them. Two motion examples are new: `opus-astra-paper`, a paper-cutout short made only from stage nodes, and `claude-codex-dawn`, a puppet film with reusable helper modules. The vid2-launch captures and stills and the ima2 icon left the repository; each README lists the command that recreates them.
+
+**Bun.** vid2 runs under Bun and renders frames identical to Node's; a CI job checks this on every change. It is not faster: a full render took 55–57 s on Bun against 54 s on Node, and the stage renderer ran at 51 fps against 64 fps. Node 22.18+ remains the supported runtime.
+
+**Install.** `npm install -g vid2-gen`. CI now also runs on pushes to `dev`.
+
 ## 0.3.0 — 2026-09-28
 
 Cuts that land on the beat, a film you can inspect without watching it, and a finishing layer for looks and HUDs.

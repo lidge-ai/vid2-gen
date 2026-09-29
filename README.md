@@ -24,11 +24,11 @@ music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 Requires **Node.js 22.18 or newer** and **ffmpeg/ffprobe 6.1 or newer** on your PATH. ffmpeg 7.1+ is recommended. Install ffmpeg with `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg` on Windows, or your Linux distribution's package manager.
 
 ```bash
-npm install -g https://github.com/lidge-ai/vid2-gen/releases/download/v0.3.0/vid2-gen-0.3.0.tgz
+npm install -g vid2-gen
 vid2 doctor
 ```
 
-npm publication of `vid2-gen` is pending; the command above installs the exact release tarball. From a source checkout:
+From a source checkout:
 
 ```bash
 npm ci

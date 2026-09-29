@@ -30,7 +30,8 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          # npm 11.5+ (Node 24) is required for Trusted Publishing (NPM_PUBLISH_MODE=oidc).
+          node-version: '24'
           registry-url: https://registry.npmjs.org
           cache: npm
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
