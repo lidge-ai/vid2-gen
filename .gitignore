@@ -6,7 +6,9 @@ coverage/
 .DS_Store
 out/
 .tmp/
-examples/ima2-launch/*.vid2cap/
-examples/ima2-launch/.work/
-examples/ima2-launch/media/music.wav
+# Example media, captures and renders live in $VID2_HOME/examples/<name> (examples/README.md).
+examples/*/media/
+examples/*/out/
+examples/*/.work/
+examples/*/*.vid2cap/
 examples/opencodex-*/

@@ -1,3 +1,0 @@
-{"id":"a1","seq":0,"kind":"goto","tMs":0.986792,"endMs":12.0265,"frame":0,"source":"agent"}
-{"id":"a2","seq":1,"kind":"hover","tMs":1532.130084,"endMs":1563.581,"frame":46,"point":{"x":1732.5,"y":298.5000114440918},"bbox":{"x":1605,"y":261.50001525878906,"width":255,"height":73.99999237060547},"source":"agent"}
-{"id":"a3","seq":2,"kind":"click","label":"publish","tMs":2067.590042,"endMs":2085.282375,"frame":62,"point":{"x":1732.5,"y":298.5000114440918},"bbox":{"x":1605,"y":261.50001525878906,"width":255,"height":73.99999237060547},"source":"agent"}
