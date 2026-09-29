@@ -38,13 +38,14 @@ async function namedTimes(path: string, cwd: string): Promise<{ resolved: Resolv
 }
 
 export const preview: CommandSpec = {
-  name: "preview",
+  name: "preview", group: "render",
+  examples: ["vid2 preview timeline.json --at 0,25%,1.5s,drop,click#2 --out preview","vid2 preview timeline.json --at 4bar --placeholders"],
   summary: "Render storyboard stills at timeline times, markers or capture events",
-  usage: "vid2 preview <timeline> --at 0,25%,1.5s,drop,click#2 [--out dir] [--profile proxy|final] [--placeholders] [--segment-only] [--json]",
+  usage: "vid2 preview <timeline.json> --at <times> [options] [--json]",
   options: {
-    at: { type: "string", description: "comma-separated seconds, frames, beats, bars, percent, marker or event" },
-    out: { type: "string", short: "o", description: "stills output directory" },
-    profile: { type: "string", description: "proxy (default) or final" },
+    at: { type: "string", value: "<times>", description: "Comma-separated seconds, frames (f), beats (b), bars, percent, markers or capture events" },
+    out: { type: "string", short: "o", value: "<dir>", description: "Stills output directory" },
+    profile: { type: "string", value: "<proxy|final>", description: "Render profile for the stills", default: "proxy" },
     placeholders: { type: "boolean", description: "substitute missing media without calling providers" },
     "segment-only": { type: "boolean", description: "show the bare scene segment" },
   },

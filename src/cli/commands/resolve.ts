@@ -7,7 +7,8 @@ import { decorateCaptureLayers, loadCaptures } from "../../capture/index.ts";
 import { materializeSources } from "../../assets/index.ts";
 
 export const resolve: CommandSpec = {
-  name: "resolve",
+  name: "resolve", group: "author",
+  examples: ["vid2 resolve timeline.json --json"],
   summary: "Resolve symbolic timeline times to frames",
   usage: "vid2 resolve <timeline.json> [--json]",
   options: {},

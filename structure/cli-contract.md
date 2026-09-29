@@ -2,7 +2,30 @@
 
 The executable is `vid2`. Every command accepts `--json`; `VID2_JSON=1` has the same effect. JSON mode writes exactly one newline-terminated object to stdout. Human-readable output goes to stdout on success and stderr on failure. Commands never prompt.
 
-Available in the foundations phase: `doctor [--deep]`, `schema`, `validate <timeline.json>`, `resolve <timeline.json>`, `version`, and `help [command]`. `--help` on a command prints its usage. `help --json` returns every command's name, summary, usage, and options for agent discovery.
+## Commands, subcommands and help
+
+Commands live in `src/cli/registry.ts` as `CommandSpec`s: name, summary, one-line `usage`, `group`, `description`, `examples`,
+`options` (each with `value` and `default` for help) and optional `subcommands`. `audio`, `assets`, `capture` and `skill` are
+parents; each subcommand has its own options and `run`. A subcommand must directly follow its parent
+(`vid2 audio beats x.wav`). `src/cli/tree.ts` resolves argv to the deepest spec and applies these rules:
+
+- A parent with no positional word runs its `defaultSubcommand` (`skill` → `list`) or fails `E_INPUT "<parent> needs a subcommand"`
+  with `details.subcommands`.
+- An unknown word fails `E_INPUT unknown subcommand` (or `unknown command` at the top) with `details.suggestion` when a name is within
+  edit distance 2. A subcommand word after an option (`vid2 audio --json beats`) fails with "beats must directly follow vid2 audio".
+- Options are strict per command: a subcommand accepts its own options, its parent's options and the global `--json` and `-h/--help`.
+  `-v/--version` is accepted only before a command word.
+
+`-h`/`--help` anywhere, and `vid2 help <command> [subcommand]`, answer with help for the deepest spec before options are parsed, so
+help never runs a command and never fails on a bad flag. Text help shows the synopsis, description, subcommands, options with value
+names and defaults, inherited and global options, and examples; the root help groups commands and lists the environment variables.
+
+JSON help (`--json`): `vid2 help` returns `data.usage` (the root text), `data.commands[]` (`name`, `summary`, `usage`, `options`, plus
+`path`, `group`, `description`, `examples`, `subcommands[]` of the same shape, `defaultSubcommand`), `data.globalOptions` and
+`data.environment`. Help for a command or subcommand returns `data.command` (the path, e.g. `"audio beats"`), `data.options` (own and
+inherited), `data.synopsis` (the one-line usage), `data.summary`, `data.examples`, `data.subcommands`, `data.globalOptions`,
+`data.commands` (that one spec) and `data.usage`. Since 0.5.0 `data.usage` holds the full help text; read `data.synopsis` for the
+one-line form. A failure envelope's `command` is the resolved path (`"audio beats"`); success `command` values are unchanged.
 
 Success shape:
 

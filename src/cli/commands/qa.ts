@@ -8,13 +8,15 @@ import type { CommandSpec } from "../registry.ts";
 import { loadTimeline } from "./timeline-file.ts";
 
 export const qa: CommandSpec = {
-  name: "qa",
+  name: "qa", group: "review",
+  examples: ["vid2 qa final.mp4 --timeline timeline.json --expect-audio","vid2 qa final.mp4 --waive black@0-0.4 --out qa"],
+  description: "Measures black frames, freezes, loudness, sync and text safety; exits 6 when a failing issue is open.",
   summary: "Check a rendered video and produce a review report",
-  usage: "vid2 qa <video> [--timeline t.json] [--out dir] [--waive black@0-0.4] [--expect-audio] [--strict-motion] [--json]",
+  usage: "vid2 qa <video> [--timeline timeline.json] [options] [--json]",
   options: {
-    timeline: { type: "string", description: "Authored timeline for duration, text, events and waivers" },
-    out: { type: "string", short: "o", description: "QA artifact directory" },
-    waive: { type: "string", description: "Comma-separated check@from-to time waivers" },
+    timeline: { type: "string", value: "<timeline.json>", description: "Authored timeline for duration, text, events and waivers" },
+    out: { type: "string", short: "o", value: "<dir>", description: "QA artifact directory", default: "<video>.qa" },
+    waive: { type: "string", value: "<check@from-to,...>", description: "Waive a check over a time range" },
     "expect-audio": { type: "boolean", description: "Fail if audio is absent" },
     "strict-motion": { type: "boolean", description: "Treat a frozen interval as a failure" },
   },

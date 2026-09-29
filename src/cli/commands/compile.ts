@@ -5,13 +5,14 @@ import type { CommandSpec } from "../registry.ts";
 import { planFromTimeline, profileOf } from "./plan-shared.ts";
 
 export const compile: CommandSpec = {
-  name: "compile",
+  name: "compile", group: "author",
+  examples: ["vid2 compile timeline.json -o timeline.plan.json","vid2 render timeline.plan.json -o out.mp4"],
   summary: "Compile a timeline to an ffmpeg render plan",
-  usage: "vid2 compile <timeline.json> [--profile proxy|final] [--out plan.plan.json] [--json]",
+  usage: "vid2 compile <timeline.json> [--profile proxy|final] [-o x.plan.json] [--json]",
   options: {
-    profile: { type: "string", description: "Render profile: proxy (half size, fast) or final (default)" },
+    profile: { type: "string", value: "<proxy|final>", description: "Render profile: proxy is half size and fast", default: "final" },
     placeholders: { type: "boolean", description: "Stand in stripe images for missing media and uncached generated sources" },
-    out: { type: "string", short: "o", description: "Write the plan JSON to this path (name it *.plan.json)" },
+    out: { type: "string", short: "o", value: "<x.plan.json>", description: "Write the plan JSON to this path" },
   },
   async run({ args, values, cwd }) {
     if (args.length !== 1) throw new Vid2Error("E_INPUT", "compile needs one timeline path");
