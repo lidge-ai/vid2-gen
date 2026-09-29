@@ -57,6 +57,8 @@ export function locate(argv: string[], registry: Map<string, CommandSpec>, opts:
   const help = opts.help === true || head.some((a) => a === "-h" || a === "--help");
   const first = head.findIndex((a) => !isFlag(a));
   if (first < 0) {
+    if (end >= 0 && end + 1 < argv.length) throw new Vid2Error("E_INPUT", "put the command before --", {
+      details: { argv }, fix: `vid2 ${argv[end + 1]} ... -- ...` });
     const version = !help && head.some((a) => a === "-v" || a === "--version");
     return { spec: registry.get(version ? "version" : "help")!, path: [], parents: [], rest: argv, help, version };
   }
@@ -79,9 +81,12 @@ export function locate(argv: string[], registry: Map<string, CommandSpec>, opts:
 /** Own options plus every parent's, plus the global ones; a key defined twice is a programming error. */
 export function optionsFor(node: Pick<Located, "spec" | "parents">): Record<string, CommandOption> {
   const merged: Record<string, CommandOption> = { ...GLOBAL_OPTIONS };
+  const shorts = new Set(Object.values(GLOBAL_OPTIONS).flatMap((o) => (o.short ? [o.short] : [])));
   for (const level of [...node.parents, node.spec]) {
     for (const [key, option] of Object.entries(level.options)) {
       if (Object.hasOwn(merged, key)) throw new Vid2Error("E_INTERNAL", `option --${key} is defined twice on the path to ${node.spec.name}`);
+      if (option.short && shorts.has(option.short)) throw new Vid2Error("E_INTERNAL", `short option -${option.short} is defined twice on the path to ${node.spec.name}`);
+      if (option.short) shorts.add(option.short);
       merged[key] = option;
     }
   }
@@ -124,6 +129,8 @@ export function settle(loc: Located): Located {
     return { ...loc, spec: fallback, parents: [...loc.parents, spec], path: [...loc.path, fallback.name] };
   }
   const misplaced = positionals.find((word) => names.includes(word));
+  const target = misplaced === undefined ? undefined : spec.subcommands.find((s) => s.name === misplaced);
+  if (target && loc.help) return { ...loc, spec: target, parents: [...loc.parents, spec], path: [...loc.path, target.name] };
   if (misplaced) throw new Vid2Error("E_INPUT", `${misplaced} must directly follow vid2 ${where}`, {
     details: { subcommands: names }, fix: `vid2 ${where} ${misplaced} [options]` });
   throw unknownSubcommand(where, positionals[0]!, names);

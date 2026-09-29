@@ -112,7 +112,7 @@ async function providers(): Promise<CommandResult> {
   return { command: "assets providers", data: capabilities };
 }
 
-export const ASSETS_GEN_OPTIONS: Record<string, CommandOption> = {
+const ASSETS_GEN_OPTIONS: Record<string, CommandOption> = {
   size: { type: "string", value: "<WxH>", description: "Image size, e.g. 1536x1024" },
   quality: { type: "string", value: "<quality>", description: "Image quality, passed to the provider" },
   background: { type: "string", value: "<opaque|transparent|chroma-green>", description: "Image background" },

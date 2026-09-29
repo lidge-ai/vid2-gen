@@ -114,6 +114,19 @@ void test("typos get suggestions; misplaced subcommands are named", async () => 
   assert.match((misplaced.body["error"] as { message: string }).message, /beats must directly follow vid2 audio/);
   const valued = await run(["skill", "--agent", "codex", "--json"]);
   assert.doesNotMatch((valued.body["error"] as { message: string }).message, /subcommand/, "an option value is not taken for a subcommand");
+  const helpFirst = await run(["audio", "--help", "beats", "--json"]);
+  assert.equal(helpFirst.code, 0, "--help before the subcommand word still answers");
+  assert.equal((helpFirst.body["data"] as { command: string }).command, "audio beats");
+  assert.equal((await run(["help", "audio", "beats", "extra", "--json"])).code, 2);
+  assert.equal((await run(["--", "render", "t.json", "--json"])).code, 2);
+});
+
+void test("optionsFor refuses a long or short option defined twice on one path", () => {
+  const out = { type: "string" as const, short: "o", description: "out" };
+  const leaf = (options: CommandSpec["options"]): CommandSpec => ({ name: "leaf", summary: "", usage: "", options, run: () => Promise.reject(new Error("no")) });
+  assert.throws(() => optionsFor({ spec: leaf({ out }), parents: [leaf({ out })] }), /--out is defined twice/);
+  assert.throws(() => optionsFor({ spec: leaf({ output: out }), parents: [leaf({ out })] }), /-o is defined twice/);
+  assert.throws(() => optionsFor({ spec: leaf({ hint: { type: "boolean", short: "h", description: "x" } }), parents: [] }), /-h is defined twice/);
 });
 
 void test("main runs the deepest spec with the remaining args; extra args are refused", async () => {

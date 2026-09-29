@@ -15,7 +15,7 @@ export function parseOptions(args: string[], options: Record<string, CommandOpti
     return parseArgs({ args, options: config, allowPositionals: true, strict: true });
   } catch (error) {
     throw new Vid2Error("E_INPUT", error instanceof Error ? error.message : "invalid arguments", {
-      fix: `run vid2 ${where || "help"} --help`,
+      fix: `run vid2 ${where ? `${where} ` : ""}--help`,
     });
   }
 }
