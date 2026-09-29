@@ -14,7 +14,7 @@ written with [music2-gen](https://github.com/lidge-ai/music2-gen), so one bar is
 ## Build and render
 
 ```bash
-cd "$(node examples/workspace.mjs opus-astra-paper)"
+cd "$(vid2 example new opus-astra-paper)"
 node make-paper.mjs media/paper.png
 node music/gen-song.mjs music/opus-astra.song.json
 music2 render music/opus-astra.song.json -o media/music.wav
@@ -32,5 +32,5 @@ Without music2-gen, drop the `music` source and `audio` block from `build-timeli
 
 The key collector keeps one keyframe map per node and property, so helpers such as `face()` or `floatHeart()` can add motion to the
 same node without knowing about each other; `layer()` turns the maps into sorted tracks at the end. A seeded `rnd()` keeps confetti
-and paper fibres identical between renders, which keeps the stage cache warm. See [structure/stage.md](../../structure/stage.md) for the
+and paper fibres identical between renders, which keeps the stage cache warm. See [structure/stage.md](https://github.com/lidge-ai/vid2-gen/blob/main/structure/stage.md) for the
 node kinds, easing names and spring parameters the stage accepts.

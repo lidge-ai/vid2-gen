@@ -1,0 +1,84 @@
+{
+  "name": "claude-codex-dawn",
+  "title": "Claude & Codex, at dawn — paper puppets",
+  "summary": "A 74-second puppet film: two logo cutouts with googly eyes walk from night into sunrise across nine scenes, built from reusable puppet and world modules.",
+  "durationS": 74,
+  "size": "1920x1080",
+  "techniques": [
+    "reusable puppet builders and verbs (to, hops, wave, blink, look)",
+    "sky, sun and hills world module",
+    "speech bubbles and captions",
+    "logo cutouts with shadows",
+    "longer film split into modules",
+    "bar-aligned scenes (100 BPM)"
+  ],
+  "goodFor": [
+    "longer character story (a minute or more)",
+    "logos or mascots as walking puppets",
+    "day/night or sunrise mood piece",
+    "reusable character rig across many scenes"
+  ],
+  "needs": [
+    {
+      "tool": "ffmpeg"
+    },
+    {
+      "tool": "rsvg-convert",
+      "note": "librsvg, used by prepare-assets.mjs"
+    },
+    {
+      "tool": "your own logo files and Korean fonts",
+      "note": "CLAUDE_SVG, CODEX_PNG and FONT_DIR; nothing is bundled"
+    },
+    {
+      "tool": "music2-gen",
+      "optional": true,
+      "note": "renders the cue"
+    }
+  ],
+  "edit": [
+    {
+      "file": "build-timeline.mjs",
+      "what": "the nine scenes and their timing"
+    },
+    {
+      "file": "puppets.mjs",
+      "what": "puppet shapes and verbs"
+    },
+    {
+      "file": "lib.mjs",
+      "what": "palette, world, bubbles and captions"
+    },
+    {
+      "file": "prepare-assets.mjs",
+      "what": "which logo files become cutouts"
+    }
+  ],
+  "steps": [
+    {
+      "run": "CLAUDE_SVG=/path/to/claude-spark.svg CODEX_PNG=/path/to/codex-icon.png FONT_DIR=/path/to/kopubworld-fonts node prepare-assets.mjs"
+    },
+    {
+      "run": "node music/gen-song.mjs music/dawn.song.json"
+    },
+    {
+      "run": "music2 render music/dawn.song.json -o media/music.wav"
+    },
+    {
+      "run": "node build-timeline.mjs"
+    },
+    {
+      "run": "vid2 validate timeline.json"
+    },
+    {
+      "run": "vid2 render timeline.json --profile proxy -o out/proxy.mp4"
+    },
+    {
+      "run": "vid2 render timeline.json -o out/claude-codex-dawn.mp4 --hw"
+    },
+    {
+      "run": "vid2 qa out/claude-codex-dawn.mp4 --timeline timeline.json --expect-audio --out out/qa"
+    }
+  ],
+  "output": "out/claude-codex-dawn.mp4"
+}

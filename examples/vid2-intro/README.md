@@ -7,7 +7,7 @@ four verbs lit one at a time, a rolling number for the hardware-encode speed-up,
 `build-timeline.mjs` writes `timeline.json`. Every visual is a vid2 stage node.
 
 ```bash
-cd "$(node examples/workspace.mjs vid2-intro)"
+cd "$(vid2 example new vid2-intro)"
 mkdir -p media && npx -y music2-gen render music/vid2-intro.song.json -o media/music.wav
 node build-timeline.mjs                                    # writes timeline.json
 vid2 validate timeline.json
@@ -16,7 +16,7 @@ vid2 render timeline.json -o out/vid2-intro.mp4 --hw-accel if-possible
 vid2 qa out/vid2-intro.mp4 --timeline timeline.json --expect-audio --out out/qa
 ```
 
-The 34 s in the number roll is the measured `--hw-accel required` time for [opus-astra-paper](../opus-astra-paper/README.md); this film
+The 34 s in the number roll is the measured `--hw-accel required` time for the opus-astra-paper example (`vid2 example show opus-astra-paper`); this film
 itself renders in about 25 s with hardware encoding. QA reports a contrast warning on the verbs scene by design: the three unlit words
 are dimmed to about 2.6:1 so the lit word leads.
 

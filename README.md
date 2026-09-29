@@ -17,7 +17,7 @@ music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 | Sound that fits | synthesized music beds, sound effects anchored to cuts and clicks, voice ducking, two-pass loudness to −14 LUFS |
 | Generated assets | optional [ima2-gen](https://github.com/lidge-ai/ima2-gen) images and Grok clips, cached so renders stay offline and repeatable |
 | Proof, not vibes | `vid2 qa` writes a contact sheet, seam stills, loudness and black/freeze checks; `vid2 preview` renders any frame exactly |
-| Agent-ready | JSON everywhere, typed exit codes, `vid2 capabilities`, six packaged Agent Skills, five templates |
+| Agent-ready | JSON everywhere, typed exit codes, `vid2 capabilities`, seven packaged Agent Skills, five templates, six example films (`vid2 example`) |
 
 ## Install
 
@@ -152,7 +152,8 @@ under voice-over, and masters to −14 LUFS. ElevenLabs and a local ACE-Step ser
 | `assets` | Generate images and Grok clips through ima2-gen (optional), cached by request |
 | `preview`, `qa`, `probe` | Frames through the real composition; evidence report (contact sheet, seams, loudness, black/freeze, contrast) |
 | `analyze`, `review` | Shot, color, motion and DSP analysis; optional frame review and audio listening |
-| `init`, `skill`, `capabilities` | Templates, packaged agent skills, one-call capability summary (layers, icons, transitions) |
+| `init`, `example` | Copy a template, or list the example films and copy one into a workspace with its exact steps |
+| `skill`, `capabilities` | Packaged agent skills, one-call capability summary (layers, icons, transitions) |
 
 Every command and subcommand answers `--help` with its arguments, options (value names and defaults) and examples, for example
 `vid2 render --help` or `vid2 audio beats --help`; `vid2 help audio beats` prints the same text.

@@ -7,6 +7,7 @@
     "./skills/vid2-direction",
     "./skills/vid2-capture",
     "./skills/vid2-audio",
-    "./skills/vid2-cli"
+    "./skills/vid2-cli",
+    "./skills/vid2-examples"
   ]
 }

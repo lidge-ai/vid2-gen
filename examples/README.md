@@ -1,17 +1,22 @@
 # Examples
 
 Each folder holds the code and instructions for one video made with vid2: timeline sources or the scripts that build them, capture
-steps, music sources and a README that lists every command. Media, captures, generated timelines and renders are not committed. They live
-in the example's workspace, `$VID2_HOME/examples/<name>` (by default `~/.vid2/examples/<name>`).
+steps, music sources, a README that lists every command and an `example.json` manifest with the same steps. The sources ship with the
+npm package. Media, captures, generated timelines and renders are never committed; they live in the example's workspace,
+`$VID2_HOME/examples/<name>` (by default `~/.vid2/examples/<name>`).
 
 ```bash
-node examples/workspace.mjs --list              # examples, and which already have a workspace
-cd "$(node examples/workspace.mjs opus-astra-paper)"   # copy the sources into the workspace and enter it
+vid2 example ls                              # examples, and which already have a workspace
+vid2 example show opus-astra-paper           # what it needs, which files to edit, the exact steps
+cd "$(vid2 example new opus-astra-paper)"    # copy the sources into the workspace and enter it
 ```
 
-`workspace.mjs` copies the repository sources over their workspace copies and leaves `media/`, `out/`, `.work/` and `*.vid2cap/`
-alone, so you can re-sync after pulling. Edit sources in the repository, not in the workspace, or the next sync will overwrite them.
-Timeline paths resolve relative to the timeline file, so every command in a README runs from inside the workspace.
+`vid2 example new` copies only files the workspace does not have yet, so re-running it keeps your edits; `--force` refreshes every
+source file from the package. `media/`, `out/`, `.work/` and `*.vid2cap/` are never touched, and `--dir <path>` copies into an empty
+or new folder instead (a non-empty one needs `--force`). Timeline paths resolve relative to the
+timeline file, so every command in a README runs from inside the workspace. Agents can load the `vid2-examples` skill to pick the
+closest example for a request. In a repository checkout, `node examples/workspace.mjs <name>` is `vid2 example new --force` from the
+checkout: edit sources in the repository, not in the workspace, or the next sync will overwrite them.
 
 | Example | What it shows | Needs |
 |---|---|---|
@@ -24,4 +29,4 @@ Timeline paths resolve relative to the timeline file, so every command in a READ
 | [hello.json](hello.json) | The smallest timeline; render it in place (`vid2 render examples/hello.json -o hello.mp4`), no workspace needed | ffmpeg |
 
 Rendering is ffmpeg-bound. Add `--hw` to `vid2 render` to use a hardware encoder for the final encode; see the
-[render contract](../structure/render.md#profiles-and-encoders) for what it changes.
+[render contract](https://github.com/lidge-ai/vid2-gen/blob/main/structure/render.md#profiles-and-encoders) for what it changes.

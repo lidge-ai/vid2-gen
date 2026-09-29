@@ -1,5 +1,5 @@
 {
- "$schema": "../../schema/timeline.v1.json",
+ "$schema": "https://raw.githubusercontent.com/lidge-ai/vid2-gen/main/schema/timeline.v1.json",
  "version": 1,
  "output": {
   "width": 1920,

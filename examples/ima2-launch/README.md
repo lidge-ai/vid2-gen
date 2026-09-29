@@ -10,7 +10,7 @@ with the brand reveal (11.25 s) and the breakdown on bar 23 with the "local" sce
 stay clear, and the dark pad blooms on bar 2. Render the WAV in the workspace before rendering the film:
 
 ```bash
-cd "$(node examples/workspace.mjs ima2-launch)"
+cd "$(vid2 example new ima2-launch)"
 node music/gen-song.mjs music/ima2-launch.song.json
 music2 render music/ima2-launch.song.json -o media/music.wav
 ```
@@ -20,15 +20,17 @@ Generated media (captures, ima2 images, the icon, the cue WAV and renders) are n
 (`ima2 serve`, signed in):
 
 ```bash
-cd "$(node examples/workspace.mjs ima2-launch)"
+cd "$(vid2 example new ima2-launch)"
 vid2 capture web --url http://127.0.0.1:3333 --steps ui.steps.json --size 1440x900 --scale 1.5 --out ui
 vid2 assets resolve timeline.json                  # backdrop + six gallery images with ima2-gen
 vid2 validate timeline.json
 vid2 render timeline.json -o .work/ima2-launch.mp4
 vid2 qa .work/ima2-launch.mp4 --timeline timeline.json --expect-audio --out .work/qa
-vid2 compile timeline.json -o .work/film.plan.json
-node check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4   # cue anchors, onsets, typing cadence
 ```
+
+With a vid2-gen repository checkout, run `vid2 compile timeline.json -o .work/film.plan.json` and then
+`node <checkout>/examples/ima2-launch/check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4` from the workspace to check cue anchors,
+onsets and typing cadence. The script imports vid2's source, so it runs only from the checkout and is not part of the npm package.
 
 Without ima2-gen, `vid2 render timeline.json --placeholders` renders the generated sources as labelled placeholders (the capture is still
 needed; record any app with the same steps file).

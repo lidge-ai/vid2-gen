@@ -1,0 +1,53 @@
+{
+  "name": "generated-video",
+  "title": "generated-video — a generated clip held across a longer layer",
+  "summary": "A five-second Grok clip generated through ima2-gen and read for a seven-second scene, with an offline twin that uses a local file.",
+  "durationS": 7,
+  "size": "320x180",
+  "techniques": [
+    "generated video source (Grok through ima2-gen)",
+    "last-frame hold with W_GENERATED_CLIP_HOLD",
+    "offline twin through the file provider"
+  ],
+  "goodFor": [
+    "adding an AI-generated clip to a timeline",
+    "testing a generated source without a provider (offline twin)"
+  ],
+  "needs": [
+    {
+      "tool": "ffmpeg"
+    },
+    {
+      "tool": "ima2-gen",
+      "note": "with a ready Grok video lane; a cache miss may be a paid request"
+    }
+  ],
+  "edit": [
+    {
+      "file": "timeline.json",
+      "what": "the prompt and clip options"
+    },
+    {
+      "file": "timeline.offline.json",
+      "what": "the offline twin's local clip"
+    }
+  ],
+  "steps": [
+    {
+      "run": "vid2 assets providers --json"
+    },
+    {
+      "run": "vid2 validate timeline.json --json"
+    },
+    {
+      "run": "vid2 assets resolve timeline.json --json"
+    },
+    {
+      "run": "vid2 render timeline.json --profile proxy -o generated-video.mp4 --json"
+    },
+    {
+      "run": "vid2 qa generated-video.mp4 --timeline timeline.json --json"
+    }
+  ],
+  "output": "generated-video.mp4"
+}

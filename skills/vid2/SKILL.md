@@ -9,6 +9,7 @@ vid2 is a timeline compiler and local renderer. Read the smallest domain skill t
 
 | Current state | First action | Next skill |
 |---|---|---|
+| Request resembles a shipped example or template ("make a video like…", paper cutout, puppets, launch film, keynote intro) | Pick the closest example and copy it into a workspace. | [examples](../vid2-examples/SKILL.md) |
 | Existing video or timeline | Inspect timeline, sources, output and last QA report; validate it. | [timeline](../vid2-timeline/SKILL.md) and [CLI](../vid2-cli/SKILL.md) |
 | Timeline exists but needs creative revision | Keep its real sources and timing anchors; storyboard the affected scenes. | [direction](../vid2-direction/SKILL.md) |
 | Fresh brief | Write one takeaway, audience, aspect, length, source inventory, and 1–2 visual references; create scene stills first. | [direction](../vid2-direction/SKILL.md), then [timeline](../vid2-timeline/SKILL.md) |

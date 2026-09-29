@@ -5,8 +5,8 @@ The executable is `vid2`. Every command accepts `--json`; `VID2_JSON=1` has the 
 ## Commands, subcommands and help
 
 Commands live in `src/cli/registry.ts` as `CommandSpec`s: name, summary, one-line `usage`, `group`, `description`, `examples`,
-`options` (each with `value` and `default` for help) and optional `subcommands`. `audio`, `assets`, `capture` and `skill` are
-parents; each subcommand has its own options and `run`. A subcommand must directly follow its parent
+`options` (each with `value` and `default` for help) and optional `subcommands`. `audio`, `assets`, `capture`, `example` and
+`skill` are parents; each subcommand has its own options and `run`. A subcommand must directly follow its parent
 (`vid2 audio beats x.wav`). `src/cli/tree.ts` resolves argv to the deepest spec and applies these rules:
 
 - A parent with no positional word runs its `defaultSubcommand` (`skill` → `list`) or fails `E_INPUT "<parent> needs a subcommand"`

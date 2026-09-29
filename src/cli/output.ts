@@ -6,6 +6,8 @@ export interface CommandResult {
   data: Record<string, unknown>;
   artifacts?: string[];
   warnings?: string[];
+  /** Human-readable form for text mode (e.g. a bare path for cd "$(...)"); JSON mode ignores it. */
+  text?: string;
 }
 
 export function renderSuccess(result: CommandResult, json: boolean): string {
@@ -19,6 +21,7 @@ export function renderSuccess(result: CommandResult, json: boolean): string {
   });
   if (result.command === "version") return `vid2 ${String(result.data["version"])}`;
   if (result.command === "help") return typeof result.data["usage"] === "string" ? result.data["usage"] : "";
+  if (result.text !== undefined) return result.text;
   return JSON.stringify(result.data, null, 2);
 }
 
