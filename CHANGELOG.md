@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-09-30
+
+Help you can navigate, the example films on demand, and a repository of its own.
 
 **Examples on demand.** The six example films now ship in the npm package as code and steps, each with an `example.json` manifest.
 `vid2 example ls` lists them, `vid2 example show <name>` prints what one needs, which files to edit and its exact steps, and
@@ -25,6 +27,9 @@ and the command word must come before `--`.
 text in `data.usage`; the one-line synopsis moved to `data.synopsis`. Help JSON adds `group`, `description`, `examples`,
 `subcommands`, `defaultSubcommand`, `globalOptions` and `environment`, and `vid2 capabilities` lists subcommands. A failure envelope
 reports the full command path (`"command": "audio beats"`). Success `command` values are unchanged.
+
+**Repository and release.** Development moved out of a shared checkout into vid2-gen's own git repository; nothing changes for users.
+Releases now publish from the `v*` tag through npm Trusted Publishing (`release.yml`, OIDC, with provenance) instead of a local token.
 
 ## 0.4.0 — 2026-09-29
 
