@@ -58,3 +58,28 @@ ima2-gen's other branches, worktrees, remotes, tags, hooks and working trees; th
   against the pre-swap untracked set minus `.codexclaw/`.
 - A7a (round 2 Low 2). Every rollback step runs only if its forward step ran (check: `$BK/ima2-worktree-admin` exists, pointer
   file moved), and the bundle fetch uses `--update-head-ok` so a partial rollback cannot stop on the checked-out branch.
+
+## wp2 P re-verification (2026-09-30, after wp1 D)
+
+- Branch set at execution time is computed, not copied: every `refs/heads` entry for which
+  `git merge-base --is-ancestor e18dfca2d1c57b21f5cf48da7f477a03aa5ec8c4 <branch>` holds. Today that is the six branches above plus
+  `codex/cli-help-tree` 148a17a6 (the wp1 docs commit), which is checked out. Step 1 bundles this set; step 4 deletes exactly this
+  set from `$IG`; step 3's `symbolic-ref` uses `codex/cli-help-tree`.
+- A concurrent task uses the ima2 database (`<codex worktrees>/16bf/ima2-gen` on `pr339-oauth-backoff`). The split touches only
+  the vid2 refs and `$IG/worktrees/vid2-gen`; no `gc`, `prune` or `worktree prune` runs in `$IG`.
+- Step 5 also checks that `git -C $IG worktree list` still shows every non-vid2 worktree it showed before the split.
+- Architect reflection (Feynman, ALIGNED) folds:
+  - Step 0 (new): record the baseline in `$BK/baseline.txt` before step 1: `git -C $V rev-parse HEAD`,
+    `git -C $V status --porcelain`, `git -C $IG worktree list`, `git -C <ima2-gen checkout> status -sb`, the computed branch set.
+    Precondition: `git -C $V status --porcelain` shows only untracked entries, and no other writer uses `$V` during the swap
+    (wp3/wp4 start after wp2 closes).
+  - Steps 1, 2 and 4 use the computed set, not the six names. Step 2 sets upstreams only for branches present in
+    `git ls-remote --heads origin`; `codex/cli-help-tree`, `codex/vid2-gen` and `codex/vid2-intro-film` stay local-only.
+  - Step 3's reason is A10's: the new `.git/info/exclude` gains `.codexclaw/`; the ima2 database never had it.
+- wp2 audit folds (Goodall, GO-WITH-FIXES, blockers=1):
+  - Step -1: commit the plan edits to `codex/cli-help-tree` before step 0, so the precondition (only untracked entries) holds.
+  - Step 1 names its copies `$BK/dotgit-pointer.copy` and `$BK/ima2-worktree-admin.copy` (a plain `$BK/.git` would make
+    `$BK` look like a worktree).
+  - Step 0 records `git -C $V symbolic-ref HEAD`; step 3 uses that value.
+  - Step 5's worktree-survival check ignores baseline entries already marked `prunable`.
+  - A rollback after new commits in the standalone repository fetches from `$BK/standalone.git`, not the bundle.
