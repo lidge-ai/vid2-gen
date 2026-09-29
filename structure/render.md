@@ -8,7 +8,23 @@ When a generated video is shorter than a scene media layer, scene background, or
 
 ## Profiles and encoders
 
-`applyProfile` maps proxy to half-sized even dimensions, a 1× motion oversample and x264 ultrafast CRF 26. Final keeps the authored dimensions and 2× oversample; intermediate segments use high-quality x264, while the final encode uses the requested H.264, HEVC, VP9 or ProRes codec. MP4/MOV get `+faststart`. Software encoding is the default. `--hw` selects an available H.264 hardware encoder in videotoolbox, NVENC, QSV, AMF, VAAPI order; its quality settings are approximate and may depend on a working device.
+`applyProfile` maps proxy to half-sized even dimensions, a 1× motion oversample and x264 ultrafast CRF 26. Final keeps the authored dimensions and 2× oversample; intermediate segments use high-quality x264, while the final encode uses the requested H.264, HEVC, VP9 or ProRes codec. MP4/MOV get `+faststart`. Software encoding is the default.
+
+## Hardware encoding
+
+`RenderOptions.hw` (CLI `--hw-accel disable|if-possible|required`, with `--hw` as shorthand for `if-possible`) applies to the final encode only. Segments, joins and stage clips keep their software intermediates so cache keys and quality do not depend on the host. `src/render/encoders.ts` selects the encoder once, before any segment renders, so `required` fails before long work starts.
+
+Candidates follow the output codec: H.264 and HEVC in videotoolbox, NVENC, QSV, AMF, VAAPI order, and ProRes through `prores_videotoolbox` only. VP9/WebM has no hardware path. `--hw-encoder <family>` limits the search to one family. An encoder listed by `ffmpeg -encoders` counts only after a five-frame trial encode of a 256×144 lavfi source succeeds; results are cached per process by ffmpeg path and arguments. `if-possible` falls back to software with a warning naming the failed probes; `required` raises `E_CAPABILITY` (exit 3) with `details.tried`.
+
+| Family | H.264 / HEVC arguments |
+|---|---|
+| videotoolbox | `-q:v 70` / `-q:v 74`, `yuv420p`; Intel Macs without constant quality fall back to `-b:v` at 0.15 bits per pixel per frame |
+| nvenc | `-preset p5 -tune hq -rc vbr -cq 19` (HEVC 21) `-b:v 0 -spatial-aq 1` |
+| qsv | `-global_quality 20` (HEVC 22), `nv12` |
+| amf | `-rc cqp -qp_i 18 -qp_p 20 -quality quality` |
+| vaapi | `-vaapi_device $VID2_VAAPI_DEVICE` (default `/dev/dri/renderD128`) before the inputs, `format=nv12,hwupload` at the end of the post chain, `-rc_mode CQP -qp 20` |
+
+HEVC adds `-tag:v hvc1`; ProRes uses `-profile:v hq` with `p210le` input and still verifies as `yuv422p10le`. The VideoToolbox values were calibrated on the grain-heavy 1080p opus-astra-paper example: against a software reference, H.264 `q:v 70` scored VMAF 97.4 and HEVC `q:v 74` 97.7, while `libx264 -preset slow -crf 18` scored 97.5 at 3.5× the H.264 size. The other families use their vendors' recommended constant-quality settings and have not been measured here. Render JSON, the result object and `<out>.render.json` carry `encoder: { name, hardware }`.
 
 ## Cache and progress
 

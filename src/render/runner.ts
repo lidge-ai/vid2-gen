@@ -10,7 +10,8 @@ import { muxAudio } from "../audio/mux.ts";
 import { probeFfmpeg } from "../probe/index.ts";
 import { fpsString, hashJson, Vid2Error } from "../shared/index.ts";
 import { cacheExists, saveSegmentCache, segmentCacheKey, segmentCachePath } from "./cache.ts";
-import { selectHardwareEncoder } from "./encoders.ts";
+import { selectEncoder } from "./encoders.ts";
+import type { EncoderChoice, HardwareRequest } from "./encoders.ts";
 import { ProgressParser } from "./progress.ts";
 import type { RenderProgress } from "./progress.ts";
 import { videoArgs } from "./profiles.ts";
@@ -22,11 +23,14 @@ import { StallWatch, stallLimitMs } from "./watchdog.ts";
 
 export interface RenderEvent { stage: "segment" | "join" | "post" | "stage" | "pretrim"; id?: string; progress?: RenderProgress; message?: string }
 export interface RenderOptions { jobs?: number; signal?: AbortSignal; noCache?: boolean; segments?: string[];
-  hw?: boolean; out: string; logger?: (event: RenderEvent) => void }
+  /** true is the legacy spelling of { mode: "if-possible" }. */
+  hw?: boolean | HardwareRequest; out: string; logger?: (event: RenderEvent) => void }
 export interface SegmentResult { id: string; cached: boolean; ms: number }
 export interface AudioResult { master: Loudness; delivered: Loudness; durationDelta: number; normalization: string }
+/** The final-encode video encoder; hardware is true only for a probed hardware encoder. */
+export interface EncoderUsed { name: string; hardware: boolean }
 export interface RenderResult { output: string; seconds: number; segments: SegmentResult[]; warnings: string[]; manifest: string; audio?: AudioResult;
-  stages?: StageResult[] }
+  stages?: StageResult[]; encoder: EncoderUsed }
 
 function stageOptions(opts: RenderOptions): Parameters<typeof materializeStages>[2] {
   return { ...(opts.noCache ? { noCache: true } : {}), ...(opts.signal ? { signal: opts.signal } : {}),
@@ -90,7 +94,7 @@ async function runFfmpegOnceMore(plan: RenderPlan, args: string[], opts: RenderO
 }
 
 function outputArgs(plan: RenderPlan, intermediate: boolean, hardware: string[]): string[] {
-  const base = hardware.length ? [...hardware, "-pix_fmt", "yuv420p"] : videoArgs(plan.output, plan.profile, intermediate);
+  const base = hardware.length ? hardware : videoArgs(plan.output, plan.profile, intermediate);
   return [...base, "-r", fpsString(plan.output.fps), "-color_range", "tv",
     ...(intermediate || plan.output.container === "webm" ? [] : ["-movflags", "+faststart"])];
 }
@@ -195,21 +199,35 @@ function checkJoin(plan: RenderPlan): void {
   }
 }
 
-async function finalEncode(plan: RenderPlan, joined: string, opts: RenderOptions, warnings: string[]): Promise<void> {
-  let hardware: string[] = [];
-  if (opts.hw) {
-    if (plan.output.videoCodec === "h264" && plan.output.container !== "webm") {
-      const info = await probeFfmpeg({ tools: { ffmpeg: plan.tool.ffmpeg, ffprobe: plan.tool.ffprobe } });
-      const choice = selectHardwareEncoder(info, true);
-      hardware = choice.args;
-      if (choice.warning) warnings.push(choice.warning);
-      if (choice.name) warnings.push(`${choice.name} settings are approximate and have not been quality-measured`);
-    } else warnings.push("Hardware encode supports H.264 only; using software");
-  }
-  const graph = plan.post.graph ? await graphArgs(plan, "post", plan.post.graph) : [];
-  const mapping = plan.post.graph ? ["-map", "[vpost]"] : ["-map", "0:v:0"];
-  const args = ["-i", joined, ...plan.post.inputs.flatMap((input) => input.args), ...graph, ...mapping,
-    "-an", "-frames:v", String(plan.totalFrames), ...outputArgs(plan, false, hardware), opts.out];
+function hardwareOf(opts: RenderOptions): HardwareRequest {
+  return typeof opts.hw === "object" ? opts.hw : { mode: opts.hw ? "if-possible" : "disable" };
+}
+
+/** Chosen before any segment renders, so a required-but-missing hardware encoder fails fast. */
+async function chooseEncoder(plan: RenderPlan, opts: RenderOptions, warnings: string[]): Promise<EncoderChoice | null> {
+  const request = hardwareOf(opts);
+  if (request.mode === "disable") return null;
+  const info = await probeFfmpeg({ tools: { ffmpeg: plan.tool.ffmpeg, ffprobe: plan.tool.ffprobe } });
+  const selection = await selectEncoder({ info, ffmpeg: plan.tool.ffmpeg, codec: plan.output.videoCodec, container: plan.output.container,
+    width: plan.output.width, height: plan.output.height, fps: plan.output.fps.num / plan.output.fps.den }, request);
+  warnings.push(...selection.warnings);
+  if (selection.choice) opts.logger?.({ stage: "post", message: "hardware encoder " + selection.choice.name });
+  return selection.choice;
+}
+
+function encoderUsed(plan: RenderPlan, encoder: EncoderChoice | null): EncoderUsed {
+  if (encoder) return { name: encoder.name, hardware: true };
+  const args = videoArgs(plan.output, plan.profile, false);
+  return { name: args[args.indexOf("-c:v") + 1] ?? "unknown", hardware: false };
+}
+
+async function finalEncode(plan: RenderPlan, joined: string, opts: RenderOptions, encoder: EncoderChoice | null): Promise<void> {
+  const upload = encoder?.filter ?? null;
+  const graphText = plan.post.graph && upload ? plan.post.graph + ";[vpost]" + upload + "[vhw]" : plan.post.graph;
+  const graph = graphText ? await graphArgs(plan, "post", graphText) : [];
+  const mapping = graphText ? ["-map", upload ? "[vhw]" : "[vpost]"] : ["-map", "0:v:0", ...(upload ? ["-vf", upload] : [])];
+  const args = [...(encoder?.preInput ?? []), "-i", joined, ...plan.post.inputs.flatMap((input) => input.args), ...graph, ...mapping,
+    "-an", "-frames:v", String(plan.totalFrames), ...outputArgs(plan, false, encoder?.args ?? []), opts.out];
   await runFfmpeg(plan, args, opts, "post");
   await verifyVideo(opts.out, plan.tool.ffprobe, { width: plan.output.width, height: plan.output.height,
     frames: plan.totalFrames, pixFmt: plan.output.videoCodec === "prores" ? "yuv422p10le" : "yuv420p",
@@ -238,17 +256,18 @@ export async function renderPlan(plan: RenderPlan, opts: RenderOptions): Promise
   await mkdir(plan.workDir, { recursive: true });
   await mkdir(dirname(opts.out), { recursive: true });
   const started = Date.now();
+  const warnings: string[] = [];
+  const encoder = await chooseEncoder(plan, opts, warnings);
   const stages = await materializeStages(plan, undefined, stageOptions(opts));
   const segments = await segmentPool(plan, opts);
   const joined = await joinSegments(plan, opts);
-  const warnings: string[] = [];
   const videoOut = plan.audio ? join(plan.workDir, `video-only${extname(opts.out) || ".mp4"}`) : opts.out;
-  await finalEncode(plan, joined, { ...opts, out: videoOut }, warnings);
+  await finalEncode(plan, joined, { ...opts, out: videoOut }, encoder);
   const audio = plan.audio ? await renderAudio(plan, plan.audio, videoOut, opts, warnings) : null;
   const result: RenderResult = { output: opts.out, seconds: (Date.now() - started) / 1000, segments, warnings,
-    manifest: `${opts.out}.render.json`, ...(audio ? { audio } : {}), ...(stages.length ? { stages } : {}) };
+    manifest: `${opts.out}.render.json`, encoder: encoderUsed(plan, encoder), ...(audio ? { audio } : {}), ...(stages.length ? { stages } : {}) };
   await writeFile(result.manifest, JSON.stringify({ planHash: hashJson(plan), timelineHash: plan.timelineHash,
-    tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments,
+    tool: plan.tool, profile: plan.profile, output: result.output, seconds: result.seconds, segments, encoder: result.encoder,
     warnings: [...new Set([...(plan.warnings ?? []), ...warnings])],
     ...(audio ? { audio: { ...audio, provenance: plan.audio?.provenance ?? [] } } : {}) }, null, 2) + "\n");
   return result;

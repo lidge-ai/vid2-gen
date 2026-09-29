@@ -1,11 +1,11 @@
 export { applyProfile, videoArgs } from "./profiles.ts";
 export type { AppliedProfile } from "./profiles.ts";
-export { selectHardwareEncoder } from "./encoders.ts";
-export type { EncoderChoice } from "./encoders.ts";
+export { HW_ACCEL_MODES, HW_FAMILIES, hardwareRequest, probeEncoder, probeHardware, selectEncoder } from "./encoders.ts";
+export type { EncoderChoice, EncoderSelection, HardwareProbe, HardwareRequest, HwAccel, HwFamily } from "./encoders.ts";
 export { ProgressParser } from "./progress.ts";
 export type { RenderProgress } from "./progress.ts";
 export { segmentCacheKey, segmentCachePath } from "./cache.ts";
 export { verifyVideo } from "./verify.ts";
 export type { ExpectedVideo, VerifiedVideo } from "./verify.ts";
 export { renderPlan, renderSegments } from "./runner.ts";
-export type { RenderOptions, RenderResult, RenderEvent, SegmentResult } from "./runner.ts";
+export type { EncoderUsed, RenderOptions, RenderResult, RenderEvent, SegmentResult } from "./runner.ts";
