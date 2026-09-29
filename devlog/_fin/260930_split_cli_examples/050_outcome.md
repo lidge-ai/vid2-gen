@@ -19,15 +19,18 @@ wp3/wp4 PASS); implementation reviews by Parfit (wp3: GO-WITH-FIXES then PASS) a
 
 ## Publish
 
-The tag's `release.yml` run 36608654190 was skipped (`NPM_PUBLISH_MODE=none`). Setting up the Trusted Publisher through Aside stopped
-at npm's security-key confirmation for the maintainer account: the form (GitHub Actions, `lidge-ai` / `vid2-gen` / `release.yml`, no
-environment) must be saved by a person who can touch the key, with "Allow npm publish" checked (unchecked, the publisher may only
-stage-publish). Nothing on the package changed. After that: `gh variable set NPM_PUBLISH_MODE -R lidge-ai/vid2-gen --body oidc` and
-`gh workflow run release.yml -R lidge-ai/vid2-gen -f tag=v0.5.0`. The GitHub release `vid2-gen 0.5.0` is staged as a draft on
-`v0.5.0` and is published once npm has 0.5.0.
+The tag push's `release.yml` run 36608654190 was skipped (`NPM_PUBLISH_MODE=none`). A first dispatch (run 36612501785) reached
+`npm publish` and failed with ENEEDAUTH because no Trusted Publisher existed. `aside exec` (which completes npm's security-key prompt with
+Aside's passkey support) then added the Trusted Publisher (GitHub Actions, `lidge-ai` / `vid2-gen` / `release.yml`, no environment,
+"Allow npm publish" checked); my earlier note that a person had to touch the key was wrong. `NPM_PUBLISH_MODE=oidc` and
+`gh workflow run release.yml -f tag=v0.5.0` (run 36639968634, tag commit `5f6613e`) then published `vid2-gen@0.5.0` with signed
+provenance through the OIDC step (the `_authToken` removal worked). The registry showed 0.4.0 for about two minutes after the log printed
+`+ vid2-gen@0.5.0`, then `latest` moved to 0.5.0. A temp-prefix install of `vid2-gen@0.5.0` ran `vid2 -v`, `example ls`, `help audio beats`,
+`example new vid2-intro` and `skill list` (7 skills), and `npm audit signatures` verified the attestations. The GitHub release
+`vid2-gen 0.5.0` is published on `v0.5.0`. `NPM_PUBLISH_MODE` stays `oidc`, so later `v*` tags publish automatically.
 
 ## What did not improve
 
-- `release.yml` has never completed a publish; the OIDC path (with the `_authToken` removal) is untested until the first run.
+- The first tag push was skipped and a manual dispatch was needed, because the variable was `none` when the tag went out.
 - The Windows/Node 24 raster-text test still times out occasionally at 180 s.
 - ima2-gen's `ima2 service start --help` starts the service instead of printing help (observed, not in this repository's scope).
