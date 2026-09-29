@@ -1,924 +1,96 @@
 {
   "version": 1,
-  "title": "ima2 — Launch",
-  "genre": "house",
-  "bpm": 128,
+  "title": "Quiet Reveal",
+  "bpm": 80,
   "meter": {
     "numerator": 4,
     "denominator": 4
   },
-  "key": "D minor",
-  "seed": 2802,
-  "swing": 0.5,
+  "key": "C major",
+  "seed": 2960,
   "sampleRate": 44100,
-  "tailSeconds": 3,
+  "tailSeconds": 4,
+  "master": {
+    "ceilingDb": -1,
+    "targetLufs": -18
+  },
   "fx": {
     "reverb": {
-      "type": "plate",
-      "decaySeconds": 2.2,
-      "preDelayMs": 20,
-      "lowCutHz": 200,
-      "highCutHz": 11000,
-      "width": 1.4
-    },
-    "delay": {
-      "time": "1/8d",
-      "feedback": 0.38,
-      "pingPong": true,
-      "lowCutHz": 300,
-      "highCutHz": 7000
+      "type": "hall",
+      "decaySeconds": 4.2,
+      "preDelayMs": 40,
+      "lowCutHz": 220,
+      "mix": 1
     }
-  },
-  "master": {
-    "targetLufs": -12,
-    "ceilingDb": -2,
-    "fx": [
-      {
-        "type": "eq",
-        "lowGainDb": 1,
-        "midGainDb": -1,
-        "midHz": 500,
-        "highGainDb": 0.5,
-        "highHz": 9000
-      },
-      {
-        "type": "compressor",
-        "ratio": 2,
-        "thresholdDb": -14,
-        "attackMs": 20,
-        "releaseMs": 150
-      },
-      {
-        "type": "width",
-        "amount": 1.15,
-        "monoBelowHz": 150
-      }
-    ]
   },
   "tracks": [
     {
-      "id": "kick",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -3,
-      "params": {
-        "tone": 0.42,
-        "decayMs": 260,
-        "noise": 0.15
-      },
-      "fx": [
-        {
-          "type": "eq",
-          "lowGainDb": 0,
-          "midGainDb": -3,
-          "midHz": 400,
-          "highGainDb": 0
-        }
-      ]
-    },
-    {
-      "id": "kick_soft",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -10,
-      "params": {
-        "tone": 0.3,
-        "decayMs": 320,
-        "noise": 0.05
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 260
-        }
-      ]
-    },
-    {
-      "id": "impact",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -8,
-      "params": {
-        "tone": 0.2,
-        "decayMs": 1000,
-        "noise": 0.15
-      },
-      "sends": {
-        "reverb": 0.45,
-        "delay": 0
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 12000
-        }
-      ]
-    },
-    {
-      "id": "clap",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -3,
-      "params": {
-        "noise": 0.7,
-        "decayMs": 200
-      },
-      "sends": {
-        "reverb": 0.2,
-        "delay": 0
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 300
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 12000
-        }
-      ]
-    },
-    {
-      "id": "hats",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -2,
-      "pan": 0.15,
-      "velocity": "0.5 0.25 0.8 0.3 0.5 0.25 0.9 0.3 0.5 0.25 0.8 0.3 0.5 0.3 0.9 0.4",
-      "params": {
-        "noise": 0.8,
-        "decayMs": 45
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 6000
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 12000
-        }
-      ]
-    },
-    {
-      "id": "open",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -6,
-      "pan": -0.15,
-      "params": {
-        "noise": 0.7,
-        "decayMs": 160
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 5000
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 12000
-        }
-      ]
-    },
-    {
-      "id": "rim",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -8,
-      "pan": 0.3,
-      "params": {
-        "tone": 0.7,
-        "decayMs": 60
-      },
-      "sends": {
-        "reverb": 0.1,
-        "delay": 0.3
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 12000
-        }
-      ]
-    },
-    {
-      "id": "roll",
-      "kind": "drums",
-      "instrument": "drums",
-      "pattern": "~",
-      "gain": -6,
-      "velocity": "0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1",
-      "params": {
-        "noise": 0.75,
-        "decayMs": 110
-      },
-      "sends": {
-        "reverb": 0.25,
-        "delay": 0
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 400
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 12000
-        }
-      ]
-    },
-    {
-      "id": "bass",
+      "id": "chords",
       "kind": "notes",
-      "instrument": "bass",
-      "pattern": "~",
-      "gain": -10,
-      "mono": true,
-      "gate": 0.7,
-      "params": {
-        "wave": 1,
-        "cutoffHz": 650,
-        "resonance": 0.25,
-        "releaseMs": 60,
-        "filterEnvAmount": 0.35,
-        "filterEnvDecayMs": 120
+      "instrument": "lib:grand-piano",
+      "velocity": 0.5,
+      "gain": -13,
+      "sends": {
+        "reverb": 0.3
       },
-      "duck": {
-        "by": "kick",
-        "amount": 0.6,
-        "releaseMs": 140
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 30
-        },
-        {
-          "type": "drive",
-          "amount": 2.5,
-          "mix": 0.25
-        }
-      ]
+      "pattern": "<[c3,g3,b3,e4] [a2,e3,g3,b3] [f2,c3,e3,a3] [g2,d3,e3,b3]>"
     },
     {
-      "id": "pad",
+      "id": "melody",
       "kind": "notes",
-      "instrument": "pad",
-      "pattern": "~",
-      "gain": -5,
-      "params": {
-        "detuneCents": 16,
-        "cutoffHz": 4200,
-        "attackMs": 600,
-        "releaseMs": 1400,
-        "unison": 5
-      },
+      "instrument": "lib:grand-piano",
+      "velocity": 0.42,
+      "gain": -17,
       "sends": {
-        "reverb": 0.35,
-        "delay": 0
+        "reverb": 0.45
       },
-      "duck": {
-        "by": "kick",
-        "amount": 0.45,
-        "releaseMs": 220
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 180
-        },
-        {
-          "type": "chorus",
-          "mix": 0.25
-        },
-        {
-          "type": "width",
-          "amount": 1.5,
-          "monoBelowHz": 150
-        }
-      ]
+      "pattern": "<[~ ~ e5 ~ ~ ~ g5 ~] [~ ~ c5 ~ e5 ~ ~ ~] [~ ~ a4 ~ c5 ~ ~ ~] [~ d5 ~ ~ b4 ~ ~ ~]>"
     },
     {
-      "id": "pad_dark",
+      "id": "bed",
       "kind": "notes",
-      "instrument": "pad",
-      "pattern": "~",
-      "gain": -10,
-      "params": {
-        "detuneCents": 14,
-        "cutoffHz": 1600,
-        "attackMs": 900,
-        "releaseMs": 1600,
-        "unison": 5
-      },
+      "instrument": "lib:strings",
+      "gain": -24,
       "sends": {
-        "reverb": 0.45,
-        "delay": 0
+        "reverb": 0.5
       },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 2200,
-          "lfoRateHz": 0.13,
-          "lfoDepthOct": 1.2
-        },
-        {
-          "type": "width",
-          "amount": 1.6,
-          "monoBelowHz": 150
-        }
-      ]
-    },
-    {
-      "id": "arp",
-      "kind": "notes",
-      "instrument": "pluck",
-      "pattern": "~",
-      "gain": -3,
-      "pan": 0.1,
-      "params": {
-        "damping": 0.994,
-        "decayMs": 700,
-        "brightness": 0.75
-      },
-      "sends": {
-        "reverb": 0.2,
-        "delay": 0.35
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 250
-        }
-      ]
-    },
-    {
-      "id": "arp_dark",
-      "kind": "notes",
-      "instrument": "pluck",
-      "pattern": "~",
-      "gain": -10,
-      "pan": -0.1,
-      "params": {
-        "damping": 0.99,
-        "decayMs": 600,
-        "brightness": 0.55
-      },
-      "sends": {
-        "reverb": 0.3,
-        "delay": 0.45
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 2600
-        }
-      ]
-    },
-    {
-      "id": "bell",
-      "kind": "notes",
-      "instrument": "bell",
-      "pattern": "~",
-      "gain": -12,
-      "pan": -0.2,
-      "params": {
-        "ratio": 3.5,
-        "index": 1.1,
-        "decayMs": 1400
-      },
-      "sends": {
-        "reverb": 0.4,
-        "delay": 0.3
-      }
-    },
-    {
-      "id": "stab",
-      "kind": "notes",
-      "instrument": "supersaw",
-      "pattern": "~",
-      "gain": -6,
-      "gate": 0.45,
-      "params": {
-        "unison": 7,
-        "detuneCents": 22,
-        "mix": 0.8,
-        "cutoffHz": 5000,
-        "resonance": 0.2,
-        "filterEnvAmount": 0.5,
-        "filterEnvDecayMs": 180,
-        "attackMs": 4,
-        "releaseMs": 120
-      },
-      "sends": {
-        "reverb": 0.2,
-        "delay": 0.15
-      },
-      "duck": {
-        "by": "kick",
-        "amount": 0.5,
-        "releaseMs": 160
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 220
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 13000
-        },
-        {
-          "type": "width",
-          "amount": 1.6,
-          "monoBelowHz": 200
-        }
-      ]
-    },
-    {
-      "id": "swell",
-      "kind": "notes",
-      "instrument": "supersaw",
-      "pattern": "~",
-      "gain": -9,
-      "gate": 1,
-      "params": {
-        "unison": 7,
-        "detuneCents": 25,
-        "mix": 0.8,
-        "cutoffHz": 4000,
-        "attackMs": 1700,
-        "releaseMs": 60,
-        "filterEnvAmount": 0
-      },
-      "sends": {
-        "reverb": 0.3,
-        "delay": 0
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 300
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 13000
-        },
-        {
-          "type": "width",
-          "amount": 1.8,
-          "monoBelowHz": 200
-        }
-      ]
-    },
-    {
-      "id": "hit",
-      "kind": "notes",
-      "instrument": "supersaw",
-      "pattern": "~",
-      "gain": -6,
-      "gate": 1,
-      "params": {
-        "unison": 9,
-        "detuneCents": 24,
-        "mix": 0.85,
-        "cutoffHz": 4200,
-        "attackMs": 30,
-        "releaseMs": 2600,
-        "filterEnvAmount": 0.6,
-        "filterEnvDecayMs": 900
-      },
-      "sends": {
-        "reverb": 0.5,
-        "delay": 0.2
-      },
-      "fx": [
-        {
-          "type": "filter",
-          "mode": "highpass",
-          "cutoffHz": 120
-        },
-        {
-          "type": "filter",
-          "mode": "lowpass",
-          "cutoffHz": 13000
-        },
-        {
-          "type": "width",
-          "amount": 1.7,
-          "monoBelowHz": 180
-        }
-      ]
+      "pattern": "<[c3,g3,e4] [a2,e3,c4] [f2,c3,a3] [g2,d3,b3]>"
     }
   ],
   "sections": [
     {
-      "id": "intro",
+      "id": "open",
       "bars": 2,
       "role": "intro",
       "patterns": {
-        "kick": null,
-        "kick_soft": null,
-        "impact": "<[bd] ~>",
-        "clap": null,
-        "hats": null,
-        "open": null,
-        "rim": null,
-        "roll": null,
-        "bass": null,
-        "pad": null,
-        "pad_dark": "<~ [bb3,d4,f4,a4,c5]>",
-        "arp": null,
-        "arp_dark": null,
-        "bell": null,
-        "stab": null,
-        "swell": null,
-        "hit": null
+        "melody": null,
+        "bed": null
       }
     },
     {
-      "id": "rise",
-      "bars": 2,
-      "role": "intro",
-      "patterns": {
-        "kick": null,
-        "kick_soft": "bd ~ ~ ~ ~ ~ ~ ~ bd ~ ~ ~ ~ ~ ~ ~",
-        "impact": null,
-        "clap": null,
-        "hats": null,
-        "open": null,
-        "rim": null,
-        "roll": null,
-        "bass": null,
-        "pad": null,
-        "pad_dark": "<[g3,bb3,d4,f4,a4] [a3,c4,e4,g4,c5]>",
-        "arp": null,
-        "arp_dark": "<~ [a4 ~ e5 ~ c5 g4 ~ e5 ~ c5 ~ g4 ~ e5 a4 ~]>",
-        "bell": "<~ [e6 ~ ~ ~ ~ ~ c6 ~ ~ ~ g5 ~ ~ ~ e5 ~]>",
-        "stab": null,
-        "swell": null,
-        "hit": null
-      }
-    },
-    {
-      "id": "build",
-      "bars": 1,
-      "role": "build",
-      "patterns": {
-        "kick": null,
-        "kick_soft": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "impact": null,
-        "clap": null,
-        "hats": null,
-        "open": "~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~",
-        "rim": null,
-        "roll": "sd ~ ~ ~ sd ~ ~ ~ sd ~ ~ ~ sd ~ sd ~",
-        "bass": null,
-        "pad": null,
-        "pad_dark": "g3,bb3,d4,f4,a4",
-        "arp": null,
-        "arp_dark": "g4 ~ d5 ~ bb4 a4 ~ f5 ~ d5 ~ bb4 ~ a4 g4 ~",
-        "bell": null,
-        "stab": null,
-        "swell": "g3,bb3,d4,f4",
-        "hit": null
-      }
-    },
-    {
-      "id": "lift",
-      "bars": 1,
-      "role": "build",
-      "patterns": {
-        "kick": "bd ~ bd ~ bd ~ bd ~ bd ~ bd ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": null,
-        "clap": null,
-        "hats": "hh hh hh hh hh hh hh hh hh hh hh hh hh hh ~ ~",
-        "open": null,
-        "rim": null,
-        "roll": "sd sd sd sd sd sd sd sd sd sd sd sd sd sd ~ ~",
-        "bass": null,
-        "pad": null,
-        "pad_dark": "a3,c4,e4,g4,c5",
-        "arp": "a4 ~ e5 ~ c5 g4 ~ e5 ~ c5 ~ g4 ~ e5 a4 ~",
-        "arp_dark": null,
-        "bell": null,
-        "stab": null,
-        "swell": "a3,c4,e4,g4",
-        "hit": null
-      }
-    },
-    {
-      "id": "drop",
-      "bars": 2,
+      "id": "main",
+      "bars": 6,
       "role": "hook",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": "bd ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~",
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh*16",
-        "open": "~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~",
-        "rim": null,
-        "roll": null,
-        "bass": "<[~ d2 ~ d2 ~ d2 d2 d3] [~ bb1 ~ bb1 ~ bb1 bb1 bb2]>",
-        "pad": "<[d4,f4,a4,c5,e5] [bb3,d4,f4,a4,c5]>",
-        "pad_dark": null,
-        "arp": "<[d5 ~ a5 ~ f5 e5 ~ c6 ~ a5 ~ f5 ~ e5 d5 ~] [bb4 ~ f5 ~ d5 c5 ~ a5 ~ f5 ~ d5 ~ c5 bb4 ~]>",
-        "arp_dark": null,
-        "bell": "<[a5 ~ ~ ~ ~ ~ e6 ~ ~ ~ d6 ~ ~ ~ ~ ~] [f5 ~ ~ ~ ~ ~ d6 ~ ~ ~ c6 ~ ~ ~ ~ ~]>",
-        "stab": "<[~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5]] [~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4]]>",
-        "swell": null,
-        "hit": "<[d4,f4,a4,c5,e5,d3] ~>"
-      }
+      "patterns": {}
     },
     {
-      "id": "glide",
-      "bars": 2,
-      "role": "breakdown",
-      "patterns": {
-        "kick": null,
-        "kick_soft": null,
-        "impact": null,
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh*16",
-        "open": null,
-        "rim": "~ ~ rim ~ ~ rim ~ ~ ~ ~ rim ~ ~ ~ rim ~",
-        "roll": null,
-        "bass": null,
-        "pad": "<[g3,bb3,d4,f4,a4] [a3,c4,e4,g4,c5]>",
-        "pad_dark": null,
-        "arp": "<[g4 ~ d5 ~ bb4 a4 ~ f5 ~ d5 ~ bb4 ~ a4 g4 ~] [a4 ~ e5 ~ c5 g4 ~ e5 ~ c5 ~ g4 ~ e5 a4 ~]>",
-        "arp_dark": null,
-        "bell": "<[d6 ~ ~ ~ ~ ~ bb5 ~ ~ ~ a5 ~ ~ ~ ~ ~] [e6 ~ ~ ~ ~ ~ c6 ~ ~ ~ g5 ~ ~ ~ e5 ~]>",
-        "stab": null,
-        "swell": null,
-        "hit": null
-      }
-    },
-    {
-      "id": "reload",
-      "bars": 1,
-      "role": "build",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": null,
-        "clap": null,
-        "hats": null,
-        "open": null,
-        "rim": null,
-        "roll": "sd ~ sd ~ sd ~ sd ~ sd sd sd sd sd sd ~ ~",
-        "bass": null,
-        "pad": "a3,c4,e4,g4,c5",
-        "pad_dark": null,
-        "arp": "a4 ~ e5 ~ c5 g4 ~ e5 ~ c5 ~ g4 ~ e5 a4 ~",
-        "arp_dark": null,
-        "bell": null,
-        "stab": null,
-        "swell": "a3,c4,e4,g4",
-        "hit": null
-      }
-    },
-    {
-      "id": "groove",
-      "bars": 3,
-      "role": "verse",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": "<[bd] ~ ~>",
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh*16",
-        "open": "~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~",
-        "rim": "~ ~ rim ~ ~ rim ~ ~ ~ ~ rim ~ ~ ~ rim ~",
-        "roll": null,
-        "bass": "<[~ d2 ~ d2 ~ d2 d2 d3] [~ bb1 ~ bb1 ~ bb1 bb1 bb2] [~ g1 ~ g1 ~ g1 g1 g2]>",
-        "pad": null,
-        "pad_dark": "<[d4,f4,a4,c5,e5] [bb3,d4,f4,a4,c5] [g3,bb3,d4,f4,a4]>",
-        "arp": "<[d5 ~ a5 ~ f5 e5 ~ c6 ~ a5 ~ f5 ~ e5 d5 ~] [bb4 ~ f5 ~ d5 c5 ~ a5 ~ f5 ~ d5 ~ c5 bb4 ~] [g4 ~ d5 ~ bb4 a4 ~ f5 ~ d5 ~ bb4 ~ a4 g4 ~]>",
-        "arp_dark": null,
-        "bell": null,
-        "stab": null,
-        "swell": null,
-        "hit": null
-      }
-    },
-    {
-      "id": "fill",
-      "bars": 1,
-      "role": "build",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": null,
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh hh hh hh hh hh hh hh hh hh hh hh hh hh ~ ~",
-        "open": null,
-        "rim": "~ ~ rim ~ ~ rim ~ ~ ~ ~ rim ~ ~ ~ rim ~",
-        "roll": "~ ~ ~ ~ ~ ~ ~ ~ sd sd sd sd sd sd ~ ~",
-        "bass": "~ a1 ~ a1 ~ a1 a1 a2",
-        "pad": "a3,c4,e4,g4,c5",
-        "pad_dark": null,
-        "arp": "a4 ~ e5 ~ c5 g4 ~ e5 ~ c5 ~ g4 ~ e5 a4 ~",
-        "arp_dark": null,
-        "bell": null,
-        "stab": null,
-        "swell": "a3,c4,e4,g4",
-        "hit": null
-      }
-    },
-    {
-      "id": "peak",
+      "id": "close",
       "bars": 4,
-      "role": "hook",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": "<bd ~ ~ ~>",
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh*16",
-        "open": "~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~",
-        "rim": "~ ~ rim ~ ~ rim ~ ~ ~ ~ rim ~ ~ ~ rim ~",
-        "roll": null,
-        "bass": "<[~ d2 ~ d2 ~ d2 d2 d3] [~ bb1 ~ bb1 ~ bb1 bb1 bb2] [~ g1 ~ g1 ~ g1 g1 g2] [~ a1 ~ a1 ~ a1 a1 a2]>",
-        "pad": "<[d4,f4,a4,c5,e5] [bb3,d4,f4,a4,c5] [g3,bb3,d4,f4,a4] [a3,c4,e4,g4,c5]>",
-        "pad_dark": null,
-        "arp": "<[d5 ~ a5 ~ f5 e5 ~ c6 ~ a5 ~ f5 ~ e5 d5 ~] [bb4 ~ f5 ~ d5 c5 ~ a5 ~ f5 ~ d5 ~ c5 bb4 ~] [g4 ~ d5 ~ bb4 a4 ~ f5 ~ d5 ~ bb4 ~ a4 g4 ~] [a4 ~ e5 ~ c5 g4 ~ e5 ~ c5 ~ g4 ~ e5 a4 ~]>",
-        "arp_dark": null,
-        "bell": "<[a5 ~ ~ ~ ~ ~ e6 ~ ~ ~ d6 ~ ~ ~ ~ ~] [f5 ~ ~ ~ ~ ~ d6 ~ ~ ~ c6 ~ ~ ~ ~ ~] [d6 ~ ~ ~ ~ ~ bb5 ~ ~ ~ a5 ~ ~ ~ ~ ~] [e6 ~ ~ ~ ~ ~ c6 ~ ~ ~ g5 ~ ~ ~ e5 ~]>",
-        "stab": "<[~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5]] [~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4]] [~ [g3,bb3,d4,f4] ~ [g3,bb3,d4,f4] ~ [g3,bb3,d4,f4] ~ [g3,bb3,d4,f4]] [~ [a3,c4,e4,g4] ~ [a3,c4,e4,g4] ~ [a3,c4,e4,g4] ~ [a3,c4,e4,g4]]>",
-        "swell": null,
-        "hit": "<[d4,f4,a4,c5,e5,d3] ~ ~ ~>"
-      }
-    },
-    {
-      "id": "peak2",
-      "bars": 2,
-      "role": "hook",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": null,
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh*16",
-        "open": "~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~ ~ ~ oh ~",
-        "rim": "~ ~ rim ~ ~ rim ~ ~ ~ ~ rim ~ ~ ~ rim ~",
-        "roll": null,
-        "bass": "<[~ d2 ~ d2 ~ d2 d2 d3] [~ bb1 ~ bb1 ~ bb1 bb1 bb2]>",
-        "pad": "<[d4,f4,a4,c5,e5] [bb3,d4,f4,a4,c5]>",
-        "pad_dark": null,
-        "arp": "<[d5 ~ a5 ~ f5 e5 ~ c6 ~ a5 ~ f5 ~ e5 d5 ~] [bb4 ~ f5 ~ d5 c5 ~ a5 ~ f5 ~ d5 ~ c5 bb4 ~]>",
-        "arp_dark": null,
-        "bell": "<[a5 ~ ~ ~ ~ ~ e6 ~ ~ ~ d6 ~ ~ ~ ~ ~] [f5 ~ ~ ~ ~ ~ d6 ~ ~ ~ c6 ~ ~ ~ ~ ~]>",
-        "stab": "<[~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5] ~ [d4,f4,a4,c5]] [~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4] ~ [bb3,d4,f4,a4]]>",
-        "swell": null,
-        "hit": null
-      }
-    },
-    {
-      "id": "turn",
-      "bars": 1,
-      "role": "build",
-      "patterns": {
-        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
-        "kick_soft": null,
-        "impact": null,
-        "clap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
-        "hats": "hh hh hh hh hh hh hh hh hh hh hh hh hh hh ~ ~",
-        "open": null,
-        "rim": null,
-        "roll": "~ ~ ~ ~ ~ ~ ~ ~ sd sd sd sd sd sd ~ ~",
-        "bass": "~ a1 ~ a1 ~ a1 a1 a2 ~ ~ ~ ~ ~ ~ ~ ~",
-        "pad": "a3,c4,e4,g4,c5",
-        "pad_dark": null,
-        "arp": null,
-        "arp_dark": null,
-        "bell": null,
-        "stab": "~ [a3,c4,e4,g4] ~ [a3,c4,e4,g4] ~ [a3,c4,e4,g4] ~ [a3,c4,e4,g4]",
-        "swell": "a3,c4,e4,g4",
-        "hit": null
-      }
-    },
-    {
-      "id": "local",
-      "bars": 2,
-      "role": "breakdown",
-      "patterns": {
-        "kick": null,
-        "kick_soft": "bd ~ ~ ~ ~ ~ ~ ~ bd ~ ~ ~ ~ ~ ~ ~",
-        "impact": "<bd ~>",
-        "clap": null,
-        "hats": "hh*16",
-        "open": null,
-        "rim": "~ ~ rim ~ ~ rim ~ ~ ~ ~ rim ~ ~ ~ rim ~",
-        "roll": null,
-        "bass": null,
-        "pad": "<[g3,bb3,d4,f4,a4] [bb3,d4,f4,a4,c5]>",
-        "pad_dark": null,
-        "arp": "<[g4 ~ d5 ~ bb4 a4 ~ f5 ~ d5 ~ bb4 ~ a4 g4 ~] [bb4 ~ f5 ~ d5 c5 ~ a5 ~ f5 ~ d5 ~ c5 bb4 ~]>",
-        "arp_dark": null,
-        "bell": "<[d6 ~ ~ ~ ~ ~ bb5 ~ ~ ~ a5 ~ ~ ~ ~ ~] [f5 ~ ~ ~ ~ ~ d6 ~ ~ ~ c6 ~ ~ ~ ~ ~]>",
-        "stab": null,
-        "swell": null,
-        "hit": null
-      }
-    },
-    {
-      "id": "end",
-      "bars": 3,
       "role": "outro",
       "patterns": {
-        "kick": null,
-        "kick_soft": null,
-        "impact": "<bd ~ ~>",
-        "clap": null,
-        "hats": null,
-        "open": null,
-        "rim": null,
-        "roll": null,
-        "bass": null,
-        "pad": null,
-        "pad_dark": "<[d4,f4,a4,c5,e5] [d4,f4,a4,c5,e5] ~>",
-        "arp": null,
-        "arp_dark": null,
-        "bell": "<[a5 ~ ~ ~ ~ ~ e6 ~ ~ ~ d6 ~ ~ ~ ~ ~] [~ ~ ~ ~ a5 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~] ~>",
-        "stab": null,
-        "swell": null,
-        "hit": "<[d4,f4,a4,c5,e5,d3] ~ ~>"
+        "melody": null
       }
     }
   ],
   "arrangement": [
     {
-      "section": "intro"
+      "section": "open"
     },
     {
-      "section": "rise"
+      "section": "main"
     },
     {
-      "section": "build"
-    },
-    {
-      "section": "lift"
-    },
-    {
-      "section": "drop"
-    },
-    {
-      "section": "glide"
-    },
-    {
-      "section": "reload"
-    },
-    {
-      "section": "groove"
-    },
-    {
-      "section": "fill"
-    },
-    {
-      "section": "peak"
-    },
-    {
-      "section": "peak2"
-    },
-    {
-      "section": "turn"
-    },
-    {
-      "section": "local"
-    },
-    {
-      "section": "end"
+      "section": "close"
     }
   ]
 }
