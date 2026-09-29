@@ -17,6 +17,7 @@ import { probe } from "./commands/probe.ts";
 import { preview } from "./commands/preview.ts";
 import { skill } from "./commands/skill.ts";
 import { init } from "./commands/init.ts";
+import { example } from "./commands/example.ts";
 import { capabilities } from "./commands/capabilities.ts";
 
 export interface CommandOption {
@@ -68,4 +69,4 @@ export function register(spec: CommandSpec): void {
   commands.set(spec.name, spec);
 }
 
-for (const spec of [init, schema, validate, resolve, compile, render, preview, capture, audio, assets, probe, qa, analyze, review, doctor, capabilities, skill, version, help]) register(spec);
+for (const spec of [init, example, schema, validate, resolve, compile, render, preview, capture, audio, assets, probe, qa, analyze, review, doctor, capabilities, skill, version, help]) register(spec);

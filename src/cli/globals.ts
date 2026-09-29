@@ -35,6 +35,8 @@ export const ENVIRONMENT: readonly (readonly [string, string])[] = [
 
 export const ROOT_EXAMPLES: readonly string[] = [
   "vid2 init launch-teaser my-video        Start from a template",
+  "vid2 example ls                         List the example films",
+  'cd "$(vid2 example new vid2-intro)"      Copy one into a workspace',
   "vid2 validate timeline.json             Check a timeline",
   "vid2 preview timeline.json --at 0,50%,5s   Stills to check",
   "vid2 render timeline.json --profile proxy -o proxy.mp4",
