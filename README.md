@@ -39,6 +39,8 @@ vid2 doctor
 
 `vid2 doctor --json` returns machine-readable capabilities and exits 3 when required ffmpeg tools are missing or too old. `vid2 help --json` exposes commands and options for agents.
 
+**Bun.** vid2 also runs under Bun (`bunx vid2-gen doctor`, `bun add -g vid2-gen`). CI checks that Bun renders frames identical to Node's, but it is not faster. On the 26-second [opus-astra-paper](examples/opus-astra-paper/README.md) film, Bun rendered in 55–57 s and Node in 54 s. The JS stage renderer ran at 51 fps under Bun and 64 fps under Node. Only startup is quicker (40 ms against 85 ms for `vid2 version`). Node 22.18+ remains the supported runtime. For faster renders, use `--hw-accel`.
+
 ## A 30-second timeline check
 
 Save this as `timeline.json`:

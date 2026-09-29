@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
   workflow_dispatch:
 
@@ -85,9 +85,24 @@ jobs:
         env:
           VID2_PACK_TEST: '1'
 
+  # Bun is an optional runtime: the same CLI must render frames identical to Node's (scripts/runtime-smoke.mjs).
+  bun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: oven-sh/setup-bun@v2
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm ci
+      - run: npm run build
+      - run: bun scripts/runtime-smoke.mjs --compare-node
+
   ci:
     if: always()
-    needs: [checks, test, pack]
+    needs: [checks, test, pack, bun]
     runs-on: ubuntu-latest
     steps:
       - name: Require all jobs
@@ -95,4 +110,5 @@ jobs:
           CHECKS: ${{ needs.checks.result }}
           TEST: ${{ needs.test.result }}
           PACK: ${{ needs.pack.result }}
-        run: test "$CHECKS" = success && test "$TEST" = success && test "$PACK" = success
+          BUN: ${{ needs.bun.result }}
+        run: test "$CHECKS" = success && test "$TEST" = success && test "$PACK" = success && test "$BUN" = success
