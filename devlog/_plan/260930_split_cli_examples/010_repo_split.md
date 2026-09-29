@@ -83,3 +83,11 @@ ima2-gen's other branches, worktrees, remotes, tags, hooks and working trees; th
   - Step 0 records `git -C $V symbolic-ref HEAD`; step 3 uses that value.
   - Step 5's worktree-survival check ignores baseline entries already marked `prunable`.
   - A rollback after new commits in the standalone repository fetches from `$BK/standalone.git`, not the bundle.
+
+## Outcome (wp2, 2026-09-30)
+
+Done. `git rev-parse --git-dir` = `.git`; the only remote is lidge-ai/vid2-gen; every local and remote-tracking branch descends
+from the vid2 root; HEAD stayed at 622efe15; author config JUN. The ima2 database lists no vid2 worktree and no vid2 branch, and its
+five other worktrees are unchanged. Backups (bundle, pointer file, worktree admin dir, baseline) are in
+`~/.vid2/backups/260930-vid2-from-ima2/`. Two execution slips, both before any move: the first run used zsh, which neither
+survives a failing `&&` as the last loop command under `set -e` nor word-splits `$SET`; the script was rerun under bash.
