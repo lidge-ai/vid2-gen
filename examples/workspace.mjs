@@ -9,8 +9,8 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-/** Workspace-only paths: generated media, captures, renders and scratch space. */
-const WORKSPACE_ONLY = /(^|[\\/])(media|out|\.work|[^\\/]+\.vid2cap)([\\/]|$)|(^|[\\/])\.DS_Store$/;
+/** Workspace-only top-level folders (generated media, captures, renders, scratch) and Finder metadata anywhere. */
+const WORKSPACE_ONLY = /^(media|out|\.work|[^\\/]+\.vid2cap)([\\/]|$)|(^|[\\/])\.DS_Store$/;
 
 export function workspaceRoot() {
   return join(process.env.VID2_HOME ?? join(homedir(), ".vid2"), "examples");

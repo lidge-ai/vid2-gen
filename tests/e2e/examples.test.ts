@@ -10,7 +10,7 @@ const root = resolve(import.meta.dirname, "../..");
 const example = join(root, "examples/vid2-launch");
 const cli = join(root, "src/cli/index.ts");
 /** The developer's example workspaces (examples/README.md); the test runner's isolated VID2_HOME does not contain them. */
-const workspaces = process.env["VID2_EXAMPLE_WORKSPACES"] ?? join(homedir(), ".vid2", "examples");
+const workspaces = process.env["VID2_EXAMPLE_WORKSPACES"] ?? join(process.env["VID2_EXAMPLE_HOME"] ?? join(homedir(), ".vid2"), "examples");
 
 async function vid2(cwd: string, args: string[]) {
   const r = await run(process.execPath, [cli, ...args, "--json"], { cwd });
@@ -56,7 +56,7 @@ void test("committed example timelines match the schema", async () => {
 void test("examples keep media, captures and renders out of git", async () => {
   const listed = await run("git", ["ls-files", "examples"], { cwd: root });
   if (listed.code !== 0) return; // a source tarball without git history has nothing to check
-  const media = /\.(mp4|mov|mkv|webm|png|jpe?g|webp|gif|wav|mp3|m4a|aac|flac|ttf|otf)$|(^|\/)(media|out|\.work)\/|\.vid2cap\//;
+  const media = /\.(mp4|mov|mkv|webm|avi|png|jpe?g|webp|gif|bmp|tiff?|wav|aiff?|mp3|m4a|aac|flac|ogg|opus|ttf|otf)$|(^|\/)(media|out|\.work)\/|\.vid2cap\//;
   const offenders = listed.stdout.toString("utf8").split("\n").filter((path) => media.test(path));
   assert.deepEqual(offenders, []);
   const ignore = readFileSync(join(root, ".gitignore"), "utf8");

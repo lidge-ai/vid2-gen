@@ -4,8 +4,9 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const OUT = new URL("./media/", import.meta.url).pathname;
+const OUT = fileURLToPath(new URL("./media/", import.meta.url));
 const CLAUDE_SVG = process.env.CLAUDE_SVG, CODEX_PNG = process.env.CODEX_PNG ?? "/Applications/ChatGPT.app/Contents/Resources/icon-codex-light.png";
 const FONT_DIR = process.env.FONT_DIR;
 if (!CLAUDE_SVG || !FONT_DIR) { console.error("set CLAUDE_SVG and FONT_DIR"); process.exit(2); }

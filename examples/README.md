@@ -20,7 +20,7 @@ Timeline paths resolve relative to the timeline file, so every command in a READ
 | [ima2-launch](ima2-launch/README.md) | 50 s launch film: kinetic type, rebuilt UI components, ima2 generations, a real web capture, music synced to bars | ima2-gen, Playwright, music2-gen |
 | [vid2-launch](vid2-launch/README.md) | 30 s launch video: two web captures, ima2 stills, a two-pass QA handoff | Playwright, ima2-gen (or placeholders) |
 | [generated-video](generated-video/README.md) | A five-second generated clip held across a seven-second layer, with an offline twin | ima2-gen, or nothing for the offline twin |
-| [hello.json](hello.json) | The smallest timeline | ffmpeg |
+| [hello.json](hello.json) | The smallest timeline; render it in place (`vid2 render examples/hello.json -o hello.mp4`), no workspace needed | ffmpeg |
 
 Rendering is ffmpeg-bound. Add `--hw` to `vid2 render` to use a hardware encoder for the final encode; see the
 [render contract](../structure/render.md#profiles-and-encoders) for what it changes.
