@@ -26,9 +26,11 @@ vid2 assets resolve timeline.json                  # backdrop + six gallery imag
 vid2 validate timeline.json
 vid2 render timeline.json -o .work/ima2-launch.mp4
 vid2 qa .work/ima2-launch.mp4 --timeline timeline.json --expect-audio --out .work/qa
-vid2 compile timeline.json -o .work/film.plan.json
-node check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4   # cue anchors, onsets, typing cadence
 ```
+
+In a repository checkout, `vid2 compile timeline.json -o .work/film.plan.json` followed by
+`node check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4` checks cue anchors, onsets and typing cadence; the script imports vid2's
+source, so it is not part of the npm package.
 
 Without ima2-gen, `vid2 render timeline.json --placeholders` renders the generated sources as labelled placeholders (the capture is still
 needed; record any app with the same steps file).

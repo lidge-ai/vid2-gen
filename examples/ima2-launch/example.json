@@ -12,7 +12,7 @@
     "generated images through ima2-gen",
     "real web capture",
     "cuts synced to bars (128 BPM)",
-    "sync check against the compiled plan"
+    "sync check against the compiled plan (repository checkout only)"
   ],
   "goodFor": [
     "product or app launch film",
@@ -22,6 +22,10 @@
   "needs": [
     {
       "tool": "ffmpeg"
+    },
+    {
+      "tool": "a square PNG of your app icon at media/ima2-icon.png",
+      "note": "not bundled"
     },
     {
       "tool": "ima2-gen",
@@ -76,12 +80,6 @@
     },
     {
       "run": "vid2 qa .work/ima2-launch.mp4 --timeline timeline.json --expect-audio --out .work/qa"
-    },
-    {
-      "run": "vid2 compile timeline.json -o .work/film.plan.json"
-    },
-    {
-      "run": "node check-sync.mjs .work/film.plan.json .work/ima2-launch.mp4"
     }
   ],
   "output": ".work/ima2-launch.mp4"

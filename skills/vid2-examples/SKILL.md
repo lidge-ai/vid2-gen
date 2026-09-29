@@ -18,21 +18,22 @@ faster and safer than a blank timeline, because its timing, sound and QA already
 | Calm, keynote-style product intro; a developer tool with a real command | example `vid2-intro` | 36 s | npx for music2-gen |
 | Launch video built from real captures of a web app and a code page | example `vid2-launch` | 30 s | Playwright; ima2-gen optional |
 | One AI-generated video clip inside a timeline | example `generated-video` | 7 s | ima2-gen Grok lane (offline twin needs nothing) |
-| Kinetic launch built only from motion layers | template `kinetic-launch` | 30 s | none |
+| Kinetic launch built only from motion layers | template `kinetic-launch` | 30 s | none (two generated images render as placeholders until resolved) |
 | Launch teaser with a hero image | template `launch-teaser` | 30 s | none (placeholder until resolved) |
 | Walkthrough of one feature from a capture | template `feature-demo` | short | none (capture bundled) |
 | Release notes, three items | template `changelog` | 20 s | none |
 | 9:16 social post | template `social-vertical` | 15 s | none |
 
 `vid2 example ls --json` returns every example's `goodFor`, `needs` and whether a workspace already exists; use it when the table
-above does not settle the choice. Templates come from `vid2 init <template> <dir>` and render immediately.
+above does not settle the choice. Templates come from `vid2 init <template> <dir>` and render immediately with `--placeholders`.
 
 ## Fast route for an example
 
 1. `vid2 example show <name>` (add `--json` to read `steps`, `needs`, `edit` and `output`). Check the needs before running anything;
    missing optional tools have a fallback below.
-2. `cd "$(vid2 example new <name>)"` copies the sources into `$VID2_HOME/examples/<name>` and prints that path. Re-running is safe:
-   sources are refreshed, and `media/`, `out/`, `.work/` and `*.vid2cap/` are kept. Use `--dir <path>` for a project folder instead.
+2. `cd "$(vid2 example new <name>)"` copies the sources into `$VID2_HOME/examples/<name>` and prints that path. Re-running only adds
+   missing files, so your edits survive; `--force` refreshes every source file from the package (and overwrites your edits).
+   `media/`, `out/`, `.work/` and `*.vid2cap/` are never touched. `--dir <path>` copies into an empty or new folder instead.
 3. Run the manifest `steps` in order up to the proxy render, then open the proxy and the QA report. This proves the toolchain before you
    change anything.
 4. Change only the files the manifest lists under `edit` for the new content (characters, copy, scenes, captures, the cue). Keep the
@@ -55,7 +56,7 @@ above does not settle the choice. Templates come from `vid2 init <template> <dir
 |---|---|
 | Key collector, seeded `rnd()`, spring pops, squash and stretch, paper texture | opus-astra-paper: `build-timeline.mjs`, `make-paper.mjs` |
 | Puppet builders and verbs (`to`, `hops`, `wave`, `blink`, `look`), sky/sun/hills world, bubbles | claude-codex-dawn: `puppets.mjs`, `lib.mjs` |
-| Bar-synced cuts, UI layers (`field`, `bars`, `ticker`, `chips`), `zoomfrom`/`iris`, sync check | ima2-launch: `timeline.json`, `check-sync.mjs` |
+| Bar-synced cuts, UI layers (`field`, `bars`, `ticker`, `chips`), `zoomfrom`/`iris` | ima2-launch: `timeline.json` |
 | Typed command, verbs lit one at a time, rolling number, keynote grammar | vid2-intro: `build-timeline.mjs` |
 | Two-pass render that shows its own QA evidence | vid2-launch: `make-qa-media.mjs`, `timeline.stills.json` |
 | Generated clip hold and the offline file provider | generated-video: `timeline.json`, `timeline.offline.json` |

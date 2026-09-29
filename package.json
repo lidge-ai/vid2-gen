@@ -46,6 +46,7 @@
     "templates",
     "examples",
     "!examples/workspace.mjs",
+    "!examples/ima2-launch/check-sync.mjs",
     "!examples/*/media",
     "!examples/*/out",
     "!examples/*/.work",

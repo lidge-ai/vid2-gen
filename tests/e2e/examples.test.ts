@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { run } from "../../src/shared/exec.ts";
@@ -153,8 +153,11 @@ function readmeLines(name: string): string[] {
 void test("every example folder has a manifest whose steps are its README commands, in order", async () => {
   const { listExamples, loadExample } = await import("../../src/examples/index.ts");
   assert.deepEqual(listExamples(), EXAMPLES);
-  const folders = readdirSync(join(root, "examples"), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
-  assert.deepEqual(folders, EXAMPLES, "every example folder has an example.json");
+  const tracked = await run("git", ["ls-files", "examples"], { cwd: root });
+  if (tracked.code === 0) {
+    const folders = [...new Set(tracked.stdout.toString("utf8").split("\n").filter((p) => p.split("/").length > 2).map((p) => p.split("/")[1]!))].sort();
+    assert.deepEqual(folders, EXAMPLES, "every tracked example folder has an example.json");
+  }
   for (const name of EXAMPLES) {
     const { manifest } = loadExample(name);
     assert.equal(manifest.name, name);
@@ -196,17 +199,46 @@ void test("syncWorkspace copies sources only and keeps workspace media", async (
     writeFileSync(join(source, file), "workspace-only");
   }
   writeFileSync(join(source, "README.md"), "readme");
-  writeFileSync(join(source, "example.json"), "{}");
+  writeFileSync(join(source, "example.json"), JSON.stringify({ name: "demo" }));
   mkdirSync(join(source, "music"), { recursive: true });
   writeFileSync(join(source, "music/song.json"), "{}");
   const dest = join(base, "ws");
+  const opts = { sourceRoot: join(base, "src") };
+  const synced = syncWorkspace("demo", dest, opts);
+  assert.deepEqual(synced.files, ["README.md", "example.json", "music/song.json"]);
+  assert.deepEqual(synced.copied, synced.files);
+  for (const file of ["media/a.png", "out/b.mp4", ".work/c", "x.vid2cap/d", "music/.DS_Store", ".DS_Store"]) assert.equal(existsSync(join(dest, file)), false, file);
   mkdirSync(join(dest, "media"), { recursive: true });
   writeFileSync(join(dest, "media/keep.png"), "kept");
-  const synced = syncWorkspace("demo", dest, { sourceRoot: join(base, "src") });
-  assert.deepEqual(synced.files, ["README.md", "example.json", "music/song.json"]);
-  for (const file of ["media/a.png", "out/b.mp4", ".work/c", "x.vid2cap/d", "music/.DS_Store", ".DS_Store"]) assert.equal(existsSync(join(dest, file)), false, file);
+  writeFileSync(join(dest, "README.md"), "my edit");
+  const again = syncWorkspace("demo", dest, opts);
+  assert.deepEqual(again.skipped, synced.files, "a re-run keeps every existing file");
+  assert.equal(readFileSync(join(dest, "README.md"), "utf8"), "my edit");
   assert.equal(readFileSync(join(dest, "media/keep.png"), "utf8"), "kept");
+  const forced = syncWorkspace("demo", dest, { ...opts, force: true });
+  assert.deepEqual(forced.copied, synced.files);
   assert.equal(readFileSync(join(dest, "README.md"), "utf8"), "readme");
+  assert.equal(readFileSync(join(dest, "media/keep.png"), "utf8"), "kept", "force never touches media");
+});
+
+void test("syncWorkspace refuses a file, the packaged source and a foreign non-empty folder", async () => {
+  const { syncWorkspace } = await import("../../src/examples/index.ts");
+  const base = tempDir("vid2-example-guard-");
+  const source = join(base, "src/demo");
+  mkdirSync(source, { recursive: true });
+  writeFileSync(join(source, "example.json"), JSON.stringify({ name: "demo" }));
+  const opts = { sourceRoot: join(base, "src") };
+  const file = join(base, "file.txt");
+  writeFileSync(file, "x");
+  const project = join(base, "project");
+  mkdirSync(project);
+  writeFileSync(join(project, "timeline.json"), "mine");
+  for (const [dest, pattern] of [[file, /is a file/], [source, /inside the example's packaged source/], [join(source, "sub"), /inside/],
+    [project, /not empty and is not a demo workspace/]] as const) {
+    assert.throws(() => syncWorkspace("demo", dest, opts), (e: Error & { code?: string }) => e.code === "E_INPUT" && pattern.test(e.message), dest);
+  }
+  assert.equal(readFileSync(join(project, "timeline.json"), "utf8"), "mine");
+  assert.equal(syncWorkspace("demo", project, { ...opts, force: true }).copied.length, 1);
 });
 
 void test("vid2 example new copies an example and prints its path; ls, show and path answer", async () => {
@@ -217,6 +249,13 @@ void test("vid2 example new copies an example and prints its path; ls, show and 
   const path = created.stdout.toString("utf8").trim();
   assert.equal(path, join(home, "examples/vid2-intro"));
   assert.ok(existsSync(join(path, "build-timeline.mjs")));
+  writeFileSync(join(path, "build-timeline.mjs"), "// my edit");
+  const rerun = await run(process.execPath, [cli, "example", "new", "vid2-intro"], { env });
+  assert.equal(rerun.code, 0, rerun.stderr);
+  assert.match(rerun.stderr, /kept \d+ existing file/);
+  assert.equal(readFileSync(join(path, "build-timeline.mjs"), "utf8"), "// my edit", "a re-run keeps edits");
+  const refused = await run(process.execPath, [cli, "example", "new", "opus-astra-paper", "--dir", path, "--json"], { env });
+  assert.equal(refused.code, 2, "another example's workspace is not overwritten");
   const dir = join(home, "elsewhere");
   const json = await run(process.execPath, [cli, "example", "new", "opus-astra-paper", "--dir", dir, "--json"], { env });
   const body = JSON.parse(json.stdout.toString("utf8")) as { ok: boolean; data: { path: string; files: string[] } };

@@ -16,7 +16,7 @@ vid2 render timeline.json -o out/vid2-intro.mp4 --hw-accel if-possible
 vid2 qa out/vid2-intro.mp4 --timeline timeline.json --expect-audio --out out/qa
 ```
 
-The 34 s in the number roll is the measured `--hw-accel required` time for [opus-astra-paper](../opus-astra-paper/README.md); this film
+The 34 s in the number roll is the measured `--hw-accel required` time for the opus-astra-paper example (`vid2 example show opus-astra-paper`); this film
 itself renders in about 25 s with hardware encoding. QA reports a contrast warning on the verbs scene by design: the three unlit words
 are dimmed to about 2.6:1 so the lit word leads.
 

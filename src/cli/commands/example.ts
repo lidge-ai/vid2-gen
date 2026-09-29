@@ -55,17 +55,23 @@ const showSpec: CommandSpec = {
 
 const newSpec: CommandSpec = {
   name: "new", summary: "Copy an example's sources into its workspace and print the path",
-  usage: "vid2 example new <name> [--dir <path>] [--json]",
-  description: "Sources overwrite their workspace copies; media/, out/, .work/ and *.vid2cap/ in the workspace are kept, so re-running is safe.",
-  options: { dir: { type: "string", value: "<path>", description: "Copy into this directory instead", default: "$VID2_HOME/examples/<name>" } },
-  examples: ['cd "$(vid2 example new opus-astra-paper)"', "vid2 example new vid2-intro --dir ./intro"],
-  run({ args, values, cwd }): Promise<CommandResult> {
+  usage: "vid2 example new <name> [--dir <path>] [--force] [--json]",
+  description: "Files already in the destination are kept, so your edits survive a re-run; --force refreshes them from the package.\n"
+    + "media/, out/, .work/ and *.vid2cap/ are never copied or touched. A non-empty --dir that is not this example's workspace needs --force.",
+  options: {
+    dir: { type: "string", value: "<path>", description: "Copy into this directory instead", default: "$VID2_HOME/examples/<name>" },
+    force: { type: "boolean", description: "Overwrite existing source files, and allow a non-empty --dir" },
+  },
+  examples: ['cd "$(vid2 example new opus-astra-paper)"', "vid2 example new vid2-intro --dir ./intro", "vid2 example new vid2-intro --force"],
+  run({ args, values, cwd, json, stderr }): Promise<CommandResult> {
     const name = one("new", args);
     const { manifest } = loadExample(name);
     const dest = typeof values["dir"] === "string" ? resolve(cwd, values["dir"]) : undefined;
-    const synced = syncWorkspace(name, dest);
+    const synced = syncWorkspace(name, dest, { force: values["force"] === true });
+    if (!json && synced.skipped.length) stderr.write(`vid2: kept ${synced.skipped.length} existing file(s) in ${synced.path}; --force refreshes them\n`);
     return Promise.resolve({ command: "example new", data: { name, path: synced.path, source: synced.source, files: synced.files,
-      steps: manifest.steps, output: manifest.output }, artifacts: [synced.path], text: synced.path });
+      copied: synced.copied, skipped: synced.skipped, steps: manifest.steps, output: manifest.output },
+      artifacts: [synced.path], text: synced.path });
   },
 };
 

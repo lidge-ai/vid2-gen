@@ -26,7 +26,7 @@
     {
       "tool": "ima2-gen",
       "optional": true,
-      "note": "for the stills; --placeholders renders labelled stripes instead"
+      "note": "for media/hero.jpg, still-a.jpg and still-b.jpg; until they exist the renders use --placeholders"
     }
   ],
   "edit": [
@@ -57,17 +57,27 @@
       "run": "vid2 validate timeline.stills.json"
     },
     {
+      "run": "vid2 render timeline.stills.json --profile proxy --placeholders -o .work/pass1.mp4"
+    },
+    {
+      "run": "vid2 qa .work/pass1.mp4 --timeline timeline.stills.json --out .work/pass1.qa"
+    },
+    {
+      "run": "node make-qa-media.mjs .work/pass1.qa media"
+    },
+    {
       "run": "vid2 preview timeline.stills.json --at 1s,7.5s,15s,27s --placeholders"
     },
     {
-      "run": "vid2 render timeline.stills.json --profile proxy -o .work/proxy.mp4"
+      "run": "vid2 render timeline.stills.json --profile proxy --placeholders -o .work/proxy.mp4"
     },
     {
       "run": "vid2 qa .work/proxy.mp4 --timeline timeline.stills.json"
     },
     {
-      "run": "vid2 render timeline.stills.json -o .work/vid2-launch.mp4"
+      "run": "vid2 render timeline.stills.json --placeholders -o .work/vid2-launch.mp4"
     }
   ],
-  "output": ".work/vid2-launch.mp4"
+  "output": ".work/vid2-launch.mp4",
+  "size": "1920x1080"
 }

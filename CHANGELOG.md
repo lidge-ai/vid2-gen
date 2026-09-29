@@ -4,7 +4,8 @@
 
 **Examples on demand.** The six example films now ship in the npm package as code and steps, each with an `example.json` manifest.
 `vid2 example ls` lists them, `vid2 example show <name>` prints what one needs, which files to edit and its exact steps, and
-`cd "$(vid2 example new <name>)"` copies it into `$VID2_HOME/examples/<name>` (media and renders there are kept on re-sync). The new
+`cd "$(vid2 example new <name>)"` copies it into `$VID2_HOME/examples/<name>`; re-running keeps your edits and media, and `--force`
+refreshes the sources. The new
 `vid2-examples` skill maps a request (paper cutout, puppet story, launch film, keynote-style intro, capture-led demo, generated clip,
 changelog, social vertical) to the closest example or template and the fastest route to a render. `vid2-intro`, a quiet keynote-style
 film about vid2 itself, joins the examples, and `vid2-launch` no longer needs a repository checkout for its app capture.

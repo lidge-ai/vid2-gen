@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -82,12 +82,15 @@ test("the package ships example sources and no workspace media", () => {
   const dir = mkdtempSync(join(tmpdir(), "vid2-pack-examples-"));
   cpSync(join(repo, "package.json"), join(dir, "package.json"));
   cpSync(join(repo, "examples"), join(dir, "examples"), { recursive: true });
-  const seeded = ["media/probe.bin", "out/x.mp4", ".work/y", "take.vid2cap/footage.mp4", ".DS_Store"].map((p) => `examples/opus-astra-paper/${p}`);
+  // ima2-launch has no .gitignore of its own, so only package.json's "files" negations can keep these out.
+  const seeded = ["media/probe.bin", "out/x.mp4", ".work/y", "take.vid2cap/footage.mp4"].map((p) => `examples/ima2-launch/${p}`);
   for (const path of seeded) { mkdirSync(join(dir, path, ".."), { recursive: true }); writeFileSync(join(dir, path), "x"); }
   const packed = packedPaths(dir);
   for (const path of seeded) assert.equal(packed.includes(path), false, path);
   assert.equal(packed.includes("examples/workspace.mjs"), false);
-  const manifests = readdirSync(join(repo, "examples"), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => `examples/${d.name}/example.json`);
+  assert.equal(packed.includes("examples/ima2-launch/check-sync.mjs"), false);
+  const manifests = readdirSync(join(repo, "examples"), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(repo, "examples", d.name, "example.json"))).map((d) => `examples/${d.name}/example.json`);
   for (const manifest of manifests) assert.ok(packed.includes(manifest), manifest);
   const bytes = packed.filter((p) => p.startsWith("examples/")).reduce((sum, p) => sum + statSync(join(dir, p)).size, 0);
   assert.ok(bytes <= 600 * 1024, `example sources are ${bytes} bytes`);
@@ -96,7 +99,11 @@ test("the package ships example sources and no workspace media", () => {
 test("every tracked example file except nested .gitignore files and workspace.mjs is packed", () => {
   const listed = spawnSync("git", ["ls-files", "examples"], { cwd: repo, encoding: "utf8" });
   if (listed.status !== 0) return; // a source tarball without git history has nothing to compare
-  const tracked = listed.stdout.split("\n").filter((p) => p && !p.endsWith("/.gitignore") && p !== "examples/workspace.mjs");
+  const repoOnly = new Set(["examples/workspace.mjs", "examples/ima2-launch/check-sync.mjs"]);
+  const tracked = listed.stdout.split("\n").filter((p) => p && !p.endsWith("/.gitignore") && !repoOnly.has(p));
   const packed = new Set(packedPaths(repo).filter((p) => p.startsWith("examples/")));
   for (const path of tracked) assert.ok(packed.has(path), path);
+  for (const path of [...packed].filter((p) => /\.(mjs|js)$/.test(p))) {
+    assert.doesNotMatch(readFileSync(join(repo, path), "utf8"), /from ["']\.\.\/\.\.\/src\//, `${path} must not import the repository source`);
+  }
 });
