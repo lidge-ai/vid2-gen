@@ -24,7 +24,8 @@ export const EFFECT_FILTERS = ["xfade", "perspective", "zoompan", "overlay", "al
   "colorkey", "loudnorm", "ebur128", "aevalsrc", "amix", "acompressor", "alimiter", "sidechaincompress",
   "showspectrumpic", "showwavespic", "blackdetect", "tile"] as const;
 const CAPTURE_DEVICES = ["avfoundation", "gdigrab", "ddagrab", "x11grab", "kmsgrab"] as const;
-const HW_ENCODERS = ["h264_videotoolbox", "h264_nvenc", "h264_qsv", "h264_amf", "h264_vaapi"] as const;
+const HW_ENCODERS = ["h264_videotoolbox", "h264_nvenc", "h264_qsv", "h264_amf", "h264_vaapi",
+  "hevc_videotoolbox", "hevc_nvenc", "hevc_qsv", "hevc_amf", "hevc_vaapi", "prores_videotoolbox"] as const;
 
 export interface DoctorReport {
   exit: ExitCode;

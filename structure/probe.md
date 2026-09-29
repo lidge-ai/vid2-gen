@@ -20,6 +20,6 @@ doctor. `requireFeatures()` provides a typed gate for later render components;
 `probeMedia()` inspects an individual file with ffprobe. Optional `vhs`, `agg`,
 and `asciinema` paths tell the later terminal capture workflow which adapters
 are available. Capability values describe the local FFmpeg build, not a promise
-that every device or hardware encoder can run on the current host.
+that every device or hardware encoder can run on the current host. `vid2 doctor --hw` adds `hwProbe`: the same five-frame trial encode the renderer uses, one entry per compiled-in H.264, HEVC or ProRes hardware encoder, with the ffmpeg error when a probe fails.
 
 Contract source: `devlog/_fin/260927_vid2_roadmap/010_foundations.md`, Probe section.

@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { renderPlan } from "../../render/index.ts";
+import { hardwareRequest, renderPlan } from "../../render/index.ts";
 import { Vid2Error } from "../../shared/errors.ts";
 import type { CommandSpec } from "../registry.ts";
 import { loadPlanOrTimeline, profileOf } from "./plan-shared.ts";
@@ -14,13 +14,15 @@ function jobs(value: unknown): number | undefined {
 export const render: CommandSpec = {
   name: "render",
   summary: "Render a timeline (or compiled plan) to a video file",
-  usage: "vid2 render <timeline.json|x.plan.json> [-o out.mp4] [--profile proxy|final] [--segments id]... [--no-cache] [--hw] [--jobs N] [--json]",
+  usage: "vid2 render <timeline.json|x.plan.json> [-o out.mp4] [--profile proxy|final] [--segments id]... [--no-cache] [--hw-accel disable|if-possible|required] [--hw-encoder videotoolbox|nvenc|qsv|amf|vaapi] [--jobs N] [--json]",
   options: {
     out: { type: "string", short: "o", description: "Output video path (default: <timeline>.mp4)" },
     profile: { type: "string", description: "proxy (half size, fast) or final (default)" },
     segments: { type: "string", multiple: true, description: "Force re-render of these scene or segment ids" },
     "no-cache": { type: "boolean", description: "Ignore and do not write the segment cache" },
-    hw: { type: "boolean", description: "Use a hardware H.264 encoder when available (approximate quality)" },
+    hw: { type: "boolean", description: "Shorthand for --hw-accel if-possible" },
+    "hw-accel": { type: "string", description: "Final encode: disable (default), if-possible (probe, fall back to software) or required (fail without one)" },
+    "hw-encoder": { type: "string", description: "Limit hardware encoding to one family: videotoolbox, nvenc, qsv, amf or vaapi" },
     jobs: { type: "string", description: "Parallel segment renders (default: half the CPUs)" },
     placeholders: { type: "boolean", description: "Stand in stripe images for missing media and uncached generated sources (no provider calls)" },
     generate: { type: "boolean", description: "Call asset providers (ima2) for generated sources that are not cached yet" },
@@ -35,12 +37,13 @@ export const render: CommandSpec = {
     process.once("SIGINT", onSigint);
     try {
       const n = jobs(values["jobs"]);
-      const result = await renderPlan(plan, { out, signal: controller.signal, noCache: values["no-cache"] === true, hw: values["hw"] === true,
+      const hw = hardwareRequest({ hw: values["hw"], accel: values["hw-accel"], family: values["hw-encoder"] });
+      const result = await renderPlan(plan, { out, signal: controller.signal, noCache: values["no-cache"] === true, hw,
         ...(n === undefined ? {} : { jobs: n }),
         ...(Array.isArray(values["segments"]) ? { segments: values["segments"] as string[] } : {}),
         logger: (e) => { if (!json && e.message) stderr.write(`${e.stage}: ${e.message}\n`); } });
       return { command: "render", data: { output: result.output, seconds: result.seconds, frames: plan.totalFrames, profile: plan.profile,
-        width: plan.output.width, height: plan.output.height, segments: result.segments, manifest: result.manifest,
+        width: plan.output.width, height: plan.output.height, segments: result.segments, manifest: result.manifest, encoder: result.encoder,
         ...(result.audio ? { audio: result.audio } : {}) },
         artifacts: [result.output, result.manifest], warnings: [...new Set([...planWarnings, ...(plan.warnings ?? []), ...result.warnings])] };
     } finally {
