@@ -24,11 +24,11 @@ music. [Full 30 s video](https://github.com/lidge-ai/vid2-gen/releases/latest).*
 Requires **Node.js 22.18 or newer** and **ffmpeg/ffprobe 6.1 or newer** on your PATH. ffmpeg 7.1+ is recommended. Install ffmpeg with `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg` on Windows, or your Linux distribution's package manager.
 
 ```bash
-npm install -g https://github.com/lidge-ai/vid2-gen/releases/download/v0.3.0/vid2-gen-0.3.0.tgz
+npm install -g vid2-gen
 vid2 doctor
 ```
 
-npm publication of `vid2-gen` is pending; the command above installs the exact release tarball. From a source checkout:
+From a source checkout:
 
 ```bash
 npm ci
@@ -38,6 +38,8 @@ vid2 doctor
 ```
 
 `vid2 doctor --json` returns machine-readable capabilities and exits 3 when required ffmpeg tools are missing or too old. `vid2 help --json` exposes commands and options for agents.
+
+**Bun.** vid2 also runs under Bun (`bunx vid2-gen doctor`, `bun add -g vid2-gen`). CI checks that Bun renders frames identical to Node's, but it is not faster. On the 26-second [opus-astra-paper](examples/opus-astra-paper/README.md) film, Bun rendered in 55–57 s and Node in 54 s. The JS stage renderer ran at 51 fps under Bun and 64 fps under Node. Only startup is quicker (40 ms against 85 ms for `vid2 version`). Node 22.18+ remains the supported runtime. For faster renders, use `--hw-accel`.
 
 ## A 30-second timeline check
 
@@ -70,9 +72,13 @@ vid2 schema --json
 vid2 render timeline.json -o intro.mp4 --profile proxy   # half size, fast
 vid2 render timeline.json -o intro.mp4                   # final quality
 vid2 compile timeline.json -o intro.plan.json            # inspect the ffmpeg plan
+vid2 render timeline.json -o intro.mp4 --hw-accel if-possible   # hardware final encode when one works
+vid2 doctor --hw                                         # which hardware encoders pass a trial encode
 ```
 
 Each scene renders as its own cached segment, transitions are joined with exact frame math, and the output is checked with ffprobe (frame count, size, pixel format, faststart). Text uses libass with the bundled Geist, Geist Mono and Instrument Serif fonts (SIL OFL).
+
+`--hw-accel` affects only the final encode: VideoToolbox, NVENC, QSV, AMF or VAAPI for H.264 and HEVC, and VideoToolbox for ProRes. vid2 trial-encodes five frames before trusting an encoder. `if-possible` falls back to software with a warning, and `required` exits 3. `--hw-encoder nvenc` limits the choice to one family, and render JSON reports `data.encoder`. On an M5 Pro, the 26-second 1080p [opus-astra-paper](examples/opus-astra-paper/README.md) film rendered in 34 s instead of 70 s. The file was a third of the size at VMAF 97.1 against the software render ([details](structure/render.md#hardware-encoding)).
 
 ## Kinetic launch films
 

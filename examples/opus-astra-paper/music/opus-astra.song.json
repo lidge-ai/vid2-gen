@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "title": "Opus & Astra",
+  "genre": "lofi_hiphop",
+  "bpm": 100,
+  "meter": {
+    "numerator": 4,
+    "denominator": 4
+  },
+  "key": "C major",
+  "seed": 6055,
+  "swing": 0.56,
+  "sampleRate": 44100,
+  "tailSeconds": 3,
+  "fx": {
+    "reverb": {
+      "type": "plate",
+      "decaySeconds": 2.2,
+      "preDelayMs": 25,
+      "lowCutHz": 200,
+      "highCutHz": 9000,
+      "width": 1.3
+    },
+    "delay": {
+      "time": "1/8d",
+      "feedback": 0.35,
+      "pingPong": true,
+      "lowCutHz": 300,
+      "highCutHz": 6500
+    }
+  },
+  "master": {
+    "targetLufs": -14,
+    "ceilingDb": -2,
+    "fx": [
+      {
+        "type": "eq",
+        "lowGainDb": 0.5,
+        "midGainDb": -1,
+        "midHz": 400,
+        "highGainDb": -0.5,
+        "highHz": 9000
+      },
+      {
+        "type": "compressor",
+        "ratio": 2,
+        "thresholdDb": -16,
+        "attackMs": 25,
+        "releaseMs": 180
+      }
+    ]
+  },
+  "tracks": [
+    {
+      "id": "kick",
+      "kind": "drums",
+      "instrument": "drums",
+      "pattern": "~",
+      "gain": -10,
+      "params": {
+        "tone": 0.3,
+        "decayMs": 260,
+        "noise": 0.04
+      },
+      "fx": [
+        {
+          "type": "filter",
+          "mode": "lowpass",
+          "cutoffHz": 900
+        }
+      ]
+    },
+    {
+      "id": "snap",
+      "kind": "drums",
+      "instrument": "drums",
+      "pattern": "~",
+      "gain": -12,
+      "params": {
+        "noise": 0.8,
+        "decayMs": 120
+      },
+      "sends": {
+        "reverb": 0.35,
+        "delay": 0
+      },
+      "fx": [
+        {
+          "type": "filter",
+          "mode": "highpass",
+          "cutoffHz": 900
+        }
+      ]
+    },
+    {
+      "id": "shaker",
+      "kind": "drums",
+      "instrument": "drums",
+      "pattern": "~",
+      "gain": -13,
+      "pan": 0.2,
+      "velocity": "0.3 0.15 0.5 0.15 0.3 0.15 0.6 0.2 0.3 0.15 0.5 0.15 0.3 0.15 0.6 0.25",
+      "params": {
+        "noise": 0.9,
+        "decayMs": 35
+      },
+      "fx": [
+        {
+          "type": "filter",
+          "mode": "highpass",
+          "cutoffHz": 7000
+        }
+      ]
+    },
+    {
+      "id": "bass",
+      "kind": "notes",
+      "instrument": "808",
+      "pattern": "~",
+      "gain": -11,
+      "gate": 0.7,
+      "duck": {
+        "by": "kick",
+        "amount": 0.3,
+        "releaseMs": 120
+      }
+    },
+    {
+      "id": "pad",
+      "kind": "notes",
+      "instrument": "pad",
+      "pattern": "~",
+      "gain": -14,
+      "params": {
+        "detuneCents": 10,
+        "cutoffHz": 2400,
+        "attackMs": 700,
+        "releaseMs": 1600,
+        "unison": 5
+      },
+      "sends": {
+        "reverb": 0.5,
+        "delay": 0
+      },
+      "fx": [
+        {
+          "type": "filter",
+          "mode": "highpass",
+          "cutoffHz": 200
+        },
+        {
+          "type": "width",
+          "amount": 1.4,
+          "monoBelowHz": 150
+        }
+      ]
+    },
+    {
+      "id": "keys",
+      "kind": "notes",
+      "instrument": "epiano",
+      "pattern": "~",
+      "gain": -13,
+      "gate": 0.9,
+      "sends": {
+        "reverb": 0.3,
+        "delay": 0.1
+      }
+    },
+    {
+      "id": "kalimba",
+      "kind": "notes",
+      "instrument": "kalimba",
+      "pattern": "~",
+      "gain": -12,
+      "pan": -0.15,
+      "sends": {
+        "reverb": 0.3,
+        "delay": 0.25
+      }
+    },
+    {
+      "id": "box",
+      "kind": "notes",
+      "instrument": "glockenspiel",
+      "pattern": "~",
+      "gain": -10,
+      "pan": 0.1,
+      "sends": {
+        "reverb": 0.45,
+        "delay": 0.3
+      }
+    },
+    {
+      "id": "marimba",
+      "kind": "notes",
+      "instrument": "marimba",
+      "pattern": "~",
+      "gain": -12,
+      "pan": -0.1,
+      "sends": {
+        "reverb": 0.25,
+        "delay": 0.1
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "bars": 2,
+      "role": "intro",
+      "patterns": {
+        "kick": null,
+        "snap": null,
+        "shaker": null,
+        "bass": null,
+        "pad": "<[c4,e4,g4,b4] [f3,a3,c4,e4]>",
+        "keys": null,
+        "kalimba": null,
+        "box": "<[e6 ~ g6 ~ c7 ~ ~ ~ b6 ~ g6 ~ ~ ~ e6 ~] [f6 ~ a6 ~ c7 ~ ~ ~ a6 ~ g6 ~ f6 ~ e6 ~]>",
+        "marimba": null
+      }
+    },
+    {
+      "id": "meet",
+      "bars": 3,
+      "role": "verse",
+      "patterns": {
+        "kick": "bd ~ ~ ~ ~ ~ ~ ~ bd ~ bd ~ ~ ~ ~ ~",
+        "snap": null,
+        "shaker": "hh*16",
+        "bass": "<[c2 ~ ~ ~ ~ ~ c2 ~ ~ ~ c2 ~ ~ ~ ~ ~] [a1 ~ ~ ~ ~ ~ a1 ~ ~ ~ a1 ~ ~ ~ ~ ~] [f2 ~ ~ ~ ~ ~ f2 ~ ~ ~ f2 ~ ~ ~ ~ ~]>",
+        "pad": "<[c4,e4,g4,b4] [a3,c4,e4,g4] [f3,a3,c4,e4]>",
+        "keys": null,
+        "kalimba": "<[c5 e5 g5 b5 g5 e5 c5 e5 c5 e5 g5 b5 g5 e5 g5 b5] [a4 c5 e5 g5 e5 c5 a4 c5 a4 c5 e5 g5 e5 c5 e5 g5] [f4 a4 c5 e5 c5 a4 f4 a4 f4 a4 c5 e5 c5 a4 c5 e5]>",
+        "box": "<[e6 ~ ~ ~ ~ ~ ~ ~ c7 ~ ~ ~ ~ ~ ~ ~] ~ [a6 ~ ~ ~ ~ ~ ~ ~ g6 ~ ~ ~ ~ ~ ~ ~]>",
+        "marimba": null
+      }
+    },
+    {
+      "id": "build",
+      "bars": 3,
+      "role": "build",
+      "patterns": {
+        "kick": "bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~",
+        "snap": "~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~",
+        "shaker": "hh*16",
+        "bass": "<[d2 ~ ~ ~ ~ ~ d2 ~ ~ ~ d2 ~ ~ ~ ~ ~] [g1 ~ ~ ~ ~ ~ g1 ~ ~ ~ g1 ~ ~ ~ ~ ~] [c2 ~ ~ ~ ~ ~ c2 ~ ~ ~ c2 ~ ~ ~ ~ ~]>",
+        "pad": "<[d4,f4,a4,c5] [g3,b3,d4,a4] [c4,e4,g4,b4]>",
+        "keys": "<[[d3,f3,a3,c4] ~ ~ ~ ~ ~ [d3,f3,a3,c4] ~ ~ ~ ~ ~ ~ ~ ~ ~] [[g3,b3,d4,f4] ~ ~ ~ ~ ~ [g3,b3,d4,f4] ~ ~ ~ ~ ~ ~ ~ ~ ~] [[c4,e4,g4,b4] ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~]>",
+        "kalimba": null,
+        "box": null,
+        "marimba": "<[d5 f5 a5 c6 a5 f5 d5 f5 d5 f5 a5 c6 a5 f5 a5 c6] [g4 b4 d5 a5 d5 b4 g4 b4 g4 b4 d5 a5 d5 b4 d5 a5] [c5 e5 g5 b5 g5 e5 c5 e5 c5 e5 g5 b5 g5 e5 g5 b5]>"
+      }
+    },
+    {
+      "id": "finale",
+      "bars": 3,
+      "role": "hook",
+      "patterns": {
+        "kick": "<[bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~] [bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~ bd ~ ~ ~] [bd ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~]>",
+        "snap": "<[~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~] [~ ~ ~ ~ cp ~ ~ ~ ~ ~ ~ ~ cp ~ ~ ~] ~>",
+        "shaker": "<[hh*16] [hh*16] ~>",
+        "bass": "<[f2 ~ ~ ~ ~ ~ f2 ~ ~ ~ f2 ~ ~ ~ ~ ~] [g1 ~ ~ ~ ~ ~ g1 ~ ~ ~ g1 ~ ~ ~ ~ ~] [c2 ~ ~ ~ ~ ~ c2 ~ ~ ~ c2 ~ ~ ~ ~ ~]>",
+        "pad": "<[f3,a3,c4,e4] [g3,b3,d4,a4] [c4,e4,g4,b4]>",
+        "keys": null,
+        "kalimba": "<[f4 a4 c5 e5 c5 a4 f4 a4 f4 a4 c5 e5 c5 a4 c5 e5] [g4 b4 d5 a5 d5 b4 g4 b4 g4 b4 d5 a5 d5 b4 d5 a5] [c5 e5 g5 b5 g5 e5 c5 e5 c5 e5 g5 b5 g5 e5 g5 b5]>",
+        "box": "<[g6 ~ e6 ~ c6 ~ e6 ~ g6 ~ a6 ~ g6 ~ ~ ~] [e6 ~ f6 ~ g6 ~ ~ ~ d6 ~ ~ ~ c6 ~ ~ ~]>",
+        "marimba": "<[f3 ~ ~ a3 ~ ~ c4 ~ f3 ~ ~ a3 ~ ~ c4 ~] [g3 ~ ~ b3 ~ ~ d4 ~ g3 ~ ~ b3 ~ ~ d4 ~] [c4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~]>"
+      }
+    }
+  ],
+  "arrangement": [
+    {
+      "section": "title"
+    },
+    {
+      "section": "meet"
+    },
+    {
+      "section": "build"
+    },
+    {
+      "section": "finale"
+    }
+  ]
+}
