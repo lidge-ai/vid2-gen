@@ -91,6 +91,11 @@ pixels once. The rest of the pipeline treats the result as a stage clip.
 on a `SpecBuilder`. All four share `presets/style.ts` (`theme: dark|light` plus per-layer overrides of fill, stroke, radius, glow, text,
 muted, accent, track, shadow).
 
+Repeated durations retain authored seconds until each cumulative timestamp reaches `SpecBuilder.frame()`: field glyph periods,
+bars stagger, ticker intervals, kinetic word/glyph stagger and highlight sweep. Absolute anchors retain output-frame quantization;
+the final stage clock includes the motion-blur rate. A 45 ms glyph period at 30 fps therefore places glyph index 9 at frame 12,
+not frame 9. Explicit zero glyph periods reveal the entry together; positive subframe periods are not replaced with defaults.
+
 - **field**: pill (fill, stroke, glow, shadow) with an optional placeholder; typed glyphs are one text node each, revealed at their
   typing time and tinted by `accent` (decays); `grow` widens the pill (critically damped, centred on `x`) to text + 2·padX up to
   `maxWidth`; the caret rect follows the advance and blinks when idle; `mask` swaps glyphs for evenly spaced bullets; `clear` fades
@@ -125,5 +130,10 @@ timeline span after look, overlays and root effects. Because this happens after 
 ## QA
 
 `src/compile/layers/stage-text.ts` compiles each stage-family layer at scale 1 (fonts resolved into `cacheDir("qa-fonts")`) and
-`src/stage/settle.ts` finds every text node's first frame after 0.4 s of full opacity. `vid2 qa` samples the background just outside each
-box on that frame and warns below 4.5:1 (text under 40 px) or 3:1.
+`src/stage/settle.ts` samples each text node after 0.4 s of full opacity and completion of its color keys. `vid2 qa` scales those
+parent-transformed boxes to output dimensions and warns when they cross the 5% title-safe margin. It also samples the background
+just outside each box and warns below 4.5:1 (authored text under 40 px) or 3:1. Safety does not depend on color parsing.
+
+These are first-opaque-hold samples, not proof of geometric settling, every reflow state, collisions, or every transition frame.
+Text that never reaches the sampled hold may have no box. Inspect event boundaries and readable holds in preview and the encoded
+video; a clean sampled report alone does not establish complete motion or readability coverage.

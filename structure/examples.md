@@ -5,6 +5,11 @@ and an `example.json` manifest. Media, captures, generated timelines and renders
 workspace, `$VID2_HOME/examples/<name>` (default `~/.vid2/examples/<name>`). The sources ship in the npm package, so an installed vid2
 can list and copy every example.
 
+`motion-study` is an offline 11-second, 330-frame example at 960x540/30fps. Its original field typing, staggered bars and
+retained-token kinetic reflow demonstrate cumulative cadence, reserved spacing and readable holds. It needs ffmpeg only, uses
+bundled fonts and no external media/audio, and ships exact event/boundary/hold preview checkpoints. The bar values are illustrative.
+`tests/e2e/motion-study.test.ts` covers the executable timeline; the common example contract also checks its manifest and instructions.
+
 ## Manifest
 
 `src/examples/manifest.ts` validates `example.json` with a strict zod schema: `name` (equals the folder), `title`, `summary`,

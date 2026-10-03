@@ -11,6 +11,25 @@ description: Use when operating vid2 from an agent or diagnosing CLI output. Tri
 4. `vid2 render timeline.json --profile proxy -o proxy.mp4 --json`, then `vid2 qa proxy.mp4 --timeline timeline.json --json`. Fix the measured issue, re-preview the touched scene, and rerender.
 5. `vid2 render timeline.json --profile final -o final.mp4 --json`, then `vid2 qa final.mp4 --timeline timeline.json --json`. Report video path, duration and QA status/artifacts. To speed up the final encode, run `vid2 doctor --hw --json` once and add `--hw-accel if-possible` (falls back to software with a warning) or `--hw-accel required` (exit 3 without a working encoder); `data.encoder` names the encoder used. If sources are intentionally absent, `--placeholders` gives labelled stripes for a structural render; replace them before a publishable final.
 
+## Motion review
+
+Use `motion-study` for an offline typing, spacing and reflow exercise: `vid2 example show motion-study` lists its steps, and `vid2 example new motion-study` copies the editable sources into a workspace. Work in the returned directory. `vid2 example path motion-study --source` locates the packaged README even when these skills were copied to a separate installation. The study is silent; audio expectations are unnecessary.
+
+Resolve scene/layer positions, then calculate repeated onsets from the quantized start anchor plus the unrounded interval; see [motion timing](../vid2-direction/references/motion.md). For each important event at absolute frame `E`, preview `E-1,E,E+1`, using explicit numeric `f` tokens within the film's bounds. Add entrance completion and reading-hold start/middle/end. Arithmetic and frame ranges are not `--at` syntax. For the unchanged study, the first glyph arrives at frame 15 and retained-word reflow starts at 258:
+
+```bash
+vid2 preview timeline.json --at 14f,15f,16f,257f,258f,259f --out out/events --profile final --json
+vid2 preview timeline.json --at 36f,60f,89f,123f,150f,179f,208f,240f,257f,282f,306f,329f --out out/holds --profile final --json
+vid2 render timeline.json --profile final -o out/motion-study.mp4 --json
+vid2 qa out/motion-study.mp4 --timeline timeline.json --json
+```
+
+After changing the study's duration, FPS or timing, recalculate these frames. For short motion, inspect consecutive frames in the encoded video: study frames 14–27 cover typing, and 257–278 cover reflow. This is distinct from sparse overview stills and timeline previews. Play the result to judge pacing; frame counts alone do not establish a comfortable reading hold. Keep any extracted review images separate from the authored timeline and delivered MP4.
+
+QA's contact sheet helps locate problems; its stage text safety and estimated contrast checks sample each eligible node's first opaque hold after color animation. They do not verify later reflow states, geometric settling, collisions, every transition frame or complete accessibility. Check warning details even when QA exits 0, and inspect the final output size before delivery. No automated pass replaces the event/hold review.
+
+## Optional model review and output contracts
+
 For a review cycle, run `vid2 render timeline.json -o film.mp4`, `vid2 analyze film.mp4 --timeline timeline.json --json`, then `vid2 review film.mp4 --timeline timeline.json --listen --json`. Fix the authored timeline using `film.mp4.review/review.json` and `film.mp4.review/analyze/report.json`, then render again. Configure image review with `VID2_REVIEW_BASE_URL` and `VID2_REVIEW_MODEL` (or `--base-url` and `--model`), and optional `VID2_REVIEW_API_KEY`. Listening requires `--listen`, `VID2_REVIEW_AUDIO_BASE_URL`, `VID2_REVIEW_AUDIO_MODEL` and optional `VID2_REVIEW_AUDIO_API_KEY`. The hosts are bare HTTP(S) origins. `--listen-excerpt S` accepts 1–120 s, default 30 s.
 
 Read evidence by source: DSP owns measured loudness, low end and sync; listener remarks own perceived timbre, groove, arrangement and mood; frames own visuals. Listener feedback is second-hand and weak on sub-bass or 808 weight, so listener-sourced low-end findings stay informational. Do not turn an `UNHEARD` result into an auditory claim. An unconfigured image model returns `SKIPPED` with no request; QA failures remain in evidence. A `REVIEWED` status means a model responded, not that all findings are resolved.
