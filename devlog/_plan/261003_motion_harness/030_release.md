@@ -26,3 +26,13 @@ After main's exact-SHA CI passes, verify version/tag equality, create/push annot
 Install exact published version in a temporary prefix, isolated VID2_HOME; exercise version/help, skills, example list/copy, motion-study validation and render/QA. Record artifact integrity, builder run/attempt/event/SHA, installation outputs, and rollback route: consumers can pin 0.5.0; any new corrective publication uses a new version, never overwrite an existing artifact. No global install required.
 
 If OIDC or a human security gesture blocks publication, preserve prepared changes and report the precise blocker. Do not switch accounts or weaken release gates. Terminal DONE requires all publication readbacks and smoke evidence.
+
+## P revalidation
+
+Previous D: motion and authoring units verified and committed; original study330frames with one disclosed freeze warning, independent source/visual PASS after portable skill-navigation repair. Source head30e4653; clean tree before this record. Current readback: npm latest0.5.0, no remote v0.6.0 tag, NPM_PUBLISH_MODE=oidc. Main protection requires ci; merge and squash methods are available. Existing unrelated PR22 is preserved. No new permission/settings changes required.
+
+The release remains one cohesive PR with separately reviewed runtime and authoring commits; most added lines are tests, the original timeline and documentation. No native stack is requested or created. Freeze/readiness evidence will name the final versioned source SHA, and any later outcome-only commit will explicitly distinguish its documentation delta from that release SHA.
+
+## Adopted release decisions
+
+Main accepts architect Mendel (`01a10242-6de0-7150-bda9-c4240492d297`) REL-01–06: 0.6.0 synchronized metadata/no dependency change; ten actual CI jobs at feature and promotion gates with tested-SHA/event/attempt records; tag only verified main with manual tag/version equality; exact published package installed outside checkout and explicit installed executable for 330-frame render/QA; registry integrity/provenance plus0.5.0 pinning fallback; post-publication archive/outcome commit separate from immutable release tag. Main enforces full CI before tag because release.yml itself only runs tests/prepack. No admin bypass or workflow weakening. Main dev branch is currently unprotected; this does not waive the ten-job integration gate.
