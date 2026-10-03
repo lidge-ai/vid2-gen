@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0 — 2026-10-03
+## 0.6.0 — 2026-10-04
 
 Motion cadence, component validation and a reproducible production study.
 
