@@ -1,5 +1,7 @@
 # Motion harness and production recipes
 
+**Completed 2026-10-04:** [vid2-gen 0.6.0 released](https://github.com/lidge-ai/vid2-gen/releases/tag/v0.6.0), with implementation and publication verified. [Release evidence](030_release.md) records exact CI/source identities, registry integrity and installed-package render proof.
+
 Repeated animation intervals currently lose precision before they are repeated, component events can begin outside their layer, and stage text is omitted from title-safe warnings. This unit repairs those paths, adds an offline choreography example and research-backed authoring guidance, then publishes the verified package.
 
 ## Loop specification
@@ -47,3 +49,7 @@ D1-D3 implemented; 54 new regressions, main affected checks 86/86, typecheck/lin
 ## Authoring cycle conclusion
 
 Original motion-study and packaged guidance complete. Main actual render/19 previews and dense strips observed; no sampled title-safe/contrast defects, one disclosed frozen0–3 warning. New4tests and catalog3tests, typecheck/lint/build/skills checks pass. Independent visual/source reviews pass after repairing copied-skill navigation. Continue to030 release gates and publication; full playback/rhythm and exhaustive trajectory proof remain outside these claims.
+
+## Final direction
+
+The scoped objective is complete: timing/validation/QA hardening, primary production research, original runnable study, portable agent guidance, reviewed pushes and verified publication. Further trajectory/overlap analysis or full-playback aesthetics require a separately scoped unit; no such work is claimed here.
