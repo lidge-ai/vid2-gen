@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — 2026-10-04
+
+Motion cadence, component validation and a reproducible production study.
+
+- Repeated field glyph, bar stagger, ticker interval, kinetic word stagger and highlight sweep durations retain authored precision until each cumulative stage-frame conversion. A 45 ms typing interval at 30 fps now places the tenth glyph at frame 12 rather than frame 9. Explicit zero glyph intervals reveal simultaneously.
+- Component validation rejects empty spans, authored event starts outside the layer, non-increasing field typing starts and zero ticker intervals. Positive subframe periods, simultaneous chips and animation tails clipped by an intentional cut remain valid. Invalid timelines previously accepted may now return the existing E_INPUT validation envelope.
+- Stage-family text receives sampled 5% title-safe warnings alongside contrast checks, with parent transforms, output scaling and existing waivers preserved. Sampling does not certify every motion state or collision-free travel.
+- `vid2 example new motion-study` ships an original offline 11-second film with typing, staggered bars and retained-word reflow. Its exact frame checkpoints, spacing and readable holds are documented; it needs ffmpeg and bundled fonts only.
+- Packaged direction and CLI guidance distinguish entrance, reading hold and exit; explain cumulative timing; and use portable example navigation after skill copy installation. The study retains a documented frozen-detector warning for its mostly static opening scene.
+
 ## 0.5.0 — 2026-09-30
 
 Help you can navigate, the example films on demand, and a repository of its own.

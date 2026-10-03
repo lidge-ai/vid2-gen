@@ -20,9 +20,9 @@
   },
   "vid2-cli": {
     "files": {
-      "SKILL.md": "f2a9912679053b81b8ecc328211fb99cdcf1004908079b720471061e1ff0dbea"
+      "SKILL.md": "4c8b2fe5ae86961e73255b95478b702c69367090221b88c2cc4759b2a9d28eb2"
     },
-    "sha256": "9d9b752f8c46d3f182d042c29ddca814361ae365a0bb5bcc80f2bf6fc9ab8630"
+    "sha256": "25bf69fbc5f3da3f10e97a219bef8f5e96bcd5c6847e6c4fdcb6a3d37a9a1ddd"
   },
   "vid2-direction": {
     "files": {
@@ -32,21 +32,21 @@
       "references/camera.md": "cd583f9550403da5bd21a0bb925bb9e980829b8af501b8c4ba39d520977a4848",
       "references/color-script.md": "735916fa8d8248b85b5c609cbae40ee429047049000413f1e89cf4c862070724",
       "references/edit-rhythm.md": "ab63f18bde32f271fc41ab3d135e933af12a8be77414b27d62423a1f247e1fa9",
-      "references/kinetic-grammar.md": "c213e0ae6752bed298253eb28b0489c6021588c732efbf5b134e4ba0dfeb0322",
-      "references/motion.md": "fb1f5a0ab46312f58b485b91734847144c20f10c3256c0c0239a81f9016ee2ce",
+      "references/kinetic-grammar.md": "14eeeffe707b08c12e28ab176c2bfd1c6f25948c671b350c7616c9b0b9cb0865",
+      "references/motion.md": "189a3b559f33a8e4ac75b9eb27b3f29a3e3cecbd15ee4a239e5f752c1393c534",
       "references/reference-films.md": "31bbbe9091ee87c1eb303774e87295c857563271e65d7fdd0674ebb31bd3b1f7",
       "references/review-rubric.md": "fd1259c518af4b9ea2d921bef84069d006598b7ac01bb651622c11706f25d94c",
       "references/sound-cues.md": "1279e65e5f13be752f98b407c225423100ec684b1082fcc8a196eac759f23f67",
       "references/storyboard.md": "d316f34f7261a7594a3d815d61593268cbae269e47f554459290aa77bd92c429",
       "references/typography.md": "83c4817821ff5651cce0f8c14569105411eb1e73ac00c8f0070b5b140ea97867"
     },
-    "sha256": "ac501cdc878f3641d20fe0bed0b0beb0984f91be28efaa2c608d9b69a7057819"
+    "sha256": "4d28aa1806ef55e99a750a53e7d4a5b9b178e22ba25950050a26f8554aaa2e70"
   },
   "vid2-examples": {
     "files": {
-      "SKILL.md": "2720475f9342f0b0e976ead856a586fa17e13ff865bf23b4eddb569e37d1b925"
+      "SKILL.md": "d2309675c80c097cd414d8720653b36bf3e539a013f397329216525962f04f24"
     },
-    "sha256": "de38a178871edf10c8ec59fdf561981ffe219a8a00e2de45b47de220cd713390"
+    "sha256": "fdb26e8cde7a48f30ed53c43529f3f0adca62089da7891d82513135fdff7e7ec"
   },
   "vid2-timeline": {
     "files": {

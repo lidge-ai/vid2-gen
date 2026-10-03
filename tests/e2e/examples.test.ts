@@ -142,7 +142,7 @@ void test("generated-video offline example holds a five-second clip once across 
 });
 
 // 030: every example ships a manifest whose steps are the README's commands, and vid2 example copies it into a workspace.
-const EXAMPLES = ["claude-codex-dawn", "generated-video", "ima2-launch", "opus-astra-paper", "vid2-intro", "vid2-launch"];
+const EXAMPLES = ["claude-codex-dawn", "generated-video", "ima2-launch", "motion-study", "opus-astra-paper", "vid2-intro", "vid2-launch"];
 
 function readmeLines(name: string): string[] {
   const readme = readFileSync(join(root, "examples", name, "README.md"), "utf8");

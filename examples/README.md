@@ -20,6 +20,7 @@ checkout: edit sources in the repository, not in the workspace, or the next sync
 
 | Example | What it shows | Needs |
 |---|---|---|
+| [motion-study](motion-study/README.md) | 11 s silent study: cumulative typing cadence, staggered bars, reserved spacing and retained-word reflow, with exact frame checkpoints | ffmpeg only; bundled fonts |
 | [opus-astra-paper](opus-astra-paper/README.md) | 26 s paper-cutout short built only from JS stage nodes: springs, squash, hearts, a procedural paper sheet | ffmpeg, music2-gen for the cue |
 | [claude-codex-dawn](claude-codex-dawn/README.md) | 74 s puppet film: two logo cutouts walking from night into sunrise, reusable puppet helpers | ffmpeg, rsvg-convert, your own logo files and Korean fonts, music2-gen |
 | [ima2-launch](ima2-launch/README.md) | 50 s launch film: kinetic type, rebuilt UI components, ima2 generations, a real web capture, music synced to bars | ima2-gen, Playwright, music2-gen |

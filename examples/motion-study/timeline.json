@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "output": {
+    "width": 960,
+    "height": 540,
+    "fps": 30,
+    "background": "#14242E"
+  },
+  "sources": {},
+  "scenes": [
+    {
+      "id": "make-room",
+      "duration": "3s",
+      "layers": [
+        {
+          "type": "field",
+          "x": 480,
+          "y": 270,
+          "width": 600,
+          "height": 76,
+          "radius": 16,
+          "font": "mono",
+          "size": 32,
+          "caret": false,
+          "typing": [
+            {
+              "at": "0.5s",
+              "text": "make room",
+              "glyph": "0.045s"
+            }
+          ],
+          "accent": {
+            "color": "#8FD8C8",
+            "decay": "0.3s"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spacing",
+      "duration": "3s",
+      "layers": [
+        {
+          "type": "bars",
+          "x": 220,
+          "y": 177,
+          "width": 460,
+          "rowHeight": 50,
+          "gap": 18,
+          "size": 22,
+          "items": [
+            {
+              "label": "Pause",
+              "value": 45
+            },
+            {
+              "label": "Space",
+              "value": 65
+            },
+            {
+              "label": "Read",
+              "value": 85
+            }
+          ],
+          "max": 100,
+          "unit": "",
+          "countUp": false,
+          "delay": "0.3s",
+          "stagger": "0.145s",
+          "grow": "0.5s"
+        }
+      ]
+    },
+    {
+      "id": "retain-room",
+      "duration": "5s",
+      "layers": [
+        {
+          "type": "kinetic",
+          "x": 480,
+          "y": 270,
+          "size": 48,
+          "font": "sans",
+          "weight": "semibold",
+          "maxWidth": 720,
+          "lineHeight": 2.25,
+          "gap": 0.3,
+          "letterSpacing": 0,
+          "camera": {
+            "mode": "fixed"
+          },
+          "enter": {
+            "style": "rise",
+            "duration": "0.35s",
+            "stagger": "0.135s",
+            "distance": 12,
+            "blur": 0
+          },
+          "exit": {
+            "style": "fade",
+            "duration": "0.2s"
+          },
+          "move": {
+            "stiffness": 196,
+            "damping": 28,
+            "mass": 1
+          },
+          "states": [
+            {
+              "at": "0.3s",
+              "tokens": [
+                {
+                  "text": "Room",
+                  "key": "room"
+                },
+                {
+                  "text": "to",
+                  "key": "to",
+                  "newline": true
+                },
+                {
+                  "text": "think",
+                  "key": "think"
+                }
+              ]
+            },
+            {
+              "at": "2.6s",
+              "tokens": [
+                {
+                  "text": "Room",
+                  "key": "room"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

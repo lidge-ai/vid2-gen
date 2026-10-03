@@ -85,32 +85,40 @@ async function sampleBackground(video: string, ffmpeg: string, frame: number, x:
   return luminance([...result.stdout.subarray(0, 3)]);
 }
 
-/** Stage-family text (030): settled boxes from the compiled specs; WCAG 4.5:1 under 40 px, 3:1 for large text; severity warn. */
-async function stageContrast(opts: CheckOptions): Promise<QaIssue[]> {
+/** Stage text at its first sampled opaque hold: title-safe geometry and estimated contrast, both warnings. */
+async function stageTextIssues(opts: CheckOptions): Promise<QaIssue[]> {
   const t = opts.timeline!;
   const issues: QaIssue[] = [];
   const scale = opts.facts.width / t.width;
   for (const box of stageTextBoxes(t)) {
+    const bounds = { x: box.x * scale, y: box.y * scale, w: box.width * scale, h: box.height * scale };
+    const safeX = opts.facts.width * 0.05; const safeY = opts.facts.height * 0.05;
+    const sampledAt = box.absoluteFrame * t.fps.den / t.fps.num;
+    const range: [number, number] = [sampledAt, sampledAt];
+    if (bounds.x < safeX || bounds.y < safeY || bounds.x + bounds.w > opts.facts.width - safeX ||
+      bounds.y + bounds.h > opts.facts.height - safeY) {
+      issues.push(issue("text_safe", "TEXT_SAFE", `Stage text in ${box.sceneId} crosses the 5% title-safe area`,
+        "move or shrink the text", "warn", { range }));
+    }
     const color = /^#([0-9a-f]{6})/i.exec(box.color);
     if (!color) continue;
     const rgb = [0, 2, 4].map((offset) => Number.parseInt(color[1]!.slice(offset, offset + 2), 16));
-    const x = Math.max(0, Math.min(opts.facts.width - 2, Math.floor(box.x * scale - 4)));
-    const y = Math.max(0, Math.min(opts.facts.height - 2, Math.floor(box.y * scale - 4)));
+    const x = Math.max(0, Math.min(opts.facts.width - 2, Math.floor(bounds.x - 4)));
+    const y = Math.max(0, Math.min(opts.facts.height - 2, Math.floor(bounds.y - 4)));
     const background = await sampleBackground(opts.video, opts.ffmpeg, Math.max(0, Math.min(opts.facts.frames - 1, box.absoluteFrame)), x, y,
       opts.facts.fps);
     const foreground = luminance(rgb);
     const ratio = (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
     const threshold = box.size < 40 ? 4.5 : 3;
     if (ratio < threshold) issues.push(issue("contrast", "CONTRAST", `Stage text in ${box.sceneId} has estimated contrast ${num(ratio)}:1`,
-      "choose a more contrasting text colour or theme", "warn", { measured: ratio, threshold,
-        range: [box.absoluteFrame * t.fps.den / t.fps.num, box.absoluteFrame * t.fps.den / t.fps.num] }));
+      "choose a more contrasting text colour or theme", "warn", { measured: ratio, threshold, range }));
   }
   return issues;
 }
 
 async function textIssues(opts: CheckOptions): Promise<QaIssue[]> {
   if (!opts.timeline) return [];
-  const issues: QaIssue[] = await stageContrast(opts);
+  const issues: QaIssue[] = await stageTextIssues(opts);
   const scale = opts.facts.width / opts.timeline.width;
   for (const scene of opts.timeline.scenes) for (const layer of scene.layers) {
     if (layer.type !== "text") continue;

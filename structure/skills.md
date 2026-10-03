@@ -9,3 +9,9 @@ Seven Agent Skills ship in `skills/`: `vid2` routes by project state, `vid2-time
 The documented CLI is `vid2 skill list|path [name]|install [--dir <path>|--tmp|--agent codex|claude|agents] [--link] [--json]`. `path` defaults to the router. `list --json` returns `data.skills[]`; `install --json` returns `data.target`, `installed[]`, `changed[]`, `unchanged[]`, and `changedCount`. The primary cross-agent distribution route is `npx skills add lidge-ai/vid2-gen` after publication.
 
 The direction skill's edit-rhythm, color-script, review-rubric, sound-cues and reference-films guides turn film-grammar research into decisions with evidence limits. Timeline references document beat/bar positions and root look/HUD syntax; the audio skill points to cue placement and listener trust rules. The research sources are `devlog/_fin/260928_film_grammar/001_reference_films.md` and `003_theory_digest.md`.
+
+Motion guidance separates entrances, readable holds and exits; repeated intervals retain authored seconds after the start anchor
+is quantized. Camera holds and typing cadence are intentional choices, not universal motion or maximum-gap rules. The CLI skill
+adds event-boundary and hold inspection alongside sparse overview sampling and states the limits of sampled stage QA. The example
+router points cadence/spacing/reflow requests to the offline `motion-study`; production-reference provenance is recorded in the
+2026-10-03 motion-harness devlog unit. These are authoring and review instructions, not automated all-frame layout enforcement.

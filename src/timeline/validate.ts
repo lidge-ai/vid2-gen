@@ -4,6 +4,7 @@ import type { Timeline } from "./schema.ts";
 import { resolveTimeline } from "./resolve.ts";
 import { stageLayerIssues } from "./validate-stage.ts";
 import { kineticLayerIssues, kineticTimingIssues } from "./validate-kinetic.ts";
+import { componentTimingIssues } from "./validate-components.ts";
 import { hudAuthoredIssues, hudResolvedIssues } from "./validate-hud.ts";
 import type { ResolveOptions, ResolvedTimeline, ValidationIssue } from "./types.ts";
 
@@ -70,6 +71,7 @@ function mediaTimingIssues(layer: ResolvedTimeline["scenes"][number]["layers"][n
 function checkResolved(r: ResolvedTimeline): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   issues.push(...kineticTimingIssues(r));
+  issues.push(...componentTimingIssues(r));
   for (const [i, scene] of r.scenes.entries()) {
     if (scene.frames <= 0) issues.push(issue(`scenes.${i}.duration`, "empty_scene", "scene duration must resolve to at least one frame"));
     const next = r.scenes[i + 1];
