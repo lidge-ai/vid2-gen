@@ -1,22 +1,19 @@
 # Kinetic grammar (launch films)
 
-Distilled from a frame-by-frame study of a widely shared 2026 AI-product launch film (87 s, six hard cuts, almost no screen recording).
-Use it when a launch or feature video should feel designed rather than assembled. Numbers are starting points.
+Use this vocabulary for launch and feature films built from text, rebuilt UI and proof shots. The recipes are style options; numbers are starting points. See [motion guidance and primary production references](motion.md) for timing, spacing and the limits of the source observations.
 
-## Rules
+## Direction choices
 
 1. **One idea per frame.** One sentence on screen; when it has landed, keep only its key word (magic move) and continue from there.
 2. **Words, glyphs and icons are actors.** Build sentences word by word (`kinetic`, `rise`, stagger 0.09–0.12 s, entrance 0.3–0.4 s,
    12–16 px rise, 8–12 px blur). Type into inputs glyph by glyph (30–45 ms). Icons sit in the sentence as nouns (`{globe}`), popping in.
-3. **Continuity over cuts.** Prefer states that transform (`kinetic` states, `expand`, `zoomfrom`) to hard cuts; cut only on a musical accent.
-   A 50 s film needs fewer than ten cuts.
+3. **Continuity and cuts.** Transform states (`kinetic` states, `expand`, `zoomfrom`) when an idea continues; retain the same token key and text for a word that should survive reflow. Hard cuts can mark a new claim or musical accent. Choose cut density for the story and pace.
 4. **Accent colour marks attention.** The newest word or glyph arrives in the accent colour and decays in ~0.3 s; on light scenes, a
    reading highlight sweeps grey → ink word by word.
 5. **Rebuild the UI.** When the moment is one input, one number or one list, show it as a `field`, `bars`, `ticker` or `chips` at full
    vector sharpness. Keep real capture for the proof shot, inside a `window`, with event-driven camera.
-6. **The camera never rests.** Slow pushes (≈ 3 %/s) on stills and backdrops, pans that follow the newest token, zooms into the part of
-   a capture that matters.
-7. **Alternate temperature.** Dark ↔ light every 6–15 s; mark the change with `fadewhite`, `iris` or an `expand` that fills the frame.
+6. **Give the camera a purpose.** A slow push (≈ 3 %/s), a pan following a token or a zoom into evidence can direct attention. Rest the camera when a phrase needs reading time or local motion already tells the story. A fixed camera is a deliberate option.
+7. **Alternate temperature when useful.** Dark ↔ light every 6–15 s is one launch-film rhythm; `fadewhite`, `iris` or an `expand` can mark it. A consistent palette also works when continuity matters.
 8. **Sound follows motion.** Music bed with sections; `audio.autoCues: true` adds typing ticks, pops, clicks, the riser into an expand
    and whooshes on transitions. Master at −14 LUFS.
 
@@ -38,6 +35,9 @@ Use it when a launch or feature video should feel designed rather than assembled
 
 ## Checks before final render
 
-- 10 fps strips of every shot: each shot shows its intended technique; nothing overlaps while words exit.
-- `vid2 qa --expect-audio`: no open contrast or title-safe issues (stage text is included), −14 ±1 LUFS.
-- Consecutive frames of typing shots: one or two new glyphs per frame, never a gap longer than two frames.
+- Budget entrance, reading hold and exit separately. Include the last staggered word and accent decay before calling a phrase readable. Reserve the final and reflow layouts, then inspect departing actors as the retained word moves. Field centers and bar-stack origins differ; use the [preset spacing guide](motion.md).
+- Derive typing cadence from FPS: retain the unrounded glyph interval, then round each cumulative onset after the start anchor has been quantized. A 45 ms interval yields 1.35 frames at 30 fps and 2.7 at 60 fps. Unequal gaps are expected; a slower pause may be intentional. Compare consecutive output frames with those expected onsets, including spaces that consume an interval.
+- Use sparse strips for shot coverage, then exact event±1 frames and reading holds. Inspect consecutive frames around typing and reflow, and play the encoded video for rhythm. A 10 fps strip can miss short overlaps and cannot prove that words never collide.
+- Run `vid2 qa film.mp4 --timeline timeline.json --json`. Add `--expect-audio` when sound is intended; for a −14 LUFS target, inspect measured loudness against −14 ±1 LUFS. Resolve or explain contrast and title-safe warnings even when the command exits 0. Stage text checks sample the first eligible opaque hold after color animation, not every state or the full movement path; they do not certify geometry has settled or all later text remains readable.
+
+For a reproducible silent exercise, use `motion-study` (`vid2 example show motion-study`): 45 ms field typing, staggered bars and a retained word moving into a new layout, with explicit frame checkpoints and reading holds. Its spacing and timing are original design choices, not measurements taken from a reference film. Keep sound-driven, capture-led and more energetic recipes available when the brief calls for them.

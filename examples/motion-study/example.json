@@ -1,0 +1,47 @@
+{
+  "name": "motion-study",
+  "title": "Motion study: make room",
+  "summary": "An original silent 11-second study of cumulative typing cadence, staggered bars, reserved spacing and retained-word reflow.",
+  "durationS": 11,
+  "size": "960x540",
+  "techniques": [
+    "45ms cumulative glyph timing",
+    "145ms row stagger with reserved gutters",
+    "kinetic reflow retaining an actor key",
+    "fixed camera and readable holds"
+  ],
+  "goodFor": [
+    "motion timing and spacing study",
+    "offline motion graphics without external assets",
+    "typing cadence and kinetic typography"
+  ],
+  "needs": [
+    {
+      "tool": "ffmpeg",
+      "note": "Uses bundled fonts; no capture, generated media or audio provider."
+    }
+  ],
+  "edit": [
+    {
+      "file": "timeline.json",
+      "what": "text, illustrative bar values, spacing and per-scene timing; keep the room key in both kinetic states"
+    }
+  ],
+  "steps": [
+    {
+      "run": "vid2 validate timeline.json"
+    },
+    {
+      "run": "vid2 preview timeline.json --at 14f,15f,26f,60f,89f,90f,99f,108f,123f,150f,179f,180f,208f,257f,258f,264f,277f,306f,329f --profile final --out out/preview",
+      "note": "Exact global event, cut and reading-hold samples; frames are zero-based."
+    },
+    {
+      "run": "vid2 render timeline.json -o out/motion-study.mp4"
+    },
+    {
+      "run": "vid2 qa out/motion-study.mp4 --timeline timeline.json --out out/qa",
+      "note": "Silent by design; inspect sampled text warnings and play the video to judge rhythm."
+    }
+  ],
+  "output": "out/motion-study.mp4"
+}

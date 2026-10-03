@@ -1,17 +1,18 @@
 ---
 name: vid2-examples
-description: Use when a request looks like an existing vid2 example film or template and you want a render fast. Triggers include "make a video like", "start from an example", paper cutout or craft short, puppet or mascot story, product or app launch film, keynote-style intro, demo from real captures, generated AI clip, changelog, social vertical, or asking which examples exist.
+description: Use when a request looks like an existing vid2 example film or template and you want a render fast. Triggers include "make a video like", "start from an example", motion timing and spacing, typing cadence, kinetic reflow, paper cutout or craft short, puppet or mascot story, product or app launch film, keynote-style intro, demo from real captures, generated AI clip, changelog, social vertical, or asking which examples exist.
 ---
 
 # Start from an example
 
-Six finished films ship with vid2 as code plus exact steps; media and renders are made in a workspace. Starting from the closest one is
+Seven example films ship with vid2 as code plus exact steps; media and renders are made in a workspace. Starting from the closest one is
 faster and safer than a blank timeline, because its timing, sound and QA already work. Five `vid2 init` templates cover shorter formats.
 
 ## Pick the closest starting point
 
 | Request looks like | Start from | Length | Needs beyond ffmpeg |
 |---|---|---|---|
+| Motion timing, spacing, typing cadence or retained-word kinetic reflow; offline study | example `motion-study` | 11 s | none; silent, bundled fonts |
 | Paper cutout, craft or cute character short; mascots without images | example `opus-astra-paper` | 26 s | music2-gen (optional) |
 | Longer character story, logos or mascots walking as puppets, day-to-night mood | example `claude-codex-dawn` | 74 s | rsvg-convert, your logo files and fonts, music2-gen (optional) |
 | Beat-driven product launch with kinetic type, UI pieces, generated images and a real web capture | example `ima2-launch` | 50 s | ima2-gen, Playwright, music2-gen (optional) |
@@ -54,6 +55,7 @@ above does not settle the choice. Templates come from `vid2 init <template> <dir
 
 | Technique | Where it lives (`vid2 example path <name> --source`) |
 |---|---|
+| Cumulative glyph/row intervals, reserved gutters, readable holds and retained actor keys | motion-study: `timeline.json`, exact global frame checkpoints in `README.md` |
 | Key collector, seeded `rnd()`, spring pops, squash and stretch, paper texture | opus-astra-paper: `build-timeline.mjs`, `make-paper.mjs` |
 | Puppet builders and verbs (`to`, `hops`, `wave`, `blink`, `look`), sky/sun/hills world, bubbles | claude-codex-dawn: `puppets.mjs`, `lib.mjs` |
 | Bar-synced cuts, UI layers (`field`, `bars`, `ticker`, `chips`), `zoomfrom`/`iris` | ima2-launch: `timeline.json` |
